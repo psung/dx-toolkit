@@ -27,6 +27,57 @@
 
 (require 'dx-api)
 
+(defvar dx-current-project-context)
+
+(defun dx-select-project (project)
+  (interactive "sProject ID: ")
+  (setq dx-current-project-context project))
+
+(defun dx-list-projects ()
+  (interactive)
+  (dx-api-system-find-projects `(:describe t)
+                                (lambda (data)
+                                  (let ((buf (get-buffer-create "*dx-list-projects*")))
+                                    (with-current-buffer buf
+                                      (setq buffer-read-only t)
+                                      (let ((buffer-read-only nil))
+                                        (erase-buffer)
+                                        (mapc
+                                         (lambda (project)
+                                           (insert (cdr (assoc 'id project))
+                                                   " "
+                                                   (cdr (assoc 'name (cdr (assoc 'describe project))))
+                                                   "\n"))
+                                         (cdr (assoc 'results data)))))
+                                    (switch-to-buffer buf)))))
+
+(defun dx-browse-project (&optional project folder)
+  (interactive)
+  (let ((project (or project dx-current-project-context))
+        (folder (or folder "/")))
+    (dx-api-project-list-folder project
+                                `(:folder ,folder :describe t)
+                                (lambda (data project)
+                                  (let ((buf (get-buffer-create (concat "*dx-browse-" project "*"))))
+                                    (with-current-buffer buf
+                                      (setq buffer-read-only t)
+                                      (let ((buffer-read-only nil))
+                                        (erase-buffer)
+                                        (insert "Contents of " project ":\n")
+                                        ;; Show folders first, then other objects.
+                                        (mapc
+                                         (lambda (folder) (insert " (folder) " folder "\n"))
+                                         (cdr (assoc 'folders data)))
+                                        (mapc
+                                         (lambda (object)
+                                           (insert " "
+                                                   (cdr (assoc 'id object))
+                                                   " "
+                                                   (cdr (assoc 'name (cdr (assoc 'describe object))))
+                                                   "\n"))
+                                         (cdr (assoc 'objects data)))))
+                                    (switch-to-buffer buf)))
+                                `(,project))))
 
 (provide 'dx)
 ;;; dx.el ends here
