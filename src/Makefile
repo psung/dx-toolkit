@@ -108,7 +108,10 @@ R/dxR/R/api.R: api_wrappers/wrapper_table.json api_wrappers/generateRAPIWrappers
 ruby/lib/dxruby/api.rb: api_wrappers/wrapper_table.json api_wrappers/generateRubyAPIWrappers.py
 	cat api_wrappers/wrapper_table.json | api_wrappers/generateRubyAPIWrappers.py > ruby/lib/dxruby/api.rb
 
-api_wrappers: toolkit_version python/dxpy/api.py cpp/dxcpp/api.h cpp/dxcpp/api.cc javascript/DNAnexusAPI.js perl/lib/DNAnexus/API.pm java/src/main/java/com/dnanexus/DXAPI.java R/dxR/R/api.R ruby/lib/dxruby/api.rb
+elisp/dx-api.el: api_wrappers/wrapper_table.json api_wrappers/generateElispAPIWrappers.py
+	cat api_wrappers/wrapper_table.json | api_wrappers/generateElispAPIWrappers.py > elisp/dx-api.el
+
+api_wrappers: toolkit_version python/dxpy/api.py cpp/dxcpp/api.h cpp/dxcpp/api.cc javascript/DNAnexusAPI.js perl/lib/DNAnexus/API.pm java/src/main/java/com/dnanexus/DXAPI.java R/dxR/R/api.R ruby/lib/dxruby/api.rb elisp/dx-api.el
 
 cpp: api_wrappers
 	mkdir -p "$(DNANEXUS_HOME)/share/dnanexus/src"
