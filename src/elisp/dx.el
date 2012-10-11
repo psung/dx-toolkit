@@ -33,27 +33,95 @@
   (interactive "sProject ID: ")
   (setq dx-current-project-context project))
 
+;;; dx-list-projects-mode
+;;; ---------------------
+
+;; dx-list-projects-mode is suitable only for specially formatted data.
+(put 'dx-list-projects-mode 'mode-class 'special)
+
+(defvar dx-list-projects-mode-map
+  (let ((map (make-keymap)))
+    (set-keymap-parent map special-mode-map)
+    (define-key map "g" 'dx-list-projects-refresh)
+    (define-key map "q" 'bury-buffer)
+    (define-key map "\C-m" 'dx-list-projects-browse-project)
+    map))
+
+(define-derived-mode dx-list-projects-mode fundamental-mode
+  "dx List Projects"
+  "Mode for listing projects."
+  (kill-all-local-variables)
+  (use-local-map dx-list-projects-mode-map)
+  (setq major-mode 'dx-list-projects-mode
+        mode-name "dx List Projects"
+        buffer-read-only t))
+
+(defun dx-list-projects-load-buffer (select-p)
+  "Renders a list-projects buffer."
+  (dx-api-system-find-projects
+   `(:describe t)
+   (lambda (data select-p)
+     (let ((buf (get-buffer-create "*dx-list-projects*")))
+       (with-current-buffer buf
+         (let ((buffer-read-only nil))
+           (erase-buffer)
+           (insert (propertize "All visible projects:\n" 'face 'bold))
+           (mapc
+            (lambda (project)
+              (let ((project-id (cdr (assoc 'id project)))
+                    (project-name (cdr (assoc 'name (cdr (assoc 'describe project)))))
+                    ;; TODO: align project names
+                    (level (cdr (assoc 'level project))))
+                (insert " " (propertize project-id 'face 'link) " " level " " project-name "\n")))
+            (cdr (assoc 'results data)))
+           ;; Go to the first entry.
+           (goto-char (point-min))
+           (forward-line))
+         (dx-list-projects-mode))
+       (and select-p
+            (switch-to-buffer buf))))
+   `(,select-p)))
+
 (defun dx-list-projects ()
   (interactive)
-  (dx-api-system-find-projects `(:describe t)
-                                (lambda (data)
-                                  (let ((buf (get-buffer-create "*dx-list-projects*")))
-                                    (with-current-buffer buf
-                                      (setq buffer-read-only t)
-                                      (let ((buffer-read-only nil))
-                                        (erase-buffer)
-                                        (mapc
-                                         (lambda (project)
-                                           (insert (cdr (assoc 'id project))
-                                                   " "
-                                                   (cdr (assoc 'name (cdr (assoc 'describe project))))
-                                                   "\n"))
-                                         (cdr (assoc 'results data)))))
-                                    (switch-to-buffer buf)))))
+  (dx-list-projects-load-buffer t))
+
+(defun dx-list-projects-refresh ()
+  (interactive)
+  (dx-list-projects-load-buffer nil))
+
+(defun dx-list-projects-browse-project ()
+  "Browses the project whose entry is at point."
+  (interactive)
+  (save-excursion
+    ;; TODO: I don't think this works with narrowing.
+    (let (p1 p2)
+      (beginning-of-line)
+      ;; Expect line to look like this:
+      ;;   project-XXXXXXXXXXXXXXXX [more stuff...]
+      ;;
+      ;; TODO: detect when we are not on a project line
+      ;;
+      ;; TODO: maybe higher specificity. Investigate use of "buttons".
+      (setq p1 (progn
+                 (search-forward "project")
+                 (match-beginning 0)))
+      (setq p2 (progn
+                 (search-forward " ")
+                 (match-beginning 0)))
+      (let ((project (buffer-substring p1 p2)))
+        ;; Remove the link face from project name
+        (set-text-properties 0 (length project) nil project)
+        (dx-browse-project project)))))
+
+;;; dx-browse-project-mode
+;;; ----------------------
 
 (defun dx-browse-project (&optional project folder)
   (interactive)
   (let ((project (or project dx-current-project-context))
+        ;; TODO: also be able to find an existing buffer for the project, if
+        ;; folder is not given.
         (folder (or folder "/")))
     (dx-api-project-list-folder project
                                 `(:folder ,folder :describe t)
@@ -63,7 +131,7 @@
                                       (setq buffer-read-only t)
                                       (let ((buffer-read-only nil))
                                         (erase-buffer)
-                                        (insert "Contents of " project ":\n")
+                                        (insert (propertize (concat "Contents of " project ":\n") 'face 'bold))
                                         ;; Show folders first, then other objects.
                                         (mapc
                                          (lambda (folder) (insert " (folder) " folder "\n"))
