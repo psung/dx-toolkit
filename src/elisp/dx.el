@@ -36,6 +36,8 @@
 ;;; dx-list-projects-mode
 ;;; ---------------------
 
+(defvar dx-list-projects-mode-hook nil)
+
 ;; dx-list-projects-mode is suitable only for specially formatted data.
 (put 'dx-list-projects-mode 'mode-class 'special)
 
@@ -54,7 +56,8 @@
   (use-local-map dx-list-projects-mode-map)
   (setq major-mode 'dx-list-projects-mode
         mode-name "dx List Projects"
-        buffer-read-only t))
+        buffer-read-only t)
+  (run-mode-hooks 'dx-list-projects-mode-hook))
 
 (defun dx-list-projects-load-buffer (select-p)
   "Renders a list-projects buffer."
