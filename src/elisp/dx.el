@@ -33,6 +33,11 @@
   (interactive "sProject ID: ")
   (setq dx-current-project-context project))
 
+;;; Buffer-local variables
+
+(defvar dx-current-project-id)
+(defvar dx-current-folder-name)
+
 ;;; dx-list-projects-mode
 ;;; ---------------------
 
@@ -120,35 +125,106 @@
 ;;; dx-browse-project-mode
 ;;; ----------------------
 
+(defvar dx-browse-project-mode-hook nil)
+
+;; dx-browse-project-mode is suitable only for specially formatted data.
+(put 'dx-browse-project-mode 'mode-class 'special)
+
+(defvar dx-browse-project-mode-map
+  (let ((map (make-keymap)))
+    (set-keymap-parent map special-mode-map)
+    (define-key map "g" 'dx-browse-project-refresh)
+    (define-key map "q" 'bury-buffer)
+    (define-key map "\C-m" 'dx-browse-project-open-item)
+    map))
+
+(define-derived-mode dx-browse-project-mode fundamental-mode
+  "dx Browse Project"
+  "Mode for listing project contents."
+  (kill-all-local-variables)
+  (use-local-map dx-browse-project-mode-map)
+  (setq major-mode 'dx-browse-project-mode
+        mode-name "dx Browse Project"
+        buffer-read-only t)
+  (run-mode-hooks 'dx-browse-project-mode-hook))
+
+(defun dx-browse-project-load-buffer (project folder select-p)
+  "Renders a browse project buffer."
+  (dx-api-project-list-folder
+   project
+   `(:folder ,folder :describe t)
+   (lambda (data project folder select-p)
+     (let ((buf (get-buffer-create (concat "*dx-browse-" project "*"))))
+       (with-current-buffer buf
+         (let ((buffer-read-only nil))
+           (erase-buffer)
+           (insert (propertize (concat "Contents of " project ":" folder "\n") 'face 'bold))
+           ;; Show folders first, then other objects.
+           (if (not (string= folder "/"))
+               (insert " (folder) " (propertize ".." 'face 'link) "\n"))
+           (mapc
+            (lambda (subfolder)
+              (let ((basename (substring subfolder (length folder))))
+                (insert " (folder) " (propertize basename 'face 'link) "\n")))
+            (cdr (assoc 'folders data)))
+           (mapc
+            (lambda (object)
+              (let ((object-id (cdr (assoc 'id object)))
+                    (object-name (cdr (assoc 'name (cdr (assoc 'describe object))))))
+                (insert " " object-id " " object-name "\n")))
+            (cdr (assoc 'objects data))))
+         ;; Go to the first entry.
+         (goto-char (point-min))
+         (forward-line)
+         (dx-browse-project-mode)
+         (set (make-local-variable 'dx-current-project-id) project)
+         (set (make-local-variable 'dx-current-folder-name) folder)
+         (and select-p (switch-to-buffer buf)))))
+   `(,project ,folder ,select-p)))
+
 (defun dx-browse-project (&optional project folder)
   (interactive)
   (let ((project (or project dx-current-project-context))
         ;; TODO: also be able to find an existing buffer for the project, if
         ;; folder is not given.
         (folder (or folder "/")))
-    (dx-api-project-list-folder project
-                                `(:folder ,folder :describe t)
-                                (lambda (data project)
-                                  (let ((buf (get-buffer-create (concat "*dx-browse-" project "*"))))
-                                    (with-current-buffer buf
-                                      (setq buffer-read-only t)
-                                      (let ((buffer-read-only nil))
-                                        (erase-buffer)
-                                        (insert (propertize (concat "Contents of " project ":\n") 'face 'bold))
-                                        ;; Show folders first, then other objects.
-                                        (mapc
-                                         (lambda (folder) (insert " (folder) " folder "\n"))
-                                         (cdr (assoc 'folders data)))
-                                        (mapc
-                                         (lambda (object)
-                                           (insert " "
-                                                   (cdr (assoc 'id object))
-                                                   " "
-                                                   (cdr (assoc 'name (cdr (assoc 'describe object))))
-                                                   "\n"))
-                                         (cdr (assoc 'objects data)))))
-                                    (switch-to-buffer buf)))
-                                `(,project))))
+    (dx-browse-project-load-buffer project folder t)))
+
+(defun dx-browse-project-refresh ()
+  (interactive)
+  (dx-browse-project-load-buffer dx-current-project-id dx-current-folder-name t))
+
+(defun dx-browse-project-open-item ()
+  "Opens the item whose entry is at point."
+  (interactive)
+  (save-excursion
+    ;; TODO: I don't think this works with narrowing.
+    (let (p1 p2)
+      (beginning-of-line)
+      ;; Expect line to look like this:
+      ;;   (folder) NAME
+      ;;
+      ;; TODO: something meaningful with data objects too
+      ;; TODO: detect when we are not on a folder or object line
+      ;;
+      ;; TODO: maybe higher specificity. Investigate use of "buttons".
+      (setq p1 (progn
+                 (search-forward "(folder) ")
+                 (match-end 0)))
+      (setq p2 (progn
+                 (search-forward "\n")
+                 (match-beginning 0)))
+      (let ((folder-basename (buffer-substring p1 p2)))
+        ;; Remove the link face from folder name
+        (set-text-properties 0 (length folder-basename) nil folder-basename)
+        (let ((real-folder-path (if (string= folder-basename "..")
+                                    (progn
+                                      (string-match "^\\(.*/\\).+/" dx-current-folder-name)
+                                      (substring dx-current-folder-name 0 (match-end 1)))
+                                    (concat dx-current-folder-name folder-basename "/"))))
+          (dx-browse-project-load-buffer dx-current-project-id
+                                         real-folder-path
+                                         nil))))))
 
 (provide 'dx)
 ;;; dx.el ends here
