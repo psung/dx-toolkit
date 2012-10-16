@@ -40,6 +40,7 @@ The Platform SDK contains API language bindings for the following platforms:
 * Perl
 * Java
 * R
+* Emacs Lisp
 
 Build dependencies
 ------------------

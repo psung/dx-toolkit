@@ -33,7 +33,7 @@ Supported languages
 * C++
 
 If you wish to use bindings for the other supported languages (Java, Perl, R,
-Ruby), please see the [DNAnexus developer
+Ruby, Emacs Lisp), please see the [DNAnexus developer
 portal](https://wiki.dnanexus.com/Developer-Portal) for specific instructions
 for your language. In general you can either build from the source
 distribution, or install a prebuilt package specific to the language.
