@@ -241,6 +241,32 @@
 
 (defvar dx-mapping-read-padding 1)
 
+(defvar dx-browse-mappings-mode-hook nil)
+
+;; dx-browse-mappings-mode is suitable only for specially formatted data.
+(put 'dx-browse-mappings-mode 'mode-class 'special)
+
+(defvar dx-browse-mappings-mode-map
+  (let ((map (make-keymap)))
+    (set-keymap-parent map special-mode-map)
+    (define-key map "g" 'dx-browse-mappings-refresh)
+    (define-key map "j" 'dx-browse-mappings-jump)
+    (define-key map "q" 'bury-buffer)
+    (define-key map "[" 'dx-browse-mappings-one-screen-left)
+    (define-key map "]" 'dx-browse-mappings-one-screen-right)
+    map))
+
+(define-derived-mode dx-browse-mappings-mode fundamental-mode
+  "dx Browse Mappings"
+  "Mode for browsing mapped reads."
+  (kill-all-local-variables)
+  (use-local-map dx-browse-mappings-mode-map)
+  (toggle-truncate-lines 1)
+  (setq major-mode 'dx-browse-mappings-mode
+        mode-name "dx Browse Mappings"
+        buffer-read-only t)
+  (run-mode-hooks 'dx-browse-mappings-mode-hook))
+
 (defun dx-reverse-complement (s)
   (let ((output (make-string (length s) ? )))
     (dotimes (i (length s))
@@ -282,12 +308,12 @@ the presence of the new read."
           (nconc layout-offsets (list (cons new-row (+ start-offset read-length dx-mapping-read-padding))))
           (cons new-row t))))))
 
-(defun dx-browse-mappings (mappings-table-id chr lo)
-  (interactive "sMappings Table ID: \nschr: \nnlo: ")
+(defun dx-browse-mappings-load-buffer (mappings-table-id chr lo select-p)
+  "Renders a browse-mappings buffer."
   (dx-api-gtable-describe
    mappings-table-id
    `(:details t)
-   (lambda (gtable-describe mappings-table-id chr lo)
+   (lambda (gtable-describe mappings-table-id chr lo select-p)
      (let ((details (cdr (assoc 'details gtable-describe))))
        ;; TODO: assert Mappings type
        (let ((original-contigset (cdadr (assoc 'original_contigset details)))
@@ -297,46 +323,72 @@ the presence of the new read."
          (dx-api-gtable-get
           mappings-table-id
           `(:limit 1000 :query (:index "gri" :parameters (:coords [,chr ,lo ,hi])) :columns ["chr" "lo" "hi" "sequence" "negative_strand"])
-          (lambda (gtable-get mappings-table-id chr lo)
+          (lambda (gtable-get mappings-table-id chr lo select-p)
             (let ((data (cdr (assoc 'data gtable-get)))
                   (buf (get-buffer-create (concat "*dx-genome-browse-" mappings-table-id "*"))))
               (with-current-buffer buf
-                (erase-buffer)
-                (toggle-truncate-lines 1)
-                (insert chr ":" (number-to-string lo) "\n\n")
-                (insert (propertize (concat "mappings from " mappings-table-id) 'face 'underline) "\n\n")
-                ;; Don't quote layout-offsets here: since we'll nconc
-                ;; stuff to the end of it, it needs to be evaluated anew
-                ;; every time.
-                (let ((layout-offsets (list (cons 0 0))))
-                  (mapc (lambda (read)
-                          (let ((read-chr (aref read 0))
-                                (read-lo (aref read 1))
-                                (read-hi (aref read 2))
-                                (seq (aref read 3))
-                                (negative-strand (if (eq (aref read 4) t) t nil)))
-                            (let ((seq (if negative-strand (dx-reverse-complement seq) seq))
-                                  (start-offset (if (< read-lo lo) (- lo read-lo) 0))
-                                  (padding (if (> read-lo lo) (- read-lo lo) 0)))
-                              (let ((layout (dx-layout-mapping layout-offsets
-                                                               padding
-                                                               (- (length seq) start-offset))))
-                                (let ((destination-row (car layout))
-                                      (is-new-line (cdr layout)))
-                                  (goto-char (point-min))
-                                  ;; Advance past header line, blank line, and section header
-                                  (move-end-of-line (+ destination-row 4))
-                                  (insert (make-string (- padding (current-column)) ? )
-                                          (propertize (substring seq start-offset)
-                                                      'face
-                                                      (if negative-strand 'dx-negative-strand 'dx-positive-strand)))
-                                  (and is-new-line (insert "\n")))))))
-                        data)))
-              (switch-to-buffer buf)
-              (goto-char (point-min))
-              (forward-line 3)))
-          `(,mappings-table-id ,chr ,lo)))))
-   `(,mappings-table-id ,chr ,lo)))
+                (let ((buffer-read-only nil))
+                  (erase-buffer)
+                  (insert chr ":" (number-to-string lo) "\n\n")
+                  (insert (propertize (concat "mappings from " mappings-table-id) 'face 'underline) "\n\n")
+                  ;; Don't quote layout-offsets here: since we'll nconc
+                  ;; stuff to the end of it, it needs to be evaluated anew
+                  ;; every time.
+                  (let ((layout-offsets (list (cons 0 0))))
+                    (mapc (lambda (read)
+                            (let ((read-chr (aref read 0))
+                                  (read-lo (aref read 1))
+                                  (read-hi (aref read 2))
+                                  (seq (aref read 3))
+                                  (negative-strand (if (eq (aref read 4) t) t nil)))
+                              (let ((seq (if negative-strand (dx-reverse-complement seq) seq))
+                                    (start-offset (if (< read-lo lo) (- lo read-lo) 0))
+                                    (padding (if (> read-lo lo) (- read-lo lo) 0)))
+                                (let ((layout (dx-layout-mapping layout-offsets
+                                                                 padding
+                                                                 (- (length seq) start-offset))))
+                                  (let ((destination-row (car layout))
+                                        (is-new-line (cdr layout)))
+                                    (goto-char (point-min))
+                                    ;; Advance past header line, blank line, and section header
+                                    (move-end-of-line (+ destination-row 4))
+                                    (insert (make-string (- padding (current-column)) ? )
+                                            (propertize (substring seq start-offset)
+                                                        'face
+                                                        (if negative-strand 'dx-negative-strand 'dx-positive-strand)))
+                                    (and is-new-line (insert "\n")))))))
+                          data))
+                  (goto-char (point-min))
+                  (forward-line 3)
+                  (dx-browse-mappings-mode)
+                  (set (make-local-variable 'dx-current-mappings-table-id) mappings-table-id)
+                  (set (make-local-variable 'dx-current-chr) chr)
+                  (set (make-local-variable 'dx-current-lo) lo)
+                  (and select-p (switch-to-buffer buf))))))
+          `(,mappings-table-id ,chr ,lo ,select-p)))))
+   `(,mappings-table-id ,chr ,lo ,select-p)))
+
+(defun dx-browse-mappings (mappings-table-id chr lo)
+  (interactive "sMappings Table ID: \nschr: \nnlo: ")
+  (dx-browse-mappings-load-buffer mappings-table-id chr lo t))
+
+(defun dx-browse-mappings-refresh ()
+  (interactive)
+  (dx-browse-mappings-load-buffer dx-current-mappings-table-id dx-current-chr dx-current-lo nil))
+
+(defun dx-browse-mappings-jump (chr lo)
+  (interactive "schr: \nnlo: ")
+  (dx-browse-mappings-load-buffer dx-current-mappings-table-id chr lo nil))
+
+(defun dx-browse-mappings-one-screen-left ()
+  (interactive)
+  (let ((new-lo (+ (- dx-current-lo (window-width)) 8)))
+    (dx-browse-mappings-load-buffer dx-current-mappings-table-id dx-current-chr new-lo nil)))
+
+(defun dx-browse-mappings-one-screen-right ()
+  (interactive)
+  (let ((new-lo (+ dx-current-lo (window-width) -8)))
+    (dx-browse-mappings-load-buffer dx-current-mappings-table-id dx-current-chr new-lo nil)))
 
 (provide 'dx)
 ;;; dx.el ends here
