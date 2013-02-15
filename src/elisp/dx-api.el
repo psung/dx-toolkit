@@ -1,6 +1,6 @@
 ;;; dx-api.el --- Low-level API wrappers for the DNAnexus Platform
 
-;; Copyright (C) 2012 DNAnexus, Inc.
+;; Copyright (C) 2012, 2013 DNAnexus, Inc.
 
 ;; Author: Phil Sung <psung@dnanexus.com>
 ;; Keywords: local
