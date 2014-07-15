@@ -47,7 +47,10 @@
          ;; Response is in the current buffer. Skip past headers and
          ;; parse the body.
          ;;
-         ;; TODO: detect response code and abort if not successful
+         ;; TODO: detect response code and abort if not successful. Note
+         ;; that url-retrieve short-circuits our code in the event of a
+         ;; 401 (which can occur when the token is expired)-- so we may
+         ;; need to reach down into a lower level.
          (search-forward "\n\n")
          (narrow-to-region (point) (point-max))
          (let ((output (buffer-string)))
