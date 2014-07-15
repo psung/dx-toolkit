@@ -1,6 +1,6 @@
 ;;; dx.el --- DNAnexus Platform Bindings
 
-;; Copyright (C) 2012, 2013 DNAnexus, Inc.
+;; Copyright (C) 2012-2014 DNAnexus, Inc.
 
 ;; Author: Phil Sung <psung@dnanexus.com>
 ;; Keywords: local

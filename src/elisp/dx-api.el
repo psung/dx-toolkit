@@ -1,6 +1,6 @@
 ;;; dx-api.el --- Low-level API wrappers for the DNAnexus Platform
 
-;; Copyright (C) 2012, 2013 DNAnexus, Inc.
+;; Copyright (C) 2012-2014 DNAnexus, Inc.
 
 ;; Author: Phil Sung <psung@dnanexus.com>
 ;; Keywords: local
@@ -362,6 +362,9 @@
 (defun dx-api-project-set-properties (object-id input callback &optional cbargs)
   (dx-http-request (concat "/" object-id "/setProperties") input callback cbargs))
 
+(defun dx-api-project-transfer (object-id input callback &optional cbargs)
+  (dx-http-request (concat "/" object-id "/transfer") input callback cbargs))
+
 (defun dx-api-project-update (object-id input callback &optional cbargs)
   (dx-http-request (concat "/" object-id "/update") input callback cbargs))
 
@@ -460,6 +463,9 @@
 
 (defun dx-api-workflow-describe (object-id input callback &optional cbargs)
   (dx-http-request (concat "/" object-id "/describe") input callback cbargs))
+
+(defun dx-api-workflow-dry-run (object-id input callback &optional cbargs)
+  (dx-http-request (concat "/" object-id "/dryRun") input callback cbargs))
 
 (defun dx-api-workflow-get-details (object-id input callback &optional cbargs)
   (dx-http-request (concat "/" object-id "/getDetails") input callback cbargs))
