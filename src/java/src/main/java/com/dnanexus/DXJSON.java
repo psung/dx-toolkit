@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -50,7 +50,7 @@ public class DXJSON {
      * Parses the specified string into a JSON object.
      */
     public static JsonNode parseJson(String stringified) throws IOException {
-        return dxJsonFactory.createJsonParser(stringified).readValueAsTree();
+        return dxJsonFactory.createParser(stringified).readValueAsTree();
     }
 
     /**
@@ -243,7 +243,7 @@ public class DXJSON {
             ObjectNode output = mapper.createObjectNode();
             ObjectBuilder nextBuilder = this;
             while (!nextBuilder.isEmpty) {
-                output.put(nextBuilder.key, nextBuilder.value);
+                output.set(nextBuilder.key, nextBuilder.value);
                 nextBuilder = nextBuilder.next;
             }
             return output;

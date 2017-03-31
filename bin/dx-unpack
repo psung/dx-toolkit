@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -38,7 +38,7 @@ while [[ $# > 0 ]]; do
         output="$2"
         shift 2
     else
-        A="$A $1"
+        A="$A \"${1//\"/\"\\\"\"}\""
         shift
     fi
 done
@@ -60,4 +60,5 @@ if [[ $output != "" ]]; then
     rmdir "$tempdir"
 else
     unpack "$@"
+    rm -f "$@"
 fi

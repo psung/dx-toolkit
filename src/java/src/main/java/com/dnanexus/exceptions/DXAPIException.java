@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -27,6 +27,12 @@ import com.google.common.collect.Maps;
 public class DXAPIException extends RuntimeException {
 
     private static enum ApiExceptionClass {
+        InternalError("InternalError") {
+          @Override
+          DXAPIException generateException(String message, int statusCode) {
+              return new InternalErrorException(message, statusCode);
+          }
+        },
         InvalidAuthentication("InvalidAuthentication") {
             @Override
             DXAPIException generateException(String message, int statusCode) {
@@ -61,6 +67,12 @@ public class DXAPIException extends RuntimeException {
             @Override
             DXAPIException generateException(String message, int statusCode) {
                 return new ResourceNotFoundException(message, statusCode);
+            }
+        },
+        ServiceUnavailableException("ServiceUnavailable") {
+            @Override
+            DXAPIException generateException(String message, int statusCode) {
+                return new ServiceUnavailableException(message, statusCode);
             }
         },
         SpendingLimitExceeded("SpendingLimitExceeded") {
@@ -112,7 +124,7 @@ public class DXAPIException extends RuntimeException {
         if (errorType != null && valueMap.containsKey(errorType)) {
             return valueMap.get(errorType).generateException(errorMessageOrDefault, statusCode);
         }
-        System.err.println("Received an API error of unknown type " + errorType
+        System.err.println("[" + System.currentTimeMillis() + "] " + "Received an API error of unknown type " + errorType
                 + "; deserializing it as a generic DXAPIException.");
         return new DXAPIException(errorMessageOrDefault, statusCode);
     }

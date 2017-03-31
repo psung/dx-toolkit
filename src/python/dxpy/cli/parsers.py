@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -20,15 +20,16 @@ other parsers, as well as utility functions for parsing the input to
 those parsers.
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-import argparse, json, os
-from ..utils.env import set_env_var
+import argparse, json
+from .. import config
 from ..utils.printing import fill
 from ..utils.pretty_print import format_table
 from ..utils.resolver import split_unescaped
 from ..utils.completer import InstanceTypesCompleter
 from ..exceptions import (DXError, DXCLIError)
+from ..compat import basestring
 
 class DXParserError(DXError):
     def __init__(self, msg):
@@ -188,37 +189,23 @@ def set_env_from_args(args):
     '''
     args = vars(args)
 
-    require_initialize = False
-
     if args.get('apiserver_host') is not None:
-        os.environ['DX_APISERVER_HOST'] = args['apiserver_host']
-        require_initialize = True
+        config['DX_APISERVER_HOST'] = args['apiserver_host']
     if args.get('apiserver_port') is not None:
-        os.environ['DX_APISERVER_PORT'] = args['apiserver_port']
-        require_initialize = True
+        config['DX_APISERVER_PORT'] = args['apiserver_port']
     if args.get('apiserver_protocol') is not None:
-        os.environ['DX_APISERVER_PROTOCOL'] = args['apiserver_protocol']
-        require_initialize = True
+        config['DX_APISERVER_PROTOCOL'] = args['apiserver_protocol']
     if args.get('project_context_id') is not None:
-        os.environ['DX_PROJECT_CONTEXT_ID'] = args['project_context_id']
-        require_initialize = True
+        config['DX_PROJECT_CONTEXT_ID'] = args['project_context_id']
     if args.get('workspace_id') is not None:
-        os.environ['DX_WORKSPACE_ID'] = args['workspace_id']
-        require_initialize = True
+        config['DX_WORKSPACE_ID'] = args['workspace_id']
     if args.get('cli_wd') is not None:
-        set_env_var('DX_CLI_WD', args['cli_wd'])
-        require_initialize = True
+        config['DX_CLI_WD'] = args['cli_wd']
     if args.get('security_context') is not None:
-        os.environ['DX_SECURITY_CONTEXT'] = args['security_context']
-        require_initialize = True
+        config['DX_SECURITY_CONTEXT'] = args['security_context']
     if args.get('auth_token') is not None:
-        os.environ['DX_SECURITY_CONTEXT'] = json.dumps({"auth_token": args['auth_token'],
-                                                        "auth_token_type": "Bearer"})
-        require_initialize = True
-
-    if require_initialize:
-        from dxpy import _initialize
-        _initialize(suppress_warning=True)
+        config['DX_SECURITY_CONTEXT'] = json.dumps({"auth_token": args['auth_token'],
+                                                    "auth_token_type": "Bearer"})
 
 extra_args = argparse.ArgumentParser(add_help=False)
 extra_args.add_argument('--extra-args', help=fill("Arguments (in JSON format) to pass to the underlying API method, overriding the default settings", width_adjustment=-24))
@@ -273,6 +260,27 @@ instance_type_arg.add_argument('--instance-type-help',
                                help=fill('Print help for specifying instance types'),
                                action=PrintInstanceTypeHelp)
 
+property_args = argparse.ArgumentParser(add_help=False)
+property_args.add_argument('--property', dest='properties', metavar='KEY=VALUE',
+                           help=(fill('Key-value pair to add as a property; repeat as necessary,',
+                                      width_adjustment=-24) + '\n' +
+                                 fill('e.g. "--property key1=val1 --property key2=val2"',
+                                      width_adjustment=-24, initial_indent=' ', subsequent_indent=' ',
+                                      break_on_hyphens=False)),
+                           action='append')
+
+tag_args = argparse.ArgumentParser(add_help=False)
+tag_args.add_argument('--tag', metavar='TAG', dest='tags',
+                      help=fill('Tag for the resulting execution; repeat as necessary,', width_adjustment=-24) + '\n' +
+                      fill('e.g. "--tag tag1 --tag tag2"', width_adjustment=-24,
+                           break_on_hyphens=False, initial_indent=' ', subsequent_indent=' '),
+                      action='append')
+
+contains_phi = argparse.ArgumentParser(add_help=False)
+contains_phi.add_argument('--phi', dest='containsPHI', choices=["true", "false"],
+                          help='If set to true, only projects that contain PHI data will be retrieved. ' +
+                          'If set to false, only projects that do not contain PHI data will be retrieved.')
+
 def _parse_inst_type(thing):
     if thing.strip().startswith('{'):
         try:
@@ -281,6 +289,7 @@ def _parse_inst_type(thing):
             raise DXCLIError("Error while parsing JSON value for --instance-type")
     else:
         return thing
+
 
 def process_instance_type_arg(args, for_workflow=False):
     if args.instance_type:
@@ -301,3 +310,30 @@ def process_instance_type_arg(args, for_workflow=False):
         else:
             # is a string
             args.instance_type = _parse_inst_type(args.instance_type)
+
+
+def get_update_project_args(args):
+    input_params = {}
+    if args.name is not None:
+        input_params["name"] = args.name
+    if args.summary is not None:
+        input_params["summary"] = args.summary
+    if args.description is not None:
+        input_params["description"] = args.description
+    if args.protected is not None:
+        input_params["protected"] = True if args.protected == 'true' else False
+    if args.restricted is not None:
+        input_params["restricted"] = True if args.restricted == 'true' else False
+    if args.containsPHI is not None:
+        input_params["containsPHI"] = True if args.containsPHI == 'true' else False
+    if args.bill_to is not None:
+        input_params["billTo"] = args.bill_to
+    return input_params
+
+
+def process_phi_param(args):
+    if args.containsPHI is not None:
+        if args.containsPHI == "true":
+            args.containsPHI = True
+        elif args.containsPHI == "false":
+            args.containsPHI = False

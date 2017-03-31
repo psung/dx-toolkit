@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -23,15 +23,22 @@
 using namespace std;
 
 namespace dx {
+  boost::mutex Log::mtx;
   Log::~Log() {
-    cerr << endl <<  oss.str();
+    try {
+      boost::mutex::scoped_lock lock(mtx);
+      cerr << oss.str() << endl;
+    }
+    catch(...) {
+      cerr << oss.str() << endl;
+    }
   }
-  
+
   static int64_t NowTime() {
     static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
     return (boost::posix_time::microsec_clock::universal_time() - epoch).total_milliseconds();
   }
-  
+
   std::string Log::ToString(LogLevel level) {
     switch (level) {
       case logERROR: return "ERROR";
@@ -42,15 +49,18 @@ namespace dx {
       case logDEBUG2: return "DEBUG2";
       case logDEBUG3: return "DEBUG3";
       case logDEBUG4: return "DEBUG4";
+      case logUSERINFO: return "USERINFO";
     }
     return "UNKNOWN_LOG_LEVEL";
   }
 
   ostringstream& Log::Get(LogLevel level) {
-    oss << "[" << NowTime();
-    oss << " " << boost::this_thread::get_id();
-    oss << "] " << Log::ToString(level) << ": ";
-    oss << string((level >= logDEBUG) ? 0: logDEBUG - level, '\t'); // indentation for higher level debug messages
+    if (level != logUSERINFO) {
+      oss << "[" << NowTime();
+      oss << " " << boost::this_thread::get_id();
+      oss << "] " << Log::ToString(level) << ": ";
+      oss << string((level >= logDEBUG) ? 0: logDEBUG - level, '\t'); // indentation for higher level debug messages
+    }
     return oss;
   }
 

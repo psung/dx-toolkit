@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -20,13 +20,14 @@ object handlers, and its subclass :class:`DXDataObject` is the abstract
 base class for all remote data object handlers.
 """
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import time, copy, re
 
 import dxpy.api
 from ..exceptions import (DXError, DXAPIError, DXFileError, DXGTableError, DXSearchError, DXAppletError,
                           DXJobFailureError, AppError, AppInternalError, DXCLIError)
+from ..compat import basestring
 
 def verify_string_dxid(dxid, expected_classes):
     '''
@@ -96,6 +97,12 @@ class DXObject(object):
             return self._desc[attr]
         except:
             raise AttributeError()
+
+    def describe(self, *args, **kwargs):
+        '''
+        Avoid infinite recursion in __getattr__ if describe is not defined.
+        '''
+        raise NotImplementedError()
 
     def set_id(self, dxid):
         '''
@@ -295,25 +302,41 @@ class DXDataObject(DXObject):
 
         return self._proj
 
-    def describe(self, incl_properties=False, incl_details=False, **kwargs):
+    def describe(self, incl_properties=False, incl_details=False, fields=None, default_fields=None, **kwargs):
         """
-        :param incl_properties: If true, includes the properties of the object in the output
-        :type incl_properties: boolean
-        :param incl_details: If true, includes the details of the object in the output
-        :type incl_details: boolean
+        :param fields: set of fields to include in the output, for
+            example ``{'name', 'modified'}``. The field ``id`` is always
+            implicitly included. If ``fields`` is specified, the default
+            fields are not included (that is, only the fields specified
+            here, and ``id``, are included) unless ``default_fields`` is
+            additionally set to True.
+        :type fields: set or sequence of str
+        :param default_fields: if True, include the default fields in
+            addition to fields requested in ``fields``, if any; if
+            False, only the fields specified in ``fields``, if any, are
+            returned (defaults to False if ``fields`` is specified, True
+            otherwise)
+        :type default_fields: bool
+        :param incl_properties: if true, includes the properties of the
+            object in the output (deprecated; use
+            ``fields={'properties'}, default_fields=True`` instead)
+        :type incl_properties: bool
+        :param incl_details: if true, includes the details of the object
+            in the output (deprecated; use ``fields={'details'},
+            default_fields=True`` instead)
+        :type incl_details: bool
         :returns: Description of the remote object
         :rtype: dict
 
-        Returns a dict with a description of the remote data object. The
-        result includes the key-value pairs as specified in the API
-        documentation for the ``/describe`` method of each data object
-        class. At a minimum, "id", "class", etc. should be available,
-        but different classes of objects may have additional fields.
+        Return a dict with a description of the remote data object.
 
-        If *incl_properties* is set, the output contains an additional
-        key-value pair with key "properties". If *incl_details* is set,
-        the output contains an additional key-value pair with key
-        "details".
+        The result includes the key-value pairs as specified in the API
+        documentation for the ``/describe`` method of each data object
+        class. The API defines some default set of fields that will be
+        included (at a minimum, "id", "class", etc. should be available,
+        and there may be additional fields that vary based on the
+        class); the set of fields may be customized using ``fields`` and
+        ``default_fields``.
 
         Any project-specific metadata fields (name, properties, and
         tags) are obtained from the copy of the object in the project
@@ -327,7 +350,18 @@ class DXDataObject(DXObject):
                 _class=self._class)
             )
 
-        describe_input = dict(properties=incl_properties, details=incl_details)
+        if (incl_properties or incl_details) and (fields is not None or default_fields is not None):
+            raise ValueError('Cannot specify properties or details in conjunction with fields or default_fields')
+
+        if incl_properties or incl_details:
+            describe_input = dict(properties=incl_properties, details=incl_details)
+        else:
+            describe_input = {}
+            if default_fields is not None:
+                describe_input['defaultFields'] = default_fields
+            if fields is not None:
+                describe_input['fields'] = {field_name: True for field_name in fields}
+
         if self._proj is not None:
             describe_input["project"] = self._proj
 
@@ -450,13 +484,13 @@ class DXDataObject(DXObject):
         project associated with the handler.
 
         The following example sets the properties for "name" and
-        "project" for a remote GTable::
+        "project" for a remote file::
 
-            dxgtable.set_properties({"name": "George", "project": "cancer"})
+            dxfile.set_properties({"name": "George", "project": "cancer"})
 
         Subsequently, the following would delete the property "project"::
 
-            dxgtable.set_properties({"project": None})
+            dxfile.set_properties({"project": None})
 
         """
 
@@ -599,9 +633,9 @@ class DXDataObject(DXObject):
 
         '''
 
-        return self.describe(**kwargs)["state"]
+        return self.describe(fields={'state'}, **kwargs)["state"]
 
-    def _wait_on_close(self, timeout=3600*24*7, **kwargs):
+    def _wait_on_close(self, timeout=3600*24*1, **kwargs):
         elapsed = 0
         while True:
             state = self._get_state(**kwargs)
@@ -617,7 +651,8 @@ class DXDataObject(DXObject):
             elapsed += 2
 
 from .dxfile import DXFile, DXFILE_HTTP_THREADS, DEFAULT_BUFFER_SIZE
-from .dxfile_functions import open_dxfile, new_dxfile, download_dxfile, upload_local_file, upload_string
+from .download_all_inputs import download_all_inputs
+from .dxfile_functions import open_dxfile, new_dxfile, download_dxfile, upload_local_file, upload_string, list_subfolders, download_folder
 from .dxgtable import DXGTable, NULL, DXGTABLE_HTTP_THREADS
 from .dxgtable_functions import open_dxgtable, new_dxgtable
 from .dxrecord import DXRecord, new_dxrecord
@@ -627,7 +662,8 @@ from .dxanalysis import DXAnalysis
 from .dxapplet import DXExecutable, DXApplet
 from .dxapp import DXApp
 from .dxworkflow import DXWorkflow, new_dxworkflow
-from .auth import user_info
+from .auth import user_info, whoami
 from .dxdataobject_functions import dxlink, is_dxlink, get_dxlink_ids, get_handler, describe, get_details, remove
 from .search import (find_data_objects, find_executions, find_jobs, find_analyses, find_projects, find_apps,
-                     find_one_data_object, find_one_project, find_one_app)
+                     find_one_data_object, find_one_project, find_one_app, resolve_data_objects, find_orgs,
+                     org_find_members, org_find_projects, org_find_apps)

@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -14,17 +14,18 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import os, sys, json, subprocess, pipes
 import collections, datetime
 
 import dxpy
-from dxpy.utils.describe import (get_field_from_jbor, get_job_from_jbor, get_index_from_jbor,
-                                 is_job_ref, job_output_to_str, JOB_STATES)
-from dxpy.utils.printing import (GREEN, BLUE, BOLD, ENDC, fill)
-from dxpy.utils.resolver import is_localjob_id
-from dxpy.compat import open, str, environ, USING_PYTHON2
+from .describe import (get_field_from_jbor, get_job_from_jbor, get_index_from_jbor,
+                       is_job_ref, job_output_to_str, JOB_STATES)
+from .printing import (GREEN, BLUE, BOLD, ENDC, fill)
+from .resolver import is_localjob_id
+from ..compat import open, str, environ, USING_PYTHON2, basestring
+from . import file_load_utils
 
 def exit_with_error(msg):
     '''
@@ -326,8 +327,10 @@ def run_one_entry_point(job_id, function, input_hash, run_spec, depends_on, name
         # Save job input to env vars
         env_path = os.path.join(job_homedir, 'environment')
         with open(env_path, 'w') as fd:
-            # Following code is what is used to generate env vars on the remote worker
-            fd.write("\n".join(["export {k}=( {vlist} )".format(k=k, vlist=" ".join([pipes.quote(vitem if isinstance(vitem, basestring) else json.dumps(vitem)) for vitem in v])) if isinstance(v, list) else "export {k}={v}".format(k=k, v=pipes.quote(v if isinstance(v, basestring) else json.dumps(v))) for k, v in input_hash.items()]))
+            job_input_file = os.path.join(job_homedir, 'job_input.json')
+            var_defs_hash = file_load_utils.gen_bash_vars(job_input_file, job_homedir=job_homedir)
+            for key, val in var_defs_hash.iteritems():
+                fd.write("{}={}\n".format(key, val))
 
     print(BOLD() + 'Logs:' + ENDC())
     start_time = datetime.datetime.now()

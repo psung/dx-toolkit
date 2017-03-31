@@ -1,3 +1,89 @@
+DNAnexus Upload Agent 1.5.24 <support@dnanexus.com>, 2017-Mar-16
+----------------------------------------------------------------
+  * Build on Windows without recompiling C++ dependencies
+
+DNAnexus Upload Agent 1.5.23 <support@dnanexus.com>, 2017-Mar-02
+----------------------------------------------------------------
+  * Fix recursive filed upload on Windows
+
+DNAnexus Upload Agent 1.5.22 <support@dnanexus.com>, 2017-Feb-23
+----------------------------------------------------------------
+  * Fix Upload agent now does not gzip compress .gz files on Ubuntu 14.04
+  * Fix Minor log message fix if file is already uploaded
+
+DNAnexus Upload Agent 1.5.21 <support@dnanexus.com>, 2017-Feb-02
+----------------------------------------------------------------
+  * Add support to build of upload agent on RHEL7
+
+DNAnexus Upload Agent 1.5.20 <support@dnanexus.com>, 2016-Oct-20
+----------------------------------------------------------------
+  * Add option to read data from stdin
+  * Add --test flag to run connectivity diagnostics
+
+DNAnexus Upload Agent 1.5.19 <support@dnanexus.com>, 2016-Sep-22
+----------------------------------------------------------------
+  * UA supplies nonce to /file/new for improved resilience
+
+DNAnexus Upload Agent 1.5.18 <support@dnanexus.com>, 2016-Sep-03
+----------------------------------------------------------------
+  * Allow file limit to be overridden
+  * Fix for false positive duplicate detection in ua --recursive
+
+DNAnexus Upload Agent 1.5.17 <support@dnanexus.com>, 2016-Jul-14
+----------------------------------------------------------------
+  * [PTFM-18415] Do not print "Upload throttling is disabled" message
+
+DNAnexus Upload Agent 1.5.16 <support@dnanexus.com>, 2016-Jun-23
+----------------------------------------------------------------
+  * PTFM-5291 Recursive directory uploads in ua
+
+DNAnexus Upload Agent 1.5.15 <support@dnanexus.com>, 2016-Jun-16
+----------------------------------------------------------------
+  * PTFM-14108 Fixed race condition in the UA logging
+
+DNAnexus Upload Agent 1.5.14 <support@dnanexus.com>, 2016-Apr-28
+----------------------------------------------------------------
+  * Fixed the help string for the visibility option
+  * PTFM-17813 Build dx-verify-file and dxcpp w/ MinGW
+
+DNAnexus Upload Agent 1.5.13 <support@dnanexus.com>, 2016-Apr-07
+----------------------------------------------------------------
+  * fixing the mac build
+  * PTFM-16676 Allow upload agent to set file metadata
+
+DNAnexus Upload Agent 1.5.12 <support@dnanexus.com>, 2016-Mar-24
+----------------------------------------------------------------
+  * Better diagnostics when S3 errors are encountered
+  * Improvements to memory management
+
+DNAnexus Upload Agent 1.5.11 <support@dnanexus.com>, 2015-Sep-16
+----------------------------------------------------------------
+  * PTFM-16030 Support proxy S3 API endpoints in UA
+
+DNAnexus Upload Agent 1.5.10 <support@dnanexus.com>, 2015-Jul-01
+----------------------------------------------------------------
+  * Use upload API v2
+
+DNAnexus Upload Agent 1.5.9 <support@dnanexus.com>, 2015-Jun-10
+---------------------------------------------------------------
+  * Adding several configuration options which should prevent uploads from getting stuck
+
+DNAnexus Upload Agent 1.5.8 <support@dnanexus.com>, 2015-May-13
+---------------------------------------------------------------
+  * Check that all chunks are marked as complete before closing an uploaded file.  Will retry non-complete chunks up to 3 times.
+
+DNAnexus Upload Agent 1.5.7 <support@dnanexus.com>, 2015-Feb-05
+---------------------------------------------------------------
+  * Minor documentation update
+
+DNAnexus Upload Agent 1.5.6 <support@dnanexus.com>, 2015-Jan-07
+---------------------------------------------------------------
+  * build using clang
+
+DNAnexus Upload Agent 1.5.5 <support@dnanexus.com>, 2014-Nov-12
+---------------------------------------------------------------
+  * Deadvertise options for running import apps.
+
 DNAnexus Upload Agent 1.5.4 <support@dnanexus.com>, 2014-Jun-10
 ---------------------------------------------------------------
   * Support for 503/Retry-After to improve resilience during apiserver maintenance.

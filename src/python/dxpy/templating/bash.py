@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -17,7 +17,7 @@
 '''
 bash templating code
 '''
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 from ..utils.printing import fill
 
@@ -26,6 +26,10 @@ def get_interpreter():
 
 def get_path():
     return 'bash'
+
+
+def get_array_output_str(output_param_name, output_param_class):
+    return '    for i in "${!' + output_param_name + '[@]}"; do\n        dx-jobutil-add-output ' + output_param_name + ' "${' + output_param_name + '[$i]}" --class=' + output_param_class + '\n    done'
 
 def get_strings(app_json,
                 required_file_input_names, optional_file_input_names,
@@ -71,7 +75,9 @@ To recover the original filenames, you can use the output of "dx describe "$vari
 and add output variables to your job's output as appropriate for the output class.  Run
 \"dx-jobutil-add-output -h\" for more information on what it does.''',
                            initial_indent='    # ', subsequent_indent='    # ', width=80) + '\n\n'
-        outputs_str += "\n".join(["    dx-jobutil-add-output " + output_param['name'] + ' "$' + output_param['name'] + '" --class=' + output_param['class'] for output_param in app_json['outputSpec']])
+        outputs_str += "\n".join(["    dx-jobutil-add-output " + output_param['name'] + ' "$' + output_param['name'] + '" --class=' + output_param['class'] if 'array' not in output_param['class']
+                                  else get_array_output_str(output_param['name'], output_param['class'])
+                                  for output_param in app_json['outputSpec']])
     elif 'outputSpec' not in app_json:
         outputs_str = "\n" + fill('''No output spec is specified, but
 if you would like to add output fields, you can add invocations of the

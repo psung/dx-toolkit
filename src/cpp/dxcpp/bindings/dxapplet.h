@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -32,7 +32,7 @@
 /// To create a new applet object, consider using the <code>dx build</code> command-line
 /// tool in the DNAnexus SDK.
 ///
-/// See <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets">Applets</a> in the
+/// See <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points">Applets</a> in the
 /// API specification for more information.
 ///
 
@@ -87,7 +87,7 @@ namespace dx {
      * Creates a %DXApplet handler for the specified remote applet.
      *
      * @param dxlink A JSON representing a <a
-     * href="https://wiki.dnanexus.com/API-Specification-v1.1.0/Details-and-Links#Linking">DNAnexus link</a>.
+     * href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Details-and-Links#Linking">DNAnexus link</a>.
      *  You may also use the extended form: {"$dnanexus_link": {"project": proj-id, "id": obj-id}}.
      */
     DXApplet(const dx::JSON &dxlink) { setIDs(dxlink); }

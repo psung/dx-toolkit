@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -16,7 +16,7 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-# Usage: fix_shebang_lines.sh DIRNAME [--debian-system-install]
+# Usage: fix_shebang_lines.sh DIRNAME [--debian-system-install] [interpreter]
 #   Rewrites shebang lines for all Python scripts in DIRNAME.
 
 dirname=$1
@@ -26,27 +26,22 @@ fi
 
 msg="Please source the environment file at the root of dx-toolkit."
 if [[ $2 == "--debian-system-install" ]]; then
-  msg="Please source the environment file /etc/profile.d/dnanexus.environment."
+    msg="Please source the environment file /etc/profile.d/dnanexus.environment.sh."
+    shift
 fi
 
-# setuptools bakes the path of the Python interpreter into all installed Python
-# scripts. Rewrite it back to the more portable form "/usr/bin/env python",
-# since we don't always know where the right interpreter is on the target
-# system.
-#
-# Also, insert a stub that tries to detect when the user hasn't sourced the
-# environment file and prints a warning.
-py_header="#!/usr/bin/env python
-import os, sys
-if \"DNANEXUS_HOME\" not in os.environ:
-    sys.stderr.write(\"\"\"***\n*** WARNING: DNANEXUS_HOME is not set. $msg\n***\n\"\"\")
-"
+# * Setuptools bakes the path of the Python interpreter into all
+#   installed Python scripts. Rewrite it back to the more portable form,
+#   since we don't always know where the right interpreter is on the
+#   target system.
+interpreter="/usr/bin/env python"
+if [[ $2 != "" ]]; then
+    interpreter=$2
+fi
 
 for f in "$dirname"/*; do
-    if ! grep -q 'WARNING: DNANEXUS_HOME' "$f"; then
-        if head -n 1 "$f" | egrep -iq "(python|pypy)"; then
-            echo "Rewriting $f to use portable interpreter paths"
-            perl -i -pe 's|^#!/.+|'"$py_header"'| if $. == 1' "$f"
-        fi
+    if head -n 1 "$f" | egrep -iq "(python|pypy)"; then
+        echo "Rewriting $f to use portable interpreter paths"
+        perl -i -pe 's|^#!/.+|'"#!$interpreter"'| if $. == 1' "$f"
     fi
 done

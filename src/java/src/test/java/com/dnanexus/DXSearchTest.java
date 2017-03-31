@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -19,6 +19,7 @@ package com.dnanexus;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -28,7 +29,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.dnanexus.DXSearch.FindResultPage;
 import com.dnanexus.DXSearch.PropertiesQuery;
+import com.dnanexus.DXSearch.TypeQuery;
 import com.dnanexus.DXSearch.VisibilityQuery;
 import com.dnanexus.TestEnvironment.ConfigOption;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -47,7 +50,6 @@ public class DXSearchTest {
 
     @JsonInclude(Include.NON_NULL)
     private static class SampleAppInput {
-        @SuppressWarnings("unused")
         @JsonProperty("input_string")
         public final String inputString;
 
@@ -108,18 +110,17 @@ public class DXSearchTest {
      */
     @Test
     public void testFindDataObjects() {
-        DXRecord moo =
-                DXRecord.newRecord().setProject(testProject).setName("Moo")
-                        .putProperty("sampleId", "1").putProperty("process", "a")
-                        .addTypes(ImmutableList.of("genome")).build().close();
-        DXRecord foo =
-                DXRecord.newRecord().setProject(testProject).setName("foo")
-                        .putProperty("sampleId", "2").addTags(ImmutableList.of("mytag")).build()
-                        .close();
-        DXRecord food =
-                DXRecord.newRecord().setProject(testProject).setName("food")
-                        .putProperty("process", "a").setFolder("/subfolder", true).build().close();
-        DXRecord open = DXRecord.newRecord().setProject(testProject).setName("open").build();
+        DXRecord moo = DXRecord.newRecord().setProject(testProject).setName("Moo")
+                .putProperty("sampleId", "1").putProperty("process", "a")
+                .addTypes(ImmutableList.of("genome", "report")).build().close();
+        DXRecord foo = DXRecord.newRecord().setProject(testProject).setName("foo")
+                .putProperty("sampleId", "2").addTags(ImmutableList.of("mytag"))
+                .addTypes(ImmutableList.of("genome")).build().close();
+        DXRecord food = DXRecord.newRecord().setProject(testProject).setName("food")
+                .putProperty("process", "a").setFolder("/subfolder", true)
+                .addTypes(ImmutableList.of("report")).build().close();
+        DXRecord open = DXRecord.newRecord().setProject(testProject).setName("open")
+                .addTypes(ImmutableList.of("type")).build();
         DXRecord invisible =
                 DXRecord.newRecord().setProject(testProject).setName("invisible")
                         .setVisibility(false).build().close();
@@ -217,7 +218,20 @@ public class DXSearchTest {
         // withTypes
 
         assertEqualsAnyOrder(DXSearch.findDataObjects().inProject(testProject).withType("genome")
-                .execute().asList(), moo);
+                .execute().asList(), moo, foo);
+        assertEqualsAnyOrder(
+                DXSearch.findDataObjects().inProject(testProject)
+                        .withTypes(TypeQuery.allOf("genome", "report")).execute().asList(), moo);
+        assertEqualsAnyOrder(
+                DXSearch.findDataObjects().inProject(testProject)
+                        .withTypes(TypeQuery.anyOf("genome", "report")).execute().asList(), moo,
+                foo, food);
+        assertEqualsAnyOrder(
+                DXSearch.findDataObjects()
+                        .inProject(testProject)
+                        .withTypes(
+                                TypeQuery.anyOf(TypeQuery.allOf("genome", "report"),
+                                        TypeQuery.of("type"))).execute().asList(), moo, open);
 
         // withVisibility
 
@@ -255,11 +269,6 @@ public class DXSearchTest {
     public void testFindDataObjectsByClass() {
         DXRecord record = DXRecord.newRecord().setProject(testProject).setName("arecord").build();
         DXFile file = DXFile.newFile().setProject(testProject).setName("afile").build();
-        DXGTable gtable =
-                DXGTable.newGTable(
-                        ImmutableList.of(ColumnSpecification.getInstance("num_goats",
-                                ColumnType.INT16))).setProject(testProject).setName("agtable")
-                        .build();
         DXApplet applet =
                 DXApplet.newApplet().setProject(testProject).setName("anapplet")
                         .setRunSpecification(RunSpecification.newRunSpec("bash", "").build())
@@ -277,11 +286,6 @@ public class DXSearchTest {
                         .withClassFile().execute().asList());
         Assert.assertEquals(file, fileResult);
         Assert.assertEquals("afile", fileResult.describe().getName());
-        DXGTable gtableResult =
-                Iterables.getOnlyElement(DXSearch.findDataObjects().inProject(testProject)
-                        .withClassGTable().execute().asList());
-        Assert.assertEquals(gtable, gtableResult);
-        Assert.assertEquals("agtable", gtableResult.describe().getName());
         DXApplet appletResult =
                 Iterables.getOnlyElement(DXSearch.findDataObjects().inProject(testProject)
                         .withClassApplet().execute().asList());
@@ -362,6 +366,16 @@ public class DXSearchTest {
                         .withTags(
                                 DXSearch.TagsQuery.anyOf(DXSearch.TagsQuery.allOf("a", "b"),
                                         DXSearch.TagsQuery.of("c"))).buildRequestHash()));
+
+        Assert.assertEquals(DXJSON.parseJson("{\"type\": \"a\"}"),
+                mapper.valueToTree(DXSearch.findDataObjects().withType("a").buildRequestHash()));
+        Assert.assertEquals(DXJSON
+                .parseJson("{\"type\": {\"$or\": [{\"$and\": [\"a\", \"b\"]}, \"c\"]}}"), mapper
+                .valueToTree(DXSearch
+                        .findDataObjects()
+                        .withTypes(
+                                DXSearch.TypeQuery.anyOf(DXSearch.TypeQuery.allOf("a", "b"),
+                                        DXSearch.TypeQuery.of("c"))).buildRequestHash()));
 
         Assert.assertEquals(
                 DXJSON.parseJson("{\"properties\": {\"foo\": true}}"),
@@ -459,6 +473,50 @@ public class DXSearchTest {
     }
 
     /**
+     * Tests paging through results.
+     */
+    @Test
+    public void testFindDataObjectsWithCustomPaging() {
+        List<DXRecord> records = Lists.newArrayList();
+        Set<String> recordIds = Sets.newHashSet();
+        for (int i = 0; i < 8; ++i) {
+            DXRecord record =
+                    DXRecord.newRecord().setProject(testProject)
+                            .setName("foo" + Integer.toString(i)).build();
+            records.add(record);
+            recordIds.add(record.getId());
+        }
+        List<DXRecord> outputRecords =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
+                        .withClassRecord().execute().asList();
+        Assert.assertEquals(8, outputRecords.size());
+
+        List<DXRecord> outputRecordsWithPaging =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
+                        .withClassRecord().execute(3).asList();
+        Assert.assertEquals(outputRecords, outputRecordsWithPaging);
+        Set<String> outputRecordIds = Sets.newHashSet();
+        for (DXRecord record : outputRecordsWithPaging) {
+            outputRecordIds.add(record.getId());
+        }
+
+        Assert.assertEquals(recordIds, outputRecordIds);
+
+        List<DXRecord> outputRecordStreamWithPaging =
+                ImmutableList.copyOf(DXSearch.findDataObjects().inProject(testProject)
+                        .nameMatchesGlob("foo*").withClassRecord().execute(3));
+        Assert.assertEquals(outputRecords, outputRecordStreamWithPaging);
+
+        // Checking an amount of fetched pages
+        DXSearch.FindDataObjectsResult<DXRecord> findResult =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*").withClassRecord().execute(3);
+        Iterator<DXRecord> iter = findResult.iterator();
+        List<DXRecord> iterativelyFetchedRecords = Lists.newArrayList(iter);
+        Assert.assertEquals(outputRecords, iterativelyFetchedRecords);
+        Assert.assertEquals(3, ((DXSearch.FindDataObjectsResult<DXRecord>.ResultIterator) iter).pageNo());
+    }
+
+    /**
      * Tests retrieving Describe output with findDataObjects.
      */
     @Test
@@ -467,9 +525,6 @@ public class DXSearchTest {
                 .putProperty("sampleId", "1234").build();
         DXFile.newFile().setProject(testProject).setName("file1").putProperty("sampleId", "2345")
                 .build();
-        DXGTable.newGTable(
-                ImmutableList.of(ColumnSpecification.getInstance("num_goats", ColumnType.INT16)))
-                .setProject(testProject).setName("gtable1").build();
         DXApplet.newApplet().setProject(testProject).setName("applet1")
                 .setRunSpecification(RunSpecification.newRunSpec("bash", "").build()).build();
         DXWorkflow.newWorkflow().setProject(testProject).setName("workflow1").build();
@@ -484,14 +539,14 @@ public class DXSearchTest {
         Assert.assertEquals(recordResult.getCachedDescribe().getProperties().get("sampleId"),
                 "1234");
 
-        DXGTable gtableResult =
-                Iterables.getOnlyElement(DXSearch.findDataObjects().withClassGTable()
-                        .inProject(testProject).nameMatchesExactly("gtable1")
+        recordResult =
+                Iterables.getOnlyElement(DXSearch.findDataObjects().withClassRecord()
+                        .inProject(testProject).nameMatchesExactly("record1")
                         .includeDescribeOutput().execute().asList());
-        Assert.assertEquals(gtableResult.getCachedDescribe().getName(), "gtable1");
+        Assert.assertEquals(recordResult.getCachedDescribe().getName(), "record1");
         // Called includeDescribeOutput with default settings so properties should NOT be returned
         try {
-            gtableResult.getCachedDescribe().getProperties();
+            recordResult.getCachedDescribe().getProperties();
             Assert.fail("Expected IllegalStateException to be thrown because properties should not have been returned");
         } catch (IllegalStateException e) {
             // Expected
@@ -530,39 +585,92 @@ public class DXSearchTest {
     }
 
     /**
-     * Tests paging through results.
+     * Tests paging through results using API for explicit pagination.
      */
     @Test
-    public void testFindDataObjectsWithPaging() {
-        List<DXRecord> records = Lists.newArrayList();
-        Set<String> recordIds = Sets.newHashSet();
+    public void testFindDataObjectsWithExplicitPagination() {
         for (int i = 0; i < 8; ++i) {
-            DXRecord record =
-                    DXRecord.newRecord().setProject(testProject)
-                            .setName("foo" + Integer.toString(i)).build();
-            records.add(record);
-            recordIds.add(record.getId());
+            DXRecord.newRecord().setProject(testProject).setName("foo" + Integer.toString(i)).build();
         }
         List<DXRecord> outputRecords =
                 DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
                         .withClassRecord().execute().asList();
         Assert.assertEquals(8, outputRecords.size());
 
-        List<DXRecord> outputRecordsWithPaging =
-                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*")
-                        .withClassRecord().execute(3).asList();
-        Assert.assertEquals(outputRecords, outputRecordsWithPaging);
-        Set<String> outputRecordIds = Sets.newHashSet();
-        for (DXRecord record : outputRecordsWithPaging) {
-            outputRecordIds.add(record.getId());
+        DXSearch.FindDataObjectsResult<DXRecord> result =
+                DXSearch.findDataObjects().inProject(testProject).nameMatchesGlob("foo*").withClassRecord().execute();
+        FindResultPage<DXRecord> page = result.getFirstPage(3);
+        Assert.assertEquals(3, page.size());
+        Assert.assertEquals(true, page.hasNextPage());
+
+        Iterator<DXRecord> iter = page.iterator();
+        for (int i = 0; i < 3; i++) {
+            Assert.assertEquals(true, iter.hasNext());
+            DXRecord r = iter.next();
+            Assert.assertEquals(outputRecords.get(i).getId(), r.getId());
+        }
+        Assert.assertEquals(false, iter.hasNext());
+
+        page = result.getSubsequentPage(page.getNext(), 3);
+        Assert.assertEquals(3, page.size());
+        Assert.assertEquals(true, page.hasNextPage());
+
+        iter = page.iterator();
+        for (int i = 3; i < 6; i++) {
+            Assert.assertEquals(true, iter.hasNext());
+            DXRecord r = iter.next();
+            Assert.assertEquals(outputRecords.get(i).getId(), r.getId());
+        }
+        Assert.assertEquals(false, iter.hasNext());
+
+        page = result.getSubsequentPage(page.getNext(), 3);
+        Assert.assertEquals(2, page.size());
+        Assert.assertEquals(false, page.hasNextPage());
+
+        iter = page.iterator();
+        for (int i = 6; i < 8; i++) {
+            Assert.assertEquals(true, iter.hasNext());
+            DXRecord r = iter.next();
+            Assert.assertEquals(outputRecords.get(i).getId(), r.getId());
+        }
+        Assert.assertEquals(false, iter.hasNext());
+
+        // Checking when the requested page size is greater than amount of items
+        page = result.getFirstPage(100);
+        Assert.assertEquals(8, page.size());
+        Assert.assertEquals(false, page.hasNextPage());
+        int i = 0;
+        for (DXRecord r : page) {
+            Assert.assertEquals(outputRecords.get(i++).getId(), r.getId());
         }
 
-        Assert.assertEquals(recordIds, outputRecordIds);
-
-        List<DXRecord> outputRecordStreamWithPaging =
-                ImmutableList.copyOf(DXSearch.findDataObjects().inProject(testProject)
-                        .nameMatchesGlob("foo*").withClassRecord().execute(3));
-        Assert.assertEquals(outputRecords, outputRecordStreamWithPaging);
+        // Checking invalid arguments
+        try {
+            result.getFirstPage(0);
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+        }
+        try {
+            result.getFirstPage(-2);
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            result.getSubsequentPage(mapper.createObjectNode(), 0);
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+        }
+        try {
+            result.getSubsequentPage(mapper.createObjectNode(), -1);
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+        }
+        try {
+            result.getSubsequentPage(null, 10);
+            Assert.fail();
+        } catch (NullPointerException e) {
+        }
     }
 
     /**

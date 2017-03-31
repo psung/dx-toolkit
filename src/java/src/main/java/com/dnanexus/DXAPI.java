@@ -63,9 +63,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the analysisAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -108,9 +109,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -247,9 +249,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the analysisDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -292,9 +295,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -431,9 +435,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the analysisRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -476,9 +481,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -615,9 +621,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the analysisSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -660,9 +667,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -799,9 +807,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisTerminate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "terminate",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the analysisTerminate method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -844,9 +853,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T analysisTerminate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "terminate",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -983,9 +993,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addAuthorizedUsers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appAddAuthorizedUsers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1028,9 +1039,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addAuthorizedUsers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -1167,9 +1179,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddCategories(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addCategories",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appAddCategories method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1212,9 +1225,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddCategories(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addCategories",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -1351,9 +1365,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddDevelopers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addDevelopers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appAddDevelopers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1396,9 +1411,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddDevelopers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addDevelopers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -1535,9 +1551,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1580,9 +1597,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -1719,9 +1737,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appDelete(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "delete",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appDelete method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1764,9 +1783,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appDelete(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "delete",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -1903,9 +1923,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -1948,9 +1969,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -2087,9 +2109,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appGet(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "get",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appGet method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -2132,9 +2155,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appGet(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "get",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -2271,9 +2295,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appInstall(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "install",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appInstall method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -2316,9 +2341,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appInstall(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "install",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -2455,9 +2481,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listAuthorizedUsers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appListAuthorizedUsers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -2500,9 +2527,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listAuthorizedUsers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -2639,9 +2667,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListCategories(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listCategories",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appListCategories method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -2684,9 +2713,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListCategories(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listCategories",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -2823,9 +2853,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListDevelopers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listDevelopers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appListDevelopers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -2868,9 +2899,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appListDevelopers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listDevelopers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3007,9 +3039,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appPublish(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "publish",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appPublish method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3052,9 +3085,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appPublish(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "publish",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3191,9 +3225,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeAuthorizedUsers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appRemoveAuthorizedUsers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3236,9 +3271,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveAuthorizedUsers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeAuthorizedUsers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3375,9 +3411,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveCategories(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeCategories",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appRemoveCategories method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3420,9 +3457,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveCategories(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeCategories",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3559,9 +3597,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveDevelopers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeDevelopers",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appRemoveDevelopers method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3604,9 +3643,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveDevelopers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeDevelopers",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3743,9 +3783,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3788,9 +3829,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -3927,9 +3969,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRun(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "run",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appRun method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -3972,9 +4015,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appRun(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "run",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -4111,9 +4155,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appUninstall(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "uninstall",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appUninstall method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -4156,9 +4201,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appUninstall(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "uninstall",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -4295,9 +4341,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appUpdate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "update",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appUpdate method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -4340,9 +4387,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appUpdate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "update",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -4497,8 +4545,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/app/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/app/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -4520,8 +4569,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/app/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/app/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -4652,9 +4702,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -4697,9 +4748,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -4800,7 +4852,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -4820,7 +4872,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -4836,14 +4888,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -4864,7 +4917,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -4881,15 +4934,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the appletDescribe method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -4911,7 +4965,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -4935,7 +4989,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -4958,7 +5012,7 @@ public final class DXAPI {
     /**
      * Invokes the appletDescribe method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -4984,7 +5038,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -5004,7 +5058,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -5020,14 +5074,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletGet(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "get",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletGet method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -5048,7 +5103,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -5065,15 +5120,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletGet(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "get",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the appletGet method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -5095,7 +5151,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -5119,7 +5175,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -5142,7 +5198,7 @@ public final class DXAPI {
     /**
      * Invokes the appletGet method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Fget">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -5204,9 +5260,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletGetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletGetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -5249,9 +5306,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletGetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -5388,9 +5446,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletListProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listProjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletListProjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -5433,9 +5492,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletListProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listProjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -5572,9 +5632,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -5617,9 +5678,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -5756,9 +5818,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRename(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "rename",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletRename method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -5801,9 +5864,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRename(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "rename",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -5904,7 +5968,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -5924,7 +5988,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -5940,14 +6004,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRun(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "run",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletRun method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -5968,7 +6033,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -5985,15 +6050,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletRun(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "run",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the appletRun method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -6015,7 +6081,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -6039,7 +6105,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -6062,7 +6128,7 @@ public final class DXAPI {
     /**
      * Invokes the appletRun method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet-xxxx%2Frun">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -6124,9 +6190,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the appletSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -6169,9 +6236,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -6272,7 +6340,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param outputClass class to deserialize the server reponse to
      *
@@ -6291,7 +6359,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with an empty input using the specified environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param outputClass class to deserialize the server reponse to
      * @param env environment object specifying the auth token and remote server and protocol
@@ -6311,7 +6379,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with the specified input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param inputObject input object (to be JSON serialized to an input hash)
      * @param outputClass class to deserialize the server reponse to
@@ -6326,14 +6394,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/applet/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/applet/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
      * Invokes the appletNew method with the specified input using the specified environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param inputObject input object (to be JSON serialized to an input hash)
      * @param outputClass class to deserialize the server reponse to
@@ -6349,15 +6418,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T appletNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/applet/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/applet/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
     /**
      * Invokes the appletNew method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @return Server response parsed from JSON
      *
@@ -6377,7 +6447,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with the specified input parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param inputParams input parameters to the API call
      *
@@ -6399,7 +6469,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param env environment object specifying the auth token and remote server and protocol
      *
@@ -6421,7 +6491,7 @@ public final class DXAPI {
     /**
      * Invokes the appletNew method with the specified environment and input parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fapplet%2Fnew">API specification</a>.
      *
      * @param inputParams input parameters to the API call
      * @param env environment object specifying the auth token and remote server and protocol
@@ -6481,9 +6551,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerClone(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "clone",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerClone method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -6526,9 +6597,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerClone(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "clone",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -6665,9 +6737,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -6710,9 +6783,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -6845,9 +6919,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerDestroy(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "destroy",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerDestroy method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -6886,9 +6961,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerDestroy(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "destroy",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7017,9 +7093,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerListFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerListFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7062,9 +7139,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerListFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7201,9 +7279,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerMove(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "move",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerMove method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7246,9 +7325,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerMove(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "move",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7385,9 +7465,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerNewFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "newFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerNewFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7430,9 +7511,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerNewFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "newFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7569,9 +7651,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRemoveFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerRemoveFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7614,9 +7697,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRemoveFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7663,7 +7747,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode containerRemoveFolder(String objectId, JsonNode inputParams) {
         return new DXHTTPRequest().request("/" + objectId + "/" + "removeFolder", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
     /**
      * Invokes the containerRemoveFolder method with the specified environment.
@@ -7711,7 +7795,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode containerRemoveFolder(String objectId, JsonNode inputParams, DXEnvironment env) {
         return new DXHTTPRequest(env).request("/" + objectId + "/" + "removeFolder", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
 
     /**
@@ -7753,9 +7837,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRemoveObjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeObjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerRemoveObjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7798,9 +7883,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRemoveObjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeObjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -7847,7 +7933,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode containerRemoveObjects(String objectId, JsonNode inputParams) {
         return new DXHTTPRequest().request("/" + objectId + "/" + "removeObjects", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
     /**
      * Invokes the containerRemoveObjects method with the specified environment.
@@ -7895,7 +7981,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode containerRemoveObjects(String objectId, JsonNode inputParams, DXEnvironment env) {
         return new DXHTTPRequest(env).request("/" + objectId + "/" + "removeObjects", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
 
     /**
@@ -7937,9 +8023,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRenameFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "renameFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the containerRenameFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -7982,9 +8069,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T containerRenameFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "renameFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -8121,9 +8209,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -8166,9 +8255,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -8305,9 +8395,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileAddTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileAddTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -8350,9 +8441,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileAddTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -8489,9 +8581,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileClose(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "close",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileClose method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -8534,9 +8627,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileClose(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "close",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -8673,9 +8767,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -8718,9 +8813,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -8857,9 +8953,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileDownload(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "download",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileDownload method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -8902,9 +8999,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileDownload(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "download",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9041,9 +9139,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileGetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileGetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -9086,9 +9185,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileGetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9225,9 +9325,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileListProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listProjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileListProjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -9270,9 +9371,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileListProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listProjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9409,9 +9511,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -9454,9 +9557,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9593,9 +9697,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRemoveTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileRemoveTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -9638,9 +9743,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRemoveTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9777,9 +9883,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRename(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "rename",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileRename method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -9822,9 +9929,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileRename(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "rename",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -9961,9 +10069,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileSetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -10006,9 +10115,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -10145,9 +10255,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -10190,9 +10301,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -10329,9 +10441,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetVisibility(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setVisibility",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileSetVisibility method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -10374,9 +10487,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileSetVisibility(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setVisibility",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -10513,9 +10627,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileUpload(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "upload",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the fileUpload method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -10558,9 +10673,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileUpload(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "upload",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -10715,8 +10831,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/file/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/file/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -10738,8 +10855,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T fileNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/file/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/file/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -10870,9 +10988,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddRows(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addRows",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableAddRows method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -10915,9 +11034,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddRows(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addRows",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11054,9 +11174,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -11099,9 +11220,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11238,9 +11360,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableAddTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -11283,9 +11406,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableAddTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11422,9 +11546,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableClose(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "close",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableClose method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -11467,9 +11592,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableClose(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "close",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11606,9 +11732,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -11651,9 +11778,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11790,9 +11918,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableGet(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "get",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableGet method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -11835,9 +11964,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableGet(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "get",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -11974,9 +12104,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableGetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableGetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12019,9 +12150,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableGetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -12158,9 +12290,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableListProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listProjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableListProjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12203,9 +12336,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableListProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listProjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -12342,9 +12476,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableNextPart(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "nextPart",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableNextPart method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12387,9 +12522,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableNextPart(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "nextPart",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -12526,9 +12662,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12571,9 +12708,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -12710,9 +12848,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRemoveTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableRemoveTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12755,9 +12894,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRemoveTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -12894,9 +13034,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRename(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "rename",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableRename method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -12939,9 +13080,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableRename(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "rename",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -13078,9 +13220,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableSetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -13123,9 +13266,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -13262,9 +13406,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -13307,9 +13452,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -13446,9 +13592,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetVisibility(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setVisibility",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the gtableSetVisibility method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -13491,9 +13638,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableSetVisibility(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setVisibility",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -13648,8 +13796,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/gtable/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/gtable/new", input, RetryStrategy.UNSAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -13671,8 +13820,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T gtableNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/gtable/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/gtable/new", input, RetryStrategy.UNSAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -13767,7 +13917,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -13787,7 +13937,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -13803,14 +13953,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -13831,7 +13982,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -13848,15 +13999,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobAddTags method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -13878,7 +14030,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -13902,7 +14054,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -13925,7 +14077,7 @@ public final class DXAPI {
     /**
      * Invokes the jobAddTags method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FaddTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -13951,7 +14103,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -13971,7 +14123,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -13987,14 +14139,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14015,7 +14168,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14032,15 +14185,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobDescribe method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -14062,7 +14216,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14086,7 +14240,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14109,7 +14263,7 @@ public final class DXAPI {
     /**
      * Invokes the jobDescribe method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fdescribe">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14135,7 +14289,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14155,7 +14309,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14171,14 +14325,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobGetLog(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getLog",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobGetLog method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14199,7 +14354,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14216,15 +14371,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobGetLog(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getLog",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobGetLog method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -14246,7 +14402,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14270,7 +14426,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14293,7 +14449,7 @@ public final class DXAPI {
     /**
      * Invokes the jobGetLog method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FgetLog">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14319,7 +14475,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14339,7 +14495,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14355,14 +14511,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14383,7 +14540,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14400,15 +14557,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobRemoveTags method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -14430,7 +14588,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14454,7 +14612,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14477,7 +14635,7 @@ public final class DXAPI {
     /**
      * Invokes the jobRemoveTags method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FremoveTags">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14503,7 +14661,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14523,7 +14681,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14539,14 +14697,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14567,7 +14726,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14584,15 +14743,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobSetProperties method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -14614,7 +14774,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14638,7 +14798,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14661,7 +14821,7 @@ public final class DXAPI {
     /**
      * Invokes the jobSetProperties method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2FsetProperties">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14687,7 +14847,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14707,7 +14867,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14723,14 +14883,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobTerminate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "terminate",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the jobTerminate method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -14751,7 +14912,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -14768,15 +14929,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobTerminate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "terminate",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the jobTerminate method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -14798,7 +14960,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14822,7 +14984,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14845,7 +15007,7 @@ public final class DXAPI {
     /**
      * Invokes the jobTerminate method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob-xxxx%2Fterminate">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -14871,7 +15033,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param outputClass class to deserialize the server reponse to
      *
@@ -14890,7 +15052,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with an empty input using the specified environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param outputClass class to deserialize the server reponse to
      * @param env environment object specifying the auth token and remote server and protocol
@@ -14910,7 +15072,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with the specified input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param inputObject input object (to be JSON serialized to an input hash)
      * @param outputClass class to deserialize the server reponse to
@@ -14925,14 +15087,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/job/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/job/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
      * Invokes the jobNew method with the specified input using the specified environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param inputObject input object (to be JSON serialized to an input hash)
      * @param outputClass class to deserialize the server reponse to
@@ -14948,15 +15111,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T jobNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/job/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/job/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
     /**
      * Invokes the jobNew method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @return Server response parsed from JSON
      *
@@ -14976,7 +15140,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with the specified input parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param inputParams input parameters to the API call
      *
@@ -14998,7 +15162,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param env environment object specifying the auth token and remote server and protocol
      *
@@ -15020,7 +15184,7 @@ public final class DXAPI {
     /**
      * Invokes the jobNew method with the specified environment and input parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets and Entry Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Applets-and-Entry-Points#API-method%3A-%2Fjob%2Fnew">API specification</a>.
      *
      * @param inputParams input parameters to the API call
      * @param env environment object specifying the auth token and remote server and protocol
@@ -15092,8 +15256,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T notificationsGet(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/notifications/get", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/notifications/get", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -15113,8 +15278,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T notificationsGet(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/notifications/get", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/notifications/get", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -15249,8 +15415,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T notificationsMarkRead(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/notifications/markRead", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/notifications/markRead", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -15270,8 +15437,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T notificationsMarkRead(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/notifications/markRead", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/notifications/markRead", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -15356,6 +15524,1669 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the orgDescribe method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgDescribe(String objectId, Class<T> outputClass) {
+        return orgDescribe(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgDescribe method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "describe",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgDescribe(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgDescribe(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgDescribe method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgDescribe method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgDescribe(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgDescribe(String objectId) {
+        return orgDescribe(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgDescribe method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgDescribe(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgDescribe(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "describe", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgDescribe method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgDescribe(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgDescribe(String objectId, DXEnvironment env) {
+        return orgDescribe(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgDescribe method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fdescribe">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgDescribe(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgDescribe(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "describe", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgFindMembers method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindMembers(String objectId, Class<T> outputClass) {
+        return orgFindMembers(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgFindMembers method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindMembers(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "findMembers",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgFindMembers method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindMembers(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgFindMembers(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgFindMembers method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindMembers(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "findMembers",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgFindMembers method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindMembers(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindMembers(String objectId) {
+        return orgFindMembers(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgFindMembers method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindMembers(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindMembers(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "findMembers", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgFindMembers method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindMembers(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindMembers(String objectId, DXEnvironment env) {
+        return orgFindMembers(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgFindMembers method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindMembers">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindMembers(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindMembers(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "findMembers", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgFindProjects method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindProjects(String objectId, Class<T> outputClass) {
+        return orgFindProjects(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgFindProjects method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "findProjects",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgFindProjects method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindProjects(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgFindProjects(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgFindProjects method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "findProjects",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgFindProjects method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindProjects(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindProjects(String objectId) {
+        return orgFindProjects(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgFindProjects method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindProjects(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindProjects(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "findProjects", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgFindProjects method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindProjects(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindProjects(String objectId, DXEnvironment env) {
+        return orgFindProjects(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgFindProjects method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindProjects">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindProjects(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindProjects(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "findProjects", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgFindApps method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindApps(String objectId, Class<T> outputClass) {
+        return orgFindApps(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgFindApps method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindApps(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "findApps",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgFindApps method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindApps(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgFindApps(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgFindApps method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgFindApps(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "findApps",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgFindApps method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindApps(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindApps(String objectId) {
+        return orgFindApps(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgFindApps method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindApps(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindApps(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "findApps", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgFindApps method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindApps(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindApps(String objectId, DXEnvironment env) {
+        return orgFindApps(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgFindApps method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FfindApps">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgFindApps(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgFindApps(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "findApps", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgInvite method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgInvite(String objectId, Class<T> outputClass) {
+        return orgInvite(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgInvite method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgInvite(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "invite",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgInvite method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgInvite(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgInvite(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgInvite method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgInvite(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "invite",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgInvite method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgInvite(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgInvite(String objectId) {
+        return orgInvite(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgInvite method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgInvite(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgInvite(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "invite", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgInvite method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgInvite(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgInvite(String objectId, DXEnvironment env) {
+        return orgInvite(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgInvite method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Finvite">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgInvite(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgInvite(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "invite", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgRemoveMember method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgRemoveMember(String objectId, Class<T> outputClass) {
+        return orgRemoveMember(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgRemoveMember method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgRemoveMember(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "removeMember",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgRemoveMember method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgRemoveMember(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgRemoveMember(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgRemoveMember method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgRemoveMember(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "removeMember",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgRemoveMember method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgRemoveMember(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgRemoveMember(String objectId) {
+        return orgRemoveMember(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgRemoveMember method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgRemoveMember(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgRemoveMember(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "removeMember", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgRemoveMember method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgRemoveMember(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgRemoveMember(String objectId, DXEnvironment env) {
+        return orgRemoveMember(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgRemoveMember method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FremoveMember">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgRemoveMember(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgRemoveMember(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "removeMember", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgSetMemberAccess method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgSetMemberAccess(String objectId, Class<T> outputClass) {
+        return orgSetMemberAccess(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgSetMemberAccess(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "setMemberAccess",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgSetMemberAccess(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgSetMemberAccess(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgSetMemberAccess(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "setMemberAccess",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgSetMemberAccess method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgSetMemberAccess(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgSetMemberAccess(String objectId) {
+        return orgSetMemberAccess(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgSetMemberAccess(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgSetMemberAccess(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "setMemberAccess", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgSetMemberAccess(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgSetMemberAccess(String objectId, DXEnvironment env) {
+        return orgSetMemberAccess(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgSetMemberAccess method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2FsetMemberAccess">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgSetMemberAccess(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgSetMemberAccess(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "setMemberAccess", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgUpdate method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgUpdate(String objectId, Class<T> outputClass) {
+        return orgUpdate(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgUpdate method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgUpdate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "update",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the orgUpdate method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgUpdate(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return orgUpdate(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgUpdate method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgUpdate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "update",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the orgUpdate method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgUpdate(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgUpdate(String objectId) {
+        return orgUpdate(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgUpdate method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgUpdate(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgUpdate(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "update", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgUpdate method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgUpdate(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgUpdate(String objectId, DXEnvironment env) {
+        return orgUpdate(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgUpdate method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg-xxxx%2Fupdate">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgUpdate(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgUpdate(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "update", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the orgNew method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgNew(Class<T> outputClass) {
+        return orgNew(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the orgNew method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgNew(Class<T> outputClass, DXEnvironment env) {
+        return orgNew(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the orgNew method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/org/new", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the orgNew method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T orgNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/org/new", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the orgNew method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgNew(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgNew() {
+        return orgNew(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the orgNew method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgNew(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgNew(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/org/new", inputParams, RetryStrategy.UNSAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the orgNew method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgNew(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgNew(DXEnvironment env) {
+        return orgNew(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the orgNew method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Organizations#API-method%3A-%2Forg%2Fnew">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #orgNew(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode orgNew(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/org/new", inputParams, RetryStrategy.UNSAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the projectAddTags method with an empty input, deserializing to an object of the specified class.
      *
      * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FaddTags">API specification</a>.
@@ -15394,9 +17225,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -15439,9 +17271,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -15578,9 +17411,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectClone(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "clone",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectClone method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -15623,9 +17457,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectClone(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "clone",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -15726,7 +17561,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -15746,7 +17581,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -15762,14 +17597,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDecreasePermissions(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "decreasePermissions",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectDecreasePermissions method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -15790,7 +17626,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -15807,15 +17643,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDecreasePermissions(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "decreasePermissions",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the projectDecreasePermissions method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -15837,7 +17674,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -15861,7 +17698,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -15884,7 +17721,7 @@ public final class DXAPI {
     /**
      * Invokes the projectDecreasePermissions method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2FdecreasePermissions">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -15946,9 +17783,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -15991,9 +17829,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -16130,9 +17969,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDestroy(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "destroy",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectDestroy method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -16175,9 +18015,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectDestroy(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "destroy",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -16314,9 +18155,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectInvite(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "invite",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectInvite method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -16359,9 +18201,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectInvite(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "invite",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -16462,7 +18305,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -16482,7 +18325,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -16498,14 +18341,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectLeave(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "leave",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectLeave method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -16526,7 +18370,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -16543,15 +18387,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectLeave(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "leave",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the projectLeave method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -16573,7 +18418,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -16597,7 +18442,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -16620,7 +18465,7 @@ public final class DXAPI {
     /**
      * Invokes the projectLeave method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Project-Permissions-and-Sharing#API-method%3A-%2Fproject-xxxx%2Fleave">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -16682,9 +18527,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectListFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectListFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -16727,9 +18573,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectListFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -16866,9 +18713,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectMove(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "move",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectMove method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -16911,9 +18759,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectMove(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "move",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17050,9 +18899,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectNewFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "newFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectNewFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -17095,9 +18945,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectNewFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "newFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17234,9 +19085,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectRemoveFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -17279,9 +19131,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17328,7 +19181,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode projectRemoveFolder(String objectId, JsonNode inputParams) {
         return new DXHTTPRequest().request("/" + objectId + "/" + "removeFolder", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
     /**
      * Invokes the projectRemoveFolder method with the specified environment.
@@ -17376,7 +19229,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode projectRemoveFolder(String objectId, JsonNode inputParams, DXEnvironment env) {
         return new DXHTTPRequest(env).request("/" + objectId + "/" + "removeFolder", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
 
     /**
@@ -17418,9 +19271,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveObjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeObjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectRemoveObjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -17463,9 +19317,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveObjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeObjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17512,7 +19367,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode projectRemoveObjects(String objectId, JsonNode inputParams) {
         return new DXHTTPRequest().request("/" + objectId + "/" + "removeObjects", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
     /**
      * Invokes the projectRemoveObjects method with the specified environment.
@@ -17560,7 +19415,7 @@ public final class DXAPI {
     @Deprecated
     public static JsonNode projectRemoveObjects(String objectId, JsonNode inputParams, DXEnvironment env) {
         return new DXHTTPRequest(env).request("/" + objectId + "/" + "removeObjects", inputParams,
-                RetryStrategy.SAFE_TO_RETRY);
+                RetryStrategy.UNSAFE_TO_RETRY);
     }
 
     /**
@@ -17602,9 +19457,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -17647,9 +19503,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17786,9 +19643,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRenameFolder(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "renameFolder",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectRenameFolder method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -17831,9 +19689,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectRenameFolder(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "renameFolder",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -17970,9 +19829,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -18015,9 +19875,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -18154,9 +20015,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectTransfer(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "transfer",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectTransfer method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -18199,9 +20061,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectTransfer(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "transfer",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -18338,9 +20201,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectUpdate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "update",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the projectUpdate method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -18383,9 +20247,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectUpdate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "update",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -18484,6 +20349,192 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the projectUpdateSponsorship method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T projectUpdateSponsorship(String objectId, Class<T> outputClass) {
+        return projectUpdateSponsorship(objectId, mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with the given input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T projectUpdateSponsorship(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/" + objectId + "/" + "updateSponsorship",
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with an empty input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T projectUpdateSponsorship(String objectId, Class<T> outputClass, DXEnvironment env) {
+        return projectUpdateSponsorship(objectId, mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with the given input using the given environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Response object
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T projectUpdateSponsorship(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+            new DXHTTPRequest(env).request("/" + objectId + "/" + "updateSponsorship",
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    }
+
+    /**
+     * Invokes the projectUpdateSponsorship method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #projectUpdateSponsorship(String, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode projectUpdateSponsorship(String objectId) {
+        return projectUpdateSponsorship(objectId, mapper.createObjectNode());
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with the specified parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #projectUpdateSponsorship(String, Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode projectUpdateSponsorship(String objectId, JsonNode inputParams) {
+        return new DXHTTPRequest().request("/" + objectId + "/" + "updateSponsorship", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #projectUpdateSponsorship(String, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode projectUpdateSponsorship(String objectId, DXEnvironment env) {
+        return projectUpdateSponsorship(objectId, mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the projectUpdateSponsorship method with the specified environment and parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject-xxxx%2FupdateSponsorship">API specification</a>.
+     *
+     * @param objectId ID of the object to operate on
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #projectUpdateSponsorship(String, Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode projectUpdateSponsorship(String objectId, JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/" + objectId + "/" + "updateSponsorship", inputParams,
+                RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the projectNew method with an empty input, deserializing to an object of the specified class.
      *
      * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Projects#API-method%3A-%2Fproject%2Fnew">API specification</a>.
@@ -18540,8 +20591,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/project/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/project/new", input, RetryStrategy.UNSAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -18563,8 +20615,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T projectNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/project/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/project/new", input, RetryStrategy.UNSAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -18695,9 +20748,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -18740,9 +20794,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -18879,9 +20934,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordAddTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordAddTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -18924,9 +20980,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordAddTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -19027,7 +21084,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -19047,7 +21104,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -19063,14 +21120,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordClose(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "close",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordClose method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -19091,7 +21149,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -19108,15 +21166,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordClose(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "close",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the recordClose method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -19138,7 +21197,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -19162,7 +21221,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -19185,7 +21244,7 @@ public final class DXAPI {
     /**
      * Invokes the recordClose method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -19247,9 +21306,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -19292,9 +21352,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -19431,9 +21492,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordGetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordGetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -19476,9 +21538,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordGetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -19615,9 +21678,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordListProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listProjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordListProjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -19660,9 +21724,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordListProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listProjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -19799,9 +21864,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -19844,9 +21910,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -19983,9 +22050,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRemoveTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordRemoveTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -20028,9 +22096,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRemoveTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -20167,9 +22236,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRename(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "rename",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordRename method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -20212,9 +22282,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordRename(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "rename",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -20351,9 +22422,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordSetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -20396,9 +22468,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -20535,9 +22608,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -20580,9 +22654,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -20719,9 +22794,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetVisibility(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setVisibility",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the recordSetVisibility method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -20764,9 +22840,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordSetVisibility(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setVisibility",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -20921,8 +22998,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/record/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/record/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -20944,8 +23022,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T recordNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/record/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/record/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21038,6 +23117,531 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the systemDescribeDataObjects method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeDataObjects(Class<T> outputClass) {
+        return systemDescribeDataObjects(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeDataObjects(Class<T> outputClass, DXEnvironment env) {
+        return systemDescribeDataObjects(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeDataObjects(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/describeDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeDataObjects(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/describeDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemDescribeDataObjects method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeDataObjects(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeDataObjects() {
+        return systemDescribeDataObjects(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeDataObjects(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeDataObjects(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/describeDataObjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeDataObjects(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeDataObjects(DXEnvironment env) {
+        return systemDescribeDataObjects(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemDescribeDataObjects method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeDataObjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeDataObjects(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeDataObjects(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/describeDataObjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the systemDescribeExecutions method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeExecutions(Class<T> outputClass) {
+        return systemDescribeExecutions(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeExecutions(Class<T> outputClass, DXEnvironment env) {
+        return systemDescribeExecutions(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeExecutions(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/describeExecutions", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeExecutions(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/describeExecutions", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemDescribeExecutions method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeExecutions(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeExecutions() {
+        return systemDescribeExecutions(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeExecutions(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeExecutions(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/describeExecutions", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeExecutions(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeExecutions(DXEnvironment env) {
+        return systemDescribeExecutions(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemDescribeExecutions method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeExecutions">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeExecutions(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeExecutions(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/describeExecutions", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the systemDescribeProjects method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeProjects(Class<T> outputClass) {
+        return systemDescribeProjects(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemDescribeProjects method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeProjects(Class<T> outputClass, DXEnvironment env) {
+        return systemDescribeProjects(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemDescribeProjects method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeProjects(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/describeProjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemDescribeProjects method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemDescribeProjects(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/describeProjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemDescribeProjects method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeProjects(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeProjects() {
+        return systemDescribeProjects(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemDescribeProjects method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeProjects(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeProjects(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/describeProjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemDescribeProjects method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeProjects(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeProjects(DXEnvironment env) {
+        return systemDescribeProjects(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemDescribeProjects method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/describeProjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemDescribeProjects(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemDescribeProjects(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/describeProjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the systemFindAffiliates method with an empty input, deserializing to an object of the specified class.
      *
      * @param outputClass class to deserialize the server reponse to
@@ -21088,8 +23692,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindAffiliates(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findAffiliates", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findAffiliates", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21109,8 +23714,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindAffiliates(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findAffiliates", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findAffiliates", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21251,8 +23857,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindApps(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findApps", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findApps", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21274,8 +23881,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindApps(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findApps", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findApps", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21424,8 +24032,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindDataObjects(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findDataObjects", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21447,8 +24056,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindDataObjects(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findDataObjects", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21541,6 +24151,181 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the systemResolveDataObjects method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemResolveDataObjects(Class<T> outputClass) {
+        return systemResolveDataObjects(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemResolveDataObjects(Class<T> outputClass, DXEnvironment env) {
+        return systemResolveDataObjects(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemResolveDataObjects(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/resolveDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemResolveDataObjects(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/resolveDataObjects", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemResolveDataObjects method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemResolveDataObjects(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemResolveDataObjects() {
+        return systemResolveDataObjects(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemResolveDataObjects(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemResolveDataObjects(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/resolveDataObjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemResolveDataObjects(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemResolveDataObjects(DXEnvironment env) {
+        return systemResolveDataObjects(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemResolveDataObjects method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/System-Methods#API-method:-/system/resolveDataObjects">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemResolveDataObjects(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemResolveDataObjects(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/resolveDataObjects", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the systemFindExecutions method with an empty input, deserializing to an object of the specified class.
      *
      * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method%3A-%2Fsystem%2FfindExecutions">API specification</a>.
@@ -21597,8 +24382,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindExecutions(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findExecutions", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findExecutions", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21620,8 +24406,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindExecutions(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findExecutions", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findExecutions", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21770,8 +24557,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindAnalyses(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findAnalyses", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findAnalyses", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21793,8 +24581,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindAnalyses(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findAnalyses", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findAnalyses", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -21943,8 +24732,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindJobs(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findJobs", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findJobs", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -21966,8 +24756,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindJobs(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findJobs", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findJobs", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22116,8 +24907,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindProjects(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findProjects", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findProjects", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -22139,8 +24931,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindProjects(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findProjects", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findProjects", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22289,8 +25082,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindUsers(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findUsers", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findUsers", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -22312,8 +25106,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindUsers(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findUsers", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findUsers", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22462,8 +25257,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindProjectMembers(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/findProjectMembers", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/findProjectMembers", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -22485,8 +25281,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemFindProjectMembers(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/findProjectMembers", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/findProjectMembers", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22579,6 +25376,356 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the systemFindOrgs method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemFindOrgs(Class<T> outputClass) {
+        return systemFindOrgs(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemFindOrgs method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemFindOrgs(Class<T> outputClass, DXEnvironment env) {
+        return systemFindOrgs(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemFindOrgs method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemFindOrgs(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/findOrgs", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemFindOrgs method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemFindOrgs(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/findOrgs", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemFindOrgs method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemFindOrgs(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemFindOrgs() {
+        return systemFindOrgs(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemFindOrgs method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemFindOrgs(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemFindOrgs(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/findOrgs", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemFindOrgs method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemFindOrgs(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemFindOrgs(DXEnvironment env) {
+        return systemFindOrgs(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemFindOrgs method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/findOrgs">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemFindOrgs(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemFindOrgs(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/findOrgs", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
+     * Invokes the systemGlobalSearch method with an empty input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemGlobalSearch(Class<T> outputClass) {
+        return systemGlobalSearch(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemGlobalSearch method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemGlobalSearch(Class<T> outputClass, DXEnvironment env) {
+        return systemGlobalSearch(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemGlobalSearch method with the specified input, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemGlobalSearch(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/globalSearch", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemGlobalSearch method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemGlobalSearch(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/globalSearch", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemGlobalSearch method.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemGlobalSearch(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemGlobalSearch() {
+        return systemGlobalSearch(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemGlobalSearch method with the specified input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemGlobalSearch(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemGlobalSearch(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/globalSearch", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemGlobalSearch method with the specified environment.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemGlobalSearch(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemGlobalSearch(DXEnvironment env) {
+        return systemGlobalSearch(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemGlobalSearch method with the specified environment and input parameters.
+     *
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Search#API-method:-/system/globalSearch">API specification</a>.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemGlobalSearch(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemGlobalSearch(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/globalSearch", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the systemGreet method with an empty input, deserializing to an object of the specified class.
      *
      * @param outputClass class to deserialize the server reponse to
@@ -22629,8 +25776,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemGreet(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/greet", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/greet", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -22650,8 +25798,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemGreet(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/greet", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/greet", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22736,6 +25885,165 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the systemHeaders method with an empty input, deserializing to an object of the specified class.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemHeaders(Class<T> outputClass) {
+        return systemHeaders(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemHeaders method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemHeaders(Class<T> outputClass, DXEnvironment env) {
+        return systemHeaders(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemHeaders method with the specified input, deserializing to an object of the specified class.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemHeaders(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/headers", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemHeaders method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemHeaders(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/headers", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemHeaders method.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemHeaders(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemHeaders() {
+        return systemHeaders(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemHeaders method with the specified input parameters.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemHeaders(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemHeaders(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/headers", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemHeaders method with the specified environment.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemHeaders(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemHeaders(DXEnvironment env) {
+        return systemHeaders(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemHeaders method with the specified environment and input parameters.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemHeaders(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemHeaders(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/headers", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the systemShortenURL method with an empty input, deserializing to an object of the specified class.
      *
      * @param outputClass class to deserialize the server reponse to
@@ -22786,8 +26094,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemShortenURL(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/system/shortenURL", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest().request("/system/shortenURL", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -22807,8 +26116,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T systemShortenURL(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/system/shortenURL", mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/system/shortenURL", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 
@@ -22893,6 +26203,165 @@ public final class DXAPI {
     }
 
     /**
+     * Invokes the systemWhoami method with an empty input, deserializing to an object of the specified class.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemWhoami(Class<T> outputClass) {
+        return systemWhoami(mapper.createObjectNode(), outputClass);
+    }
+    /**
+     * Invokes the systemWhoami method with an empty input using the specified environment, deserializing to an object of the specified class.
+     *
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemWhoami(Class<T> outputClass, DXEnvironment env) {
+        return systemWhoami(mapper.createObjectNode(), outputClass, env);
+    }
+    /**
+     * Invokes the systemWhoami method with the specified input, deserializing to an object of the specified class.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemWhoami(Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest().request("/system/whoami", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+    /**
+     * Invokes the systemWhoami method with the specified input using the specified environment, deserializing to an object of the specified class.
+     *
+     * @param inputObject input object (to be JSON serialized to an input hash)
+     * @param outputClass class to deserialize the server reponse to
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     */
+    public static <T> T systemWhoami(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
+        return DXJSON.safeTreeToValue(
+                new DXHTTPRequest(env).request("/system/whoami", input, RetryStrategy.SAFE_TO_RETRY),
+                outputClass);
+    }
+
+    /**
+     * Invokes the systemWhoami method.
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemWhoami(Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemWhoami() {
+        return systemWhoami(mapper.createObjectNode());
+    }
+    /**
+     * Invokes the systemWhoami method with the specified input parameters.
+     *
+     * @param inputParams input parameters to the API call
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemWhoami(Object, Class)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemWhoami(JsonNode inputParams) {
+        return new DXHTTPRequest().request("/system/whoami", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+    /**
+     * Invokes the systemWhoami method with the specified environment.
+     *
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemWhoami(Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemWhoami(DXEnvironment env) {
+        return systemWhoami(mapper.createObjectNode(), env);
+    }
+    /**
+     * Invokes the systemWhoami method with the specified environment and input parameters.
+     *
+     * @param inputParams input parameters to the API call
+     * @param env environment object specifying the auth token and remote server and protocol
+     *
+     * @return Server response parsed from JSON
+     *
+     * @throws DXAPIException
+     *             If the server returns a complete response with an HTTP status
+     *             code other than 200 (OK).
+     * @throws DXHTTPException
+     *             If an error occurs while making the HTTP request or obtaining
+     *             the response (includes HTTP protocol errors).
+     *
+     * @deprecated Use {@link #systemWhoami(Object, Class, DXEnvironment)} instead and supply your own class to deserialize to.
+     */
+    @Deprecated
+    public static JsonNode systemWhoami(JsonNode inputParams, DXEnvironment env) {
+        return new DXHTTPRequest(env).request("/system/whoami", inputParams, RetryStrategy.SAFE_TO_RETRY);
+    }
+
+    /**
      * Invokes the userDescribe method with an empty input, deserializing to an object of the specified class.
      *
      * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Users#API-method%3A-%2Fuser-xxxx%2Fdescribe">API specification</a>.
@@ -22931,9 +26400,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T userDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the userDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -22976,9 +26446,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T userDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -23115,9 +26586,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T userUpdate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "update",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the userUpdate method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -23160,9 +26632,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T userUpdate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "update",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.UNSAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -23299,9 +26772,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddStage(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addStage",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowAddStage method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -23344,9 +26818,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddStage(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addStage",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -23483,9 +26958,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowAddTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -23528,9 +27004,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -23667,9 +27144,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "addTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowAddTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -23712,9 +27190,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowAddTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "addTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -23815,7 +27294,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with an empty input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -23835,7 +27314,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with the given input, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -23851,14 +27330,15 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowClose(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "close",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowClose method with an empty input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param outputClass class to deserialize the server reponse to
@@ -23879,7 +27359,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with the given input using the given environment, deserializing to an object of the specified class.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputObject input object (to be JSON serialized to an input hash)
@@ -23896,15 +27376,16 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowClose(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "close",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
      * Invokes the workflowClose method.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      *
@@ -23926,7 +27407,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with the specified parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -23950,7 +27431,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with the specified environment.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param env environment object specifying the auth token and remote server and protocol
@@ -23973,7 +27454,7 @@ public final class DXAPI {
     /**
      * Invokes the workflowClose method with the specified environment and parameters.
      *
-     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
+     * <p>For more information about this method, see the <a href="https://wiki.dnanexus.com/API-Specification-v1.0.0/Data-Object-Lifecycle#API-method%3A-%2Fclass-xxxx%2Fclose">API specification</a>.
      *
      * @param objectId ID of the object to operate on
      * @param inputParams input parameters to the API call
@@ -24035,9 +27516,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowDescribe(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "describe",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowDescribe method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -24080,9 +27562,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowDescribe(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "describe",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -24219,9 +27702,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowDryRun(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "dryRun",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowDryRun method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -24264,9 +27748,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowDryRun(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "dryRun",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -24403,9 +27888,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowGetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "getDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowGetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -24448,9 +27934,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowGetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "getDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -24587,9 +28074,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowIsStageCompatible(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "isStageCompatible",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowIsStageCompatible method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -24632,9 +28120,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowIsStageCompatible(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "isStageCompatible",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -24771,9 +28260,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowListProjects(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "listProjects",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowListProjects method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -24816,9 +28306,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowListProjects(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "listProjects",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -24955,9 +28446,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowMoveStage(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "moveStage",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowMoveStage method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25000,9 +28492,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowMoveStage(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "moveStage",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -25139,9 +28632,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowOverwrite(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "overwrite",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowOverwrite method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25184,9 +28678,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowOverwrite(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "overwrite",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -25323,9 +28818,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveStage(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeStage",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowRemoveStage method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25368,9 +28864,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveStage(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeStage",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -25507,9 +29004,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveTags(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTags",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowRemoveTags method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25552,9 +29050,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveTags(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTags",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -25691,9 +29190,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveTypes(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "removeTypes",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowRemoveTypes method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25736,9 +29236,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRemoveTypes(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "removeTypes",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -25875,9 +29376,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRename(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "rename",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowRename method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -25920,9 +29422,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRename(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "rename",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26059,9 +29562,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRun(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "run",
-                        mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowRun method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -26104,9 +29608,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowRun(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "run",
-                    mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26243,9 +29748,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetDetails(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setDetails",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowSetDetails method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -26288,9 +29794,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetDetails(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setDetails",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26427,9 +29934,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetProperties(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setProperties",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowSetProperties method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -26472,9 +29980,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetProperties(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setProperties",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26611,9 +30120,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetStageInputs(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setStageInputs",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowSetStageInputs method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -26656,9 +30166,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetStageInputs(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setStageInputs",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26795,9 +30306,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetVisibility(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "setVisibility",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowSetVisibility method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -26840,9 +30352,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowSetVisibility(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "setVisibility",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -26979,9 +30492,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowUpdate(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "update",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowUpdate method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -27024,9 +30538,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowUpdate(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "update",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -27163,9 +30678,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowUpdateStageExecutable(String objectId, Object inputObject, Class<T> outputClass) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "updateStageExecutable",
-                        mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                        input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
     /**
      * Invokes the workflowUpdateStageExecutable method with an empty input using the given environment, deserializing to an object of the specified class.
@@ -27208,9 +30724,10 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowUpdateStageExecutable(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = mapper.valueToTree(inputObject);
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "updateStageExecutable",
-                    mapper.valueToTree(inputObject), RetryStrategy.SAFE_TO_RETRY), outputClass);
+                    input, RetryStrategy.SAFE_TO_RETRY), outputClass);
     }
 
     /**
@@ -27365,8 +30882,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowNew(Object inputObject, Class<T> outputClass) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("/workflow/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest().request("/workflow/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
     /**
@@ -27388,8 +30906,9 @@ public final class DXAPI {
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T workflowNew(Object inputObject, Class<T> outputClass, DXEnvironment env) {
+        JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("/workflow/new", mapper.valueToTree(inputObject), RetryStrategy.UNSAFE_TO_RETRY),
+                new DXHTTPRequest(env).request("/workflow/new", input, RetryStrategy.SAFE_TO_RETRY),
                 outputClass);
     }
 

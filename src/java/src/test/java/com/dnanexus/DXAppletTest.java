@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -51,7 +51,7 @@ public class DXAppletTest {
      * This class doesn't serialize to an object or array!
      */
     private static class InvalidAppDetails {
-        @SuppressWarnings({"unused", "static-method"})
+        @SuppressWarnings("static-method")
         @JsonValue
         public Object getValue() {
             return 3;
@@ -74,10 +74,8 @@ public class DXAppletTest {
 
     @JsonInclude(Include.NON_NULL)
     private static class SampleAppInput {
-        @SuppressWarnings("unused")
         @JsonProperty("input_string")
         public final String inputString;
-        @SuppressWarnings("unused")
         @JsonProperty("input_record")
         public final DXRecord inputRecord;
 
@@ -126,7 +124,7 @@ public class DXAppletTest {
     @After
     public void tearDown() {
         if (testProject != null) {
-            testProject.destroy();
+            testProject.destroy(true);
         }
     }
 
@@ -164,6 +162,96 @@ public class DXAppletTest {
 
         DXApplet.Describe d = a.describe();
         Assert.assertEquals(testProject, d.getProject());
+    }
+
+    @Test
+    public void testCustomFields() {
+        final InputParameter input1 =
+                InputParameter.newInputParameter("input_string", IOClass.STRING).build();
+        final InputParameter input2 =
+                InputParameter.newInputParameter("input_record", IOClass.RECORD).build();
+
+        final OutputParameter output1 =
+                OutputParameter.newOutputParameter("output_record", IOClass.RECORD).build();
+
+        DXApplet a = DXApplet
+                .newApplet()
+                .setProject(testProject)
+                .setName("myname")
+                .setTitle("mytitle")
+                .setSummary("mysummary")
+                .setDescription("mydescription")
+                .setRunSpecification(
+                        RunSpecification.newRunSpec("bash", "false;").build())
+                .setInputSpecification(ImmutableList.of(input1, input2))
+                .setOutputSpecification(ImmutableList.of(output1))
+                .build();
+
+        // Retrieve some fields and verify that the ones we want are there and the ones we don't
+        // want are not there
+        DXApplet.Describe describe = a.describe(DescribeOptions.get().withCustomFields(
+                ImmutableList.of("description", "dxapi", "inputSpec", "outputSpec")));
+
+        Assert.assertEquals("mydescription", describe.getDescription());
+        Assert.assertEquals("1.0.0", describe.getDXAPIVersion());
+        Assert.assertEquals(2, describe.getInputSpecification().size());
+        Assert.assertEquals(1, describe.getOutputSpecification().size());
+        try {
+            describe.getRunSpecification();
+            Assert.fail("Expected getRunSpecification to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getSummary();
+            Assert.fail("Expected getSummary to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getTitle();
+            Assert.fail("Expected getTitle to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getName();
+            Assert.fail("Expected getName to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+
+        // Now describe with some complementary fields and perform the same check
+        describe = a.describe(DescribeOptions.get().withCustomFields(
+                ImmutableList.of("runSpec", "summary", "title", "name")));
+        Assert.assertEquals("bash", describe.getRunSpecification().getInterpreter());
+        Assert.assertEquals("mysummary", describe.getSummary());
+        Assert.assertEquals("mytitle", describe.getTitle());
+        Assert.assertEquals("myname", describe.getName());
+        try {
+            describe.getDescription();
+            Assert.fail("Expected getDescription to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getDXAPIVersion();
+            Assert.fail("Expected getDXAPIVersion to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getInputSpecification();
+            Assert.fail("Expected getInputSpecification to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getOutputSpecification();
+            Assert.fail("Expected getOutputSpecification to fail with IllegalStateException");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
     }
 
     @Test

@@ -34,8 +34,23 @@ else
 fi
 
 pkg_name="dx-toolkit-${new_version}-${build_target_name}.tar.gz"
-echo "Downloading $pkg_name..."
-(cd "$build_dir"; curl -O -L "https://wiki.dnanexus.com/images/files/${pkg_name}")
+if type -t curl >/dev/null; then
+    get_cmd="curl -O -L"
+elif type -t wget >/dev/null; then
+    get_cmd="wget"
+else
+    echo "$(basename $0): Unable to download file (either curl or wget is required)" 1>&2
+    false
+fi
+
+if [[ ! -w "${build_dir}" ]]; then
+    echo "${build_dir} directory not writable" 1>&2
+    false
+fi
+
+echo "Downloading $pkg_name (using ${get_cmd})..."
+rm -f "${build_dir}/${pkg_name}"
+(cd "$build_dir"; ${get_cmd} "https://wiki.dnanexus.com/images/files/${pkg_name}")
 
 echo "Unpacking $pkg_name..."
 tar -C "$build_dir" -xzf "${build_dir}/${pkg_name}"
@@ -60,3 +75,5 @@ rm -rf "${build_dir}/dx-toolkit"
 echo "${new_version}" > "${build_dir}/info/version"
 
 echo "$(basename $0): Updated to version ${new_version}. Previous version saved in ${build_dir}/${current_version}."
+echo "Please close this terminal, open a new terminal, and source the environment file in the dx-toolkit folder"
+

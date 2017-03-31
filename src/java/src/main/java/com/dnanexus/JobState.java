@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -36,7 +36,9 @@ public enum JobState {
     FAILED("failed"),
     UNRESPONSIVE("unresponsive"),
     TERMINATING("terminating"),
-    TERMINATED("terminated");
+    TERMINATED("terminated"),
+    DEBUG_HOLD("debug_hold"),
+    RESTARTABLE("restartable");
 
     private static Map<String, JobState> createMap;
 
@@ -48,7 +50,6 @@ public enum JobState {
         createMap = ImmutableMap.copyOf(result);
     }
 
-    @SuppressWarnings("unused")
     @JsonCreator
     private static JobState create(String value) {
         return createMap.get(value);

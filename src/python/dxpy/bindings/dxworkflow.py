@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -24,12 +24,13 @@ be run together.  They can be run by calling the
 
 """
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import re
 import dxpy
-from dxpy.bindings import DXDataObject, DXExecutable, DXAnalysis
-from dxpy.exceptions import DXError
+from ..bindings import DXDataObject, DXExecutable, DXAnalysis
+from ..exceptions import DXError
+from ..compat import basestring
 
 ##############
 # DXWorkflow #
@@ -451,8 +452,8 @@ class DXWorkflow(DXDataObject, DXExecutable):
 
         if kwargs.get('rerun_stages') is not None:
             run_input['rerunStages'] = [
-                stage if stage == '*' else self._get_stage_id(stage)
-                for stage in kwargs['rerun_stages']
+                _stage if _stage == '*' else self._get_stage_id(_stage)
+                for _stage in kwargs['rerun_stages']
             ]
 
         return run_input

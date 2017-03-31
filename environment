@@ -1,6 +1,6 @@
 # -*- Mode: shell-script -*-
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -29,6 +29,11 @@ test ! -z "$version" && echo "$shell" | grep -q csh && set SOURCE=`echo $_ | cut
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 
+# Get RHEL version
+if [ -e /etc/redhat-release ] ; then
+  RHEL_MAJOR_VERSION=$(grep -o "Red Hat Enterprise Linux .* release [0-9]\+" /etc/redhat-release | sed -e "s/Red Hat Enterprise Linux .* release //")
+fi
+
 export DNANEXUS_HOME="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # Detect system installation of dx-toolkit
@@ -38,15 +43,17 @@ if [ "$DNANEXUS_HOME" == "/etc/profile.d" ]; then
   # Private Python packages. We really ought not pollute PYTHONPATH with these though.
   export PYTHONPATH="/usr/share/dnanexus/lib/python2.7/site-packages:$PYTHONPATH"
   export CLASSPATH="/usr/share/java/dnanexus-api-0.1.0.jar:${CLASSPATH}"
-  export GEM_PATH="/usr/share/dnanexus/lib/rubygems:$GEM_PATH"
 
 else
 
   export PATH="${DNANEXUS_HOME}/bin:$PATH"
-  export PYTHONPATH="${DNANEXUS_HOME}/share/dnanexus/lib/python2.7/site-packages:${DNANEXUS_HOME}/lib/python:$PYTHONPATH"
-  export PERL5LIB="${DNANEXUS_HOME}/lib/perl5:$PERL5LIB"
   export CLASSPATH="${DNANEXUS_HOME}/lib/java/*:${CLASSPATH}"
-  export GEM_PATH="${DNANEXUS_HOME}/lib/rubygems:$GEM_PATH"
+
+  if [ "$RHEL_MAJOR_VERSION" == "7" ]; then
+    export PYTHONPATH="${DNANEXUS_HOME}/share/dnanexus/lib/python2.7/site-packages:${DNANEXUS_HOME}/lib64/python2.7/site-packages:$PYTHONPATH"
+  else
+    export PYTHONPATH="${DNANEXUS_HOME}/share/dnanexus/lib/python2.7/site-packages:${DNANEXUS_HOME}/lib/python:$PYTHONPATH"
+  fi
 
 fi
 
@@ -69,4 +76,22 @@ eval "$(register-python-argcomplete dx|sed 's/-o default//')"
 
 if [[ -z "$DX_SECURITY_CONTEXT" && -n "$DX_AUTH_TOKEN" ]]; then
     export DX_SECURITY_CONTEXT="{\"auth_token_type\":\"Bearer\",\"auth_token\":\"$DX_AUTH_TOKEN\"}"
+fi
+
+if [[ $OSTYPE == "darwin"* ]]; then
+    # On the first run, create a virtualenv for Mac-specific needs;
+    # skip to activating it when it already exists.
+    VIRTUALENV_DIR="$DNANEXUS_HOME/dxenv"
+
+    if [ ! -d "$VIRTUALENV_DIR" ]; then
+        virtualenv "$VIRTUALENV_DIR"
+        source "$VIRTUALENV_DIR/bin/activate"
+        
+        # Install ndg-httpsclient in the env to provide TLS 1.2 support
+        # Install all tar packages only for osx python virtual environment
+        PYTHON_PKG_DIR="$DNANEXUS_HOME"/osx-python-packages/
+        pip install --no-cache-dir --no-index --find-links="$PYTHON_PKG_DIR" -r "${DNANEXUS_HOME}/src/python/requirements_osx.txt"
+    else
+        source "$VIRTUALENV_DIR/bin/activate"
+    fi
 fi

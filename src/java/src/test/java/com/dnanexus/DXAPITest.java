@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -67,7 +67,7 @@ public class DXAPITest {
     public void testDXAPICustomEnvironment() throws IOException {
         DXEnvironment env = DXEnvironment.Builder.fromDefaults().build();
         JsonNode input =
-                (JsonNode) (new MappingJsonFactory().createJsonParser("{}").readValueAsTree());
+                (JsonNode) (new MappingJsonFactory().createParser("{}").readValueAsTree());
         JsonNode responseJson = DXAPI.systemFindDataObjects(input, JsonNode.class, env);
         Assert.assertEquals(responseJson.isObject(), true);
 

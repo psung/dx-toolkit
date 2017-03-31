@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -27,7 +27,7 @@ job creating a subjob.
 
 """
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import os, time
 
@@ -35,6 +35,7 @@ import dxpy
 from . import DXObject, DXDataObject, DXJobFailureError, verify_string_dxid
 from ..exceptions import DXError
 from ..utils.local_exec_utils import queue_entry_point
+from ..compat import basestring
 
 #########
 # DXJob #
@@ -192,9 +193,13 @@ class DXJob(DXObject):
 
     def describe(self, fields=None, io=None, **kwargs):
         """
-        :param fields: Hash where the keys are field names that should be returned, and values should be set to True (default is that all fields are returned)
+        :param fields: dict where the keys are field names that should
+            be returned, and values should be set to True (by default,
+            all fields are returned)
         :type fields: dict
-        :param io: Include input and output fields in description; cannot be provided with *fields*; default is True if *fields* is not provided (deprecated)
+        :param io: Include input and output fields in description;
+            cannot be provided with *fields*; default is True if
+            *fields* is not provided (deprecated)
         :type io: bool
         :returns: Description of the job
         :rtype: dict
@@ -339,4 +344,4 @@ class DXJob(DXObject):
 
         '''
 
-        return self.describe(io=False, **kwargs)["state"]
+        return self.describe(fields=dict(state=True), **kwargs)["state"]

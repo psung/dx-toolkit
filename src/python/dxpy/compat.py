@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -14,12 +14,17 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-import os, sys, io, locale
+import os, sys, io, locale, threading
 from io import TextIOWrapper
+from contextlib import contextmanager
+from collections import MutableMapping
 
-sys_encoding = locale.getdefaultlocale()[1] or 'UTF-8'
+try:
+    sys_encoding = locale.getdefaultlocale()[1] or "UTF-8"
+except Exception:
+    sys_encoding = "UTF-8"
 
 USING_PYTHON2 = True if sys.version_info < (3, 0) else False
 
@@ -27,6 +32,7 @@ _stdio_wrapped = False
 
 if USING_PYTHON2:
     from cStringIO import StringIO
+    from httplib import BadStatusLine
     BytesIO = StringIO
     builtin_str = str
     bytes = str
@@ -35,17 +41,11 @@ if USING_PYTHON2:
     builtin_int = int
     int = long
     open = io.open
+    THREAD_TIMEOUT_MAX = sys.maxint
     def input(prompt=None):
-        try:
-            cur_stdin, cur_stdout = sys.stdin, sys.stdout
-            if hasattr(sys.stdin, '_original_stream'):
-                sys.stdin = sys.stdin._original_stream
-            if hasattr(sys.stdout, '_original_stream'):
-                sys.stdout = sys.stdout._original_stream
-            encoded_prompt = prompt.encode(sys_encoding)
+        encoded_prompt = prompt.encode(sys_encoding)
+        with unwrap_stream("stdin"), unwrap_stream("stdout"):
             return raw_input(encoded_prompt).decode(sys_encoding)
-        finally:
-            sys.stdin, sys.stdout = cur_stdin, cur_stdout
     def expanduser(path):
         '''
         Copy of os.path.expanduser that decodes os.environ['HOME'] if necessary.
@@ -75,8 +75,15 @@ if USING_PYTHON2:
     if os.name == 'nt':
         # The POSIX os.path.expanduser doesn't work on NT, so just leave it be
         expanduser = os.path.expanduser
+    # Prior to 2.7.3, shlex is not compatible with Unicode strings, so we bundle a replacement from 2.7.6.
+    if sys.version_info < (2, 7, 3):
+        from .packages import shlex
+    else:
+        import shlex
 else:
     from io import StringIO, BytesIO
+    from http.client import BadStatusLine
+    import shlex
     builtin_str = str
     str = str
     bytes = bytes
@@ -86,6 +93,7 @@ else:
     int = int
     open = open
     expanduser = os.path.expanduser
+    THREAD_TIMEOUT_MAX = threading.TIMEOUT_MAX
 
 def wrap_stdio_in_codecs():
     if USING_PYTHON2:
@@ -130,41 +138,43 @@ def decode_command_line_args():
         sys.argv = [i if isinstance(i, unicode) else i.decode(sys_encoding) for i in sys.argv]
     return sys.argv
 
-class _Environ(object):
+def _ensure_bytes(i):
+    if not isinstance(i, bytes):
+        i = i.encode(sys_encoding)
+    return i
+
+def _ensure_str(i):
+    if isinstance(i, bytes):
+        i = i.decode(sys_encoding)
+    return i
+
+class _Environ(MutableMapping):
     def __getitem__(self, item):
-        if not isinstance(item, bytes):
-            item = item.encode(sys_encoding)
-        value = os.environ[item]
-        if isinstance(value, bytes):
-            value = value.decode(sys_encoding)
-        return value
+        return _ensure_str(os.environ[_ensure_bytes(item)])
 
     def __setitem__(self, varname, value):
-        if not isinstance(varname, bytes):
-            varname = varname.encode(sys_encoding)
-        if not isinstance(value, bytes):
-            value = value.encode(sys_encoding)
-        os.environ[varname] = value
+        os.environ[_ensure_bytes(varname)] = _ensure_bytes(value)
 
     def __contains__(self, item):
-        if not isinstance(item, bytes):
-            item = item.encode(sys_encoding)
-        return True if item in os.environ else False
-
-    def __getattr__(self, attr):
-        return getattr(os.environ, attr)
+        return True if _ensure_bytes(item) in os.environ else False
 
     def __repr__(self):
-        return repr(os.environ)
+        return repr(dict(self))
 
     def __iter__(self):
         for key in os.environ:
-            yield key
+            yield _ensure_str(key)
+
+    def __delitem__(self, item):
+        del os.environ[_ensure_bytes(item)]
+
+    def __len__(self):
+        return len(os.environ)
 
     def copy(self):
-        return {key: self[key] for key in self}
+        return dict(self)
 
-environ = _Environ()
+environ = _Environ() if USING_PYTHON2 else os.environ
 
 def wrap_env_var_handlers():
     if USING_PYTHON2 and not getattr(os, '__native_getenv', None):
@@ -189,3 +199,18 @@ def wrap_env_var_handlers():
 def unwrap_env_var_handlers():
     if USING_PYTHON2 and getattr(os, __native_getenv, None):
         os.getenv, os.putenv = os.__native_getenv, os.__native_putenv
+
+@contextmanager
+def unwrap_stream(stream_name):
+    """
+    Temporarily unwraps a given stream (stdin, stdout, or stderr) to undo the effects of wrap_stdio_in_codecs().
+    """
+    wrapped_stream = None
+    try:
+        wrapped_stream = getattr(sys, stream_name)
+        if hasattr(wrapped_stream, '_original_stream'):
+            setattr(sys, stream_name, wrapped_stream._original_stream)
+        yield
+    finally:
+        if wrapped_stream:
+            setattr(sys, stream_name, wrapped_stream)

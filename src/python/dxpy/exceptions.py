@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -18,14 +18,18 @@
 Exceptions for the :mod:`dxpy` package.
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-import os, sys, json, traceback, errno
-from .packages import requests
+import sys, json, traceback, errno, socket
+import requests
+from requests.exceptions import HTTPError
+
+import dxpy
+
+EXPECTED_ERR_EXIT_STATUS = 3
 
 class DXError(Exception):
     '''Base class for exceptions in this package.'''
-    pass
 
 class DXAPIError(DXError):
     '''
@@ -33,7 +37,7 @@ class DXAPIError(DXError):
     https://wiki.dnanexus.com/API-Specification-v1.0.0/Protocols#Errors for complete documentation of API errors,
     including those reflected by subclasses of this class.
     '''
-    def __init__(self, content, code):
+    def __init__(self, content, code, timestamp="", req_id=""):
         self.name = content["error"]["type"]
         self.msg = content["error"]["message"]
         if "details" in content["error"]:
@@ -41,83 +45,83 @@ class DXAPIError(DXError):
         else:
             self.details = None
         self.code = code
+        self.timestamp = timestamp
+        self.req_id = req_id
 
-    def __str__(self):
+    def error_message(self):
+        "Returns a one-line description of the error."
         output = self.msg + ", code " + str(self.code)
+        output += ". Request Time={}, Request ID={}".format(self.timestamp, self.req_id)
         if self.name != self.__class__.__name__:
             output = self.name + ": " + output
+        return output
+
+    def __str__(self):
+        output = self.error_message()
         if self.details:
             output += "\nDetails: " + json.dumps(self.details, indent=4)
         return output
 
 class MalformedJSON(DXAPIError):
     ''' Raised when the input could not be parsed as JSON. '''
-    pass
 
 class InvalidAuthentication(DXAPIError):
     ''' Raised when the provided OAuth2 token is invalid. '''
-    pass
 
 class PermissionDenied(DXAPIError):
     ''' Raised when the supplied credentials have insufficient permissions to perform this action. '''
-    pass
 
 class SpendingLimitExceeded(DXAPIError):
     ''' Raised when the spending limit has been reached for the account that would be billed for this action. '''
-    pass
 
 class ResourceNotFound(DXAPIError):
     ''' Raised when a specified entity or resource could not be found. '''
-    pass
 
 class InvalidInput(DXAPIError):
     ''' Raised when the input is syntactically correct (JSON), but semantically incorrect (for example, a JSON array
     is provided where a hash was required; or a required parameter was missing, etc.). '''
-    pass
 
 class InvalidState(DXAPIError):
     ''' Raised when the operation is not allowed at this object state. '''
-    pass
 
 class InvalidType(DXAPIError):
     ''' Raised when an object specified in the request is of invalid type. '''
-    pass
 
 class RateLimitConditional(DXAPIError):
     ''' Raised when the rate of invalid requests is too high. '''
-    pass
 
 class InternalError(DXAPIError):
     ''' Raised when the server encountered an internal error. '''
-    pass
 
 class ServiceUnavailable(DXAPIError):
     ''' Raised when an API service was temporarily unavailable. '''
-    pass
 
 class DXFileError(DXError):
     '''Exception for :class:`dxpy.bindings.dxfile.DXFile`.'''
-    pass
+
+class DXIncompleteReadsError(DXError):
+    '''Exception for :class:`dxpy.bindings.dxfile.DXFile` when returned read data is shorter than requested'''
+
+class DXPartLengthMismatchError(DXFileError):
+    '''Exception raised by :class:`dxpy.bindings.dxfile.DXFile` on part length mismatch.'''
+
+class DXChecksumMismatchError(DXFileError):
+    '''Exception raised by :class:`dxpy.bindings.dxfile.DXFile` on checksum mismatch.'''
 
 class DXGTableError(DXError):
     '''Exception for :class:`dxpy.bindings.dxgtable.DXGTable`.'''
-    pass
 
 class DXSearchError(DXError):
     '''Exception for :mod:`dxpy.bindings.search` methods.'''
-    pass
 
 class DXAppletError(DXError):
     '''Exception for :class:`dxpy.bindings.dxapplet.DXApplet`.'''
-    pass
 
 class DXJobFailureError(DXError):
     '''Exception produced by :class:`dxpy.bindings.dxjob.DXJob` when a job fails.'''
-    pass
 
 class ProgramError(DXError):
     '''Deprecated. Use :class:`AppError` instead.'''
-    pass
 
 class AppError(ProgramError):
     '''
@@ -130,7 +134,6 @@ class AppError(ProgramError):
     *job_error.json* in the current working directory, allowing reporting of
     the error state through the DNAnexus API.
     '''
-    pass
 
 class AppInternalError(DXError):
     '''
@@ -143,17 +146,38 @@ class AppInternalError(DXError):
     the current working directory, allowing reporting of the error state
     through the DNAnexus API.
     '''
-    pass
 
 class DXCLIError(DXError):
     '''
     Exception class for generic errors in the command-line client
     '''
-    pass
 
-class ContentLengthError(requests.HTTPError):
-    '''Will be raised when actual content length received from server does not match the "Content-Length" header'''
-    pass
+class ContentLengthError(HTTPError):
+    '''
+    Raised when actual content length received from the server does not
+    match the "Content-Length" header
+    '''
+
+class BadJSONInReply(ValueError):
+    '''
+    Raised when the server returned invalid JSON in the response body. Possible reasons
+    for this are the network connection breaking, or overload on the server.
+    '''
+
+
+class UrllibInternalError(AttributeError):
+    '''
+    Exception class for AttributeError from urllib3
+    '''
+
+
+def format_exception(e):
+    """Returns a string containing the type and text of the exception.
+
+    """
+    from .utils.printing import fill
+    return '\n'.join(fill(line) for line in traceback.format_exception_only(type(e), e))
+
 
 def exit_with_exc_info(code=1, message='', print_tb=False, exception=None):
     '''Exits the program, printing information about the last exception (if
@@ -167,11 +191,14 @@ def exit_with_exc_info(code=1, message='', print_tb=False, exception=None):
     :type print_tb: boolean
     :type exception: an exception to use in place of the last exception raised
     '''
-    exc_type, exc_value = (exception.__class__.__name__, exception) \
+    exc_type, exc_value = (exception.__class__, exception) \
                           if exception is not None else sys.exc_info()[:2]
+
     if exc_type is not None:
         if print_tb:
             traceback.print_exc()
+        elif isinstance(exc_value, KeyboardInterrupt):
+            sys.stderr.write('^C\n')
         else:
             for line in traceback.format_exception_only(exc_type, exc_value):
                 sys.stderr.write(line)
@@ -181,10 +208,13 @@ def exit_with_exc_info(code=1, message='', print_tb=False, exception=None):
         sys.stderr.write('\n')
     sys.exit(code)
 
-network_exceptions = (requests.ConnectionError,
-                      requests.HTTPError,
-                      requests.Timeout,
-                      requests.packages.urllib3.connectionpool.HTTPException)
+network_exceptions = (requests.packages.urllib3.exceptions.ProtocolError,
+                      requests.packages.urllib3.exceptions.DecodeError,
+                      requests.packages.urllib3.exceptions.ConnectTimeoutError,
+                      requests.packages.urllib3.exceptions.ReadTimeoutError,
+                      requests.packages.urllib3.connectionpool.HTTPException,
+                      HTTPError,
+                      socket.error)
 
 default_expected_exceptions = network_exceptions + (DXAPIError,
                                                     DXCLIError,
@@ -213,10 +243,13 @@ def err_exit(message='', code=None, expected_exceptions=default_expected_excepti
         message = arg_parser.prog + ": " + message
 
     exc = exception if exception is not None else sys.exc_info()[1]
-    if isinstance(exc, expected_exceptions):
-        exit_with_exc_info(3, message, print_tb=True if '_DX_DEBUG' in os.environ else False,
-                           exception=exception)
+    if isinstance(exc, SystemExit):
+        raise
+    elif isinstance(exc, expected_exceptions):
+        exit_with_exc_info(EXPECTED_ERR_EXIT_STATUS, message, print_tb=dxpy._DEBUG > 0, exception=exception)
     elif ignore_sigpipe and isinstance(exc, IOError) and getattr(exc, 'errno', None) == errno.EPIPE:
+        if dxpy._DEBUG > 0:
+            print("Broken pipe", file=sys.stderr)
         sys.exit(3)
     else:
         if code is None:

@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -79,6 +79,11 @@ namespace dx {
    * appropriate.
    */
   bool loadFromEnvironment();
+
+  namespace Nonce {
+    std::string nonce();
+    dx::JSON updateNonce(const dx::JSON &input_params);
+  }
 }
 
 #include "exceptions.h"

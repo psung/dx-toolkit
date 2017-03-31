@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -17,25 +17,35 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-import os, sys, unittest, json, tempfile, subprocess
+import os, sys, unittest, json, tempfile, subprocess, re
 import pexpect
+import pipes
 
 from dxpy_testutil import DXTestCase, check_output
 import dxpy_testutil as testutil
 
 import dxpy
 from dxpy.scripts import dx_build_app
+from dxpy.utils.completer import InstanceTypesCompleter
 
-supported_languages = ['Python', 'C++', 'bash']
+
+def run(command, **kwargs):
+    print("$ %s" % (command,))
+    output = check_output(command, shell=True, **kwargs)
+    print(output)
+    return output
+
+
+supported_languages = ['Python', 'bash']
 
 def run_dx_app_wizard():
     old_cwd = os.getcwd()
     tempdir = tempfile.mkdtemp(prefix='Программа')
     os.chdir(tempdir)
     try:
-        wizard = pexpect.spawn("dx-app-wizard")
+        wizard = pexpect.spawn("dx-app-wizard --template parallelized")
         wizard.logfile = sys.stdout
         wizard.setwinsize(20, 90)
         wizard.expect("App Name:")
@@ -47,14 +57,8 @@ def run_dx_app_wizard():
         wizard.sendline("Заголовок")
         wizard.expect("Summary")
         wizard.sendline("Конспект")
-        wizard.expect("Description")
-        wizard.sendline("Описание")
         wizard.expect("Version")
         wizard.sendline("1.2.3")
-        wizard.expect("Choose a category")
-        wizard.sendline("Assembly")
-        wizard.expect("Choose a category")
-        wizard.sendline()
         wizard.expect("1st input name")
         wizard.sendline("in1")
         wizard.expect("Label")
@@ -75,19 +79,26 @@ def run_dx_app_wizard():
         wizard.sendline("int")
         wizard.expect("2nd output name")
         wizard.sendline()
+        wizard.expect("Timeout policy")
+        wizard.sendline("31d")
+        wizard.expect("Error: max allowed timeout is 30 days")
+        wizard.sendline("ЄЯTЪЦGЇCЄкЇ")
+        wizard.expect("Error: enter an int with a single-letter suffix")
+        wizard.expect("Timeout policy")
+        wizard.sendline("24h")
         wizard.expect("Programming language")
         wizard.sendline("АЛГОЛ")
         wizard.expect("Error: unrecognized response")
         wizard.sendline("Python")
-        wizard.expect("Execution pattern")
-        wizard.sendline("параллельно")
-        wizard.expect("Error: unrecognized response")
-        wizard.expect("Execution pattern")
-        wizard.sendline("parallelized")
         wizard.expect("Will this app need access to the Internet?")
         wizard.sendline("y")
         wizard.expect("Will this app need access to the parent project?")
         wizard.sendline("y")
+        wizard.expect("Choose an instance type for your app")
+        wizard.sendline("t1.микро")
+        wizard.expect("Error: unrecognized response, expected one of")
+        wizard.expect("Choose an instance type for your app")
+        wizard.sendline()
         wizard.expect("App directory created")
         wizard.close()
 
@@ -130,11 +141,13 @@ def create_app_dir_with_dxapp_json(dxapp_json, language):
         wizard.sendline()
         wizard.expect("Version")
         wizard.sendline()
-        wizard.expect("Execution pattern")
+        wizard.expect("Timeout policy")
         wizard.sendline()
         wizard.expect("Will this app need access to the Internet?")
         wizard.sendline()
         wizard.expect("Will this app need access to the parent project?")
+        wizard.sendline()
+        wizard.expect("Choose an instance type for your app")
         wizard.sendline()
         wizard.expect("App directory created")
         wizard.close()
@@ -145,18 +158,34 @@ def create_app_dir_with_dxapp_json(dxapp_json, language):
         os.chdir(old_cwd)
 
 class TestDXAppWizardAndRunAppLocally(DXTestCase):
+    def test_invalid_arguments(self):
+        with self.assertRaises(testutil.DXCalledProcessError):
+            check_output(['dx-app-wizard', '--template=par'])
+
     def test_dx_app_wizard(self):
         appdir = run_dx_app_wizard()
         dxapp_json = json.load(open(os.path.join(appdir, 'dxapp.json')))
-        self.assertEqual(dxapp_json.get('authorizedUsers'), [])
+        self.assertEqual(dxapp_json['runSpec']['systemRequirements']['*']['instanceType'],
+                         InstanceTypesCompleter.default_instance_type.Name)
+        self.assertEqual(dxapp_json['runSpec']['distribution'], 'Ubuntu')
+        self.assertEqual(dxapp_json['runSpec']['release'], '14.04')
+        self.assertEqual(dxapp_json['runSpec']['timeoutPolicy']['*']['hours'], 24)
 
-    def test_dx_run_app_locally(self):
+    def test_dx_run_app_locally_interactively(self):
+        appdir = create_app_dir()
+        local_run = pexpect.spawn("dx-run-app-locally {} -iin1=8".format(appdir))
+        local_run.expect("Confirm")
+        local_run.sendline()
+        local_run.expect("App finished successfully")
+        local_run.expect("Final output: out1 = 140")
+        local_run.close()
+
+    def test_dx_run_app_locally_noninteractively(self):
         appdir = create_app_dir()
         output = check_output(['dx-run-app-locally', appdir, '-iin1=8'])
         print(output)
         self.assertIn("App finished successfully", output)
         self.assertIn("Final output: out1 = 140", output)
-        return appdir
 
     @unittest.skipUnless(testutil.TEST_RUN_JOBS,
                          'skipping test that would run jobs')
@@ -197,9 +226,10 @@ class TestDXAppWizardAndRunAppLocally(DXTestCase):
             "version": "0.0.1",
             "categories": [],
             "inputSpec": [
-                {"name": "required_file",
-                 "class": "file",
-                 "optional": False
+                {
+                    "name": "required_file",
+                    "class": "file",
+                    "optional": False
                 },
                 {
                     "name": "optional_file",
@@ -278,14 +308,11 @@ class TestDXAppWizardAndRunAppLocally(DXTestCase):
         dxpy.PROJECT_CONTEXT_ID = self.project
 
         # Make some data objects for input
-        dxapplet = dxpy.api.applet_new({"project": dxpy.WORKSPACE_ID,
-                                        "name": "anapplet",
-                                        "dxapi": "1.0.0",
-                                        "runSpec": {"code": "", "interpreter": "bash"}})['id']
-        dxfile = dxpy.upload_string("foo", name="afile")
-        dxgtable = dxpy.new_dxgtable(columns=[{"name": "int_col", "type": "int"}], name="agtable")
-        dxgtable.add_rows([[3], [0]])
-        dxgtable.close(block=True)
+        dxpy.api.applet_new({"project": dxpy.WORKSPACE_ID,
+                             "name": "anapplet",
+                             "dxapi": "1.0.0",
+                             "runSpec": {"code": "", "interpreter": "bash"}})['id']
+        dxpy.upload_string("foo", name="afile")
         dxrecord = dxpy.new_dxrecord(name="arecord")
         dxrecord.close()
 
@@ -300,9 +327,9 @@ class TestDXAppWizardAndRunAppLocally(DXTestCase):
             "outputSpec": []
         }
 
-        classes = ['applet', 'record', 'file', 'gtable',
+        classes = ['applet', 'record', 'file',
                    'boolean', 'int', 'float', 'string', 'hash',
-                   'array:applet', 'array:record', 'array:file', 'array:gtable',
+                   'array:applet', 'array:record', 'array:file',
                    'array:boolean', 'array:int', 'array:float', 'array:string']
 
         for classname in classes:
@@ -325,10 +352,9 @@ class TestDXAppWizardAndRunAppLocally(DXTestCase):
                         '-irequired_array_record=arecord',
                         '-irequired_file=afile',
                         '-irequired_array_file=afile',
-                        '-irequired_gtable=agtable',
-                        '-irequired_array_gtable=agtable',
                         '-irequired_boolean=true',
                         '-irequired_array_boolean=true',
+                        '-irequired_array_boolean=false',
                         '-irequired_int=32',
                         '-irequired_array_int=42',
                         '-irequired_float=3.4',
@@ -341,13 +367,150 @@ class TestDXAppWizardAndRunAppLocally(DXTestCase):
             # Test with bare-minimum of inputs
             output = subprocess.check_output(['dx-run-app-locally', appdir] + cmdline_args)
             print(output)
+            # Verify array is printed total 3 times once in each input, logs, and final output
+            self.assertEquals(len(re.findall("required_array_boolean = \[ true, false ]", output)), 3)
             self.assertIn("App finished successfully", output)
 
-            if testutil.TEST_RUN_JOBS:
+            # See PTFM-13697 for CentOS 5 details
+            if testutil.TEST_RUN_JOBS and not testutil.host_is_centos_5():
                 # Now actually make it an applet and run it
                 applet_name = dxapp_json['name'] + '-' + lang
                 subprocess.check_output(['dx', 'build', appdir, '--destination', applet_name])
                 subprocess.check_output(['dx', 'run', applet_name, '-y', '--wait'] + cmdline_args)
+
+    @unittest.skipUnless(testutil.TEST_ENV, 'skipping test that would clobber your local environment')
+    def test_dx_run_app_locally_without_auth(self):
+        temp_file_path = tempfile.mkdtemp()
+        app_spec = {
+            "name": "test_run_locally_without_auth",
+            "dxapi": "1.0.0",
+            "runSpec": {"file": "code.py", "interpreter": "python2.7"},
+            "inputSpec": [{"name": "foo", "class": "file"}],
+            "outputSpec": [],
+            "version": "1.0.0"
+            }
+        app_dir_path = os.path.join(temp_file_path, app_spec['name'])
+        os.mkdir(app_dir_path)
+        with open(os.path.join(app_dir_path, 'dxapp.json'), 'w') as manifest:
+            manifest.write(json.dumps(app_spec))
+        with open(os.path.join(app_dir_path, 'code.py'), 'w') as code_file:
+            code_file.write('')
+        with testutil.without_auth(), testutil.without_project_context():
+            with self.assertSubprocessFailure(stderr_regexp="logged in", exit_code=3):
+                run("dx-run-app-locally " + pipes.quote(app_dir_path) + " -ifoo=nothing")
+
+    def test_dx_run_app_locally_invalid_interpreter(self):
+        temp_file_path = tempfile.mkdtemp()
+        app_spec = {
+            "name": "test_run_locally_invalid_interpreter",
+            "dxapi": "1.0.0",
+            "runSpec": {"file": "code.py", "interpreter": "python"},
+            "inputSpec": [],
+            "outputSpec": [],
+            "version": "1.0.0"
+            }
+        app_dir_path = os.path.join(temp_file_path, app_spec['name'])
+        os.mkdir(app_dir_path)
+        with open(os.path.join(app_dir_path, 'dxapp.json'), 'w') as manifest:
+            manifest.write(json.dumps(app_spec))
+        with open(os.path.join(app_dir_path, 'code.py'), 'w') as code_file:
+            code_file.write('')
+        with self.assertSubprocessFailure(stderr_regexp="Unknown interpreter python", exit_code=3):
+            run("dx-run-app-locally " + pipes.quote(app_dir_path))
+
+
+'''
+test the upload/download helpers by running them locally
+'''
+class TestDXBashHelpers(DXTestCase):
+    def run_test_app_locally(self, app_name, arg_list):
+        '''
+        :param app_name: name of app to run
+        :param arg_list: list of command line arguments given to an app
+
+        Runs an app locally, with a given set of command line arguments
+        '''
+        path = os.path.join(os.path.dirname(__file__), "file_load")
+        args = ['dx-run-app-locally', os.path.join(path, app_name)]
+        args.extend(arg_list)
+        check_output(args)
+
+    def test_vars(self):
+        """Tests bash variable generation """
+        # Make a couple files for testing
+        dxpy.upload_string("1234", name="A.txt", wait_on_close=True)
+        self.run_test_app_locally('vars', ['-iseq1=A.txt', '-iseq2=A.txt', '-igenes=A.txt', '-igenes=A.txt',
+                                           '-ii=5', '-ix=4.2', '-ib=true', '-is=hello',
+                                           '-iil=6', '-iil=7', '-iil=8',
+                                           '-ixl=3.3', '-ixl=4.4', '-ixl=5.0',
+                                           '-ibl=true', '-ibl=false', '-ibl=true',
+                                           '-isl=hello', '-isl=world', '-isl=next',
+                                           '-imisc={"hello": "world", "foo": true}'])
+
+    def test_prefix_patterns(self):
+        """ Tests that the bash prefix variable works correctly, and
+        respects patterns.
+        """
+        buf = "1234"
+        filenames = ["A.bar", "A.json.dot.bar", "A.vcf.pam", "A.foo.bar", "fooxxx.bam", "A.bar.gz", "x13year23.sam"]
+        for fname in filenames:
+            dxpy.upload_string(buf, name=fname, wait_on_close=True)
+        self.run_test_app_locally('prefix_patterns', ['-iseq1=A.bar',
+                                                      '-iseq2=A.json.dot.bar',
+                                                      '-igene=A.vcf.pam',
+                                                      '-imap=A.foo.bar',
+                                                      '-imap2=fooxxx.bam',
+                                                      '-imap3=A.bar',
+                                                      '-imap4=A.bar.gz',
+                                                      '-imulti=x13year23.sam'])
+
+    def test_deepdirs(self):
+        self.run_test_app_locally('deepdirs', [])
+
+    def test_basic(self):
+        '''Tests upload/download helpers
+
+        '''
+        # Make a couple files for testing
+        dxpy.upload_string("1234", wait_on_close=True, name="A.txt")
+
+        # this invocation should fail with a CLI exception
+        with self.assertRaises(testutil.DXCalledProcessError):
+            self.run_test_app_locally('basic', ['-iseq1=A.txt', '-iseq2=B.txt'])
+
+        dxpy.upload_string("ABCD", wait_on_close=True, name="B.txt")
+
+        # these should succeed
+        self.run_test_app_locally('basic', ['-iseq1=A.txt', '-iseq2=B.txt',
+                                            '-iref=A.txt', '-iref=B.txt',
+                                            "-ivalue=5", '-iages=1'])
+        self.run_test_app_locally('basic', ['-iseq1=A.txt', '-iseq2=B.txt', '-ibar=A.txt',
+                                            '-iref=A.txt', '-iref=B.txt',
+                                            "-ivalue=5", '-iages=1'])
+        self.run_test_app_locally('basic', ['-iseq1=A.txt', '-iseq2=B.txt',
+                                            '-iref=A.txt', '-iref=B.txt', "-ivalue=5",
+                                            '-iages=1', '-iages=11', '-iages=33'])
+
+        # check the except flags
+        self.run_test_app_locally('basic_except', ['-iseq1=A.txt', '-iseq2=B.txt',
+                                                   '-iref=A.txt', '-iref=B.txt', "-ivalue=5",
+                                                   '-iages=1', '-iages=11', '-iages=33'])
+
+    def test_sub_jobs(self):
+        '''  Tests a bash script that generates sub-jobs '''
+        dxpy.upload_string("1234", wait_on_close=True, name="A.txt")
+        dxpy.upload_string("ABCD", wait_on_close=True, name="B.txt")
+        self.run_test_app_locally('with-subjobs', ["-ifiles=A.txt", "-ifiles=B.txt"])
+
+    def test_parseq(self):
+        ''' Tests the parallel/sequential variations '''
+        dxpy.upload_string("1234", wait_on_close=True, name="A.txt")
+        dxpy.upload_string("ABCD", wait_on_close=True, name="B.txt")
+        self.run_test_app_locally('parseq', ["-iseq1=A.txt", "-iseq2=B.txt", "-iref=A.txt", "-iref=B.txt"])
+
+    def test_file_optional(self):
+        ''' Tests that file optional input arguments are handled correctly '''
+        self.run_test_app_locally('file_optional', ["-icreate_seq3=true"])
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -34,10 +34,16 @@ the effective destination project.
 
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import os, sys, json, subprocess, tempfile, multiprocessing
 import datetime
+import gzip
+import hashlib
+import io
+import tarfile
+import stat
+
 import dxpy
 from . import logger
 from .utils import merge
@@ -47,8 +53,9 @@ from .cli import INTERACTIVE_CLI
 
 NUM_CORES = multiprocessing.cpu_count()
 
-DX_TOOLKIT_PKGS = ['dx-toolkit', 'dx-toolkit-beta', 'dx-toolkit-unstable']
-DX_TOOLKIT_GIT_URLS = ["git@github.com:dnanexus/dx-toolkit.git"]
+DX_TOOLKIT_PKGS = ('dx-toolkit',)
+DX_TOOLKIT_GIT_URLS = ("git@github.com:dnanexus/dx-toolkit.git",)
+
 
 class AppBuilderException(Exception):
     """
@@ -129,8 +136,76 @@ def get_destination_project(src_dir, project=None):
         return project
     return _get_applet_spec(src_dir)['project']
 
-def upload_resources(src_dir, project=None, folder='/'):
+def is_link_local(link_target):
     """
+    :param link_target: The target of a symbolic link, as given by os.readlink()
+    :type link_target: string
+    :returns: A boolean indicating the link is local to the current directory.
+              This is defined to mean that os.path.isabs(link_target) == False
+              and the link NEVER references the parent directory, so
+              "./foo/../../curdir/foo" would return False.
+    :rtype: boolean
+    """
+    is_local=(not os.path.isabs(link_target))
+
+    if is_local:
+        # make sure that the path NEVER extends outside the resources directory!
+        d,l = os.path.split(link_target)
+        link_parts = []
+        while l:
+            link_parts.append(l)
+            d,l = os.path.split(d)
+        curr_path = os.sep
+
+        for p in reversed(link_parts):
+            is_local = (is_local and not (curr_path == os.sep and p == os.pardir) )
+            curr_path = os.path.abspath(os.path.join(curr_path, p))
+
+    return is_local
+
+def _fix_perms(perm_obj):
+    """
+    :param perm_obj: A permissions object, as given by os.stat()
+    :type perm_obj: integer
+    :returns: A permissions object that is the result of "chmod a+rX" on the
+              given permission object.  This is defined to be the permission object
+              bitwise or-ed with all stat.S_IR*, and if the stat.S_IXUSR bit is
+              set, then the permission object should also be returned bitwise or-ed
+              with stat.S_IX* (stat.S_IXUSR not included because it would be redundant).
+    :rtype: integer
+    """
+    ret_perm = perm_obj | stat.S_IROTH | stat.S_IRGRP | stat.S_IRUSR
+    if ret_perm & stat.S_IXUSR:
+        ret_perm = ret_perm | stat.S_IXGRP | stat.S_IXOTH
+
+    return ret_perm
+
+def _fix_perm_filter(tar_obj):
+    """
+    :param tar_obj: A TarInfo object to be added to a tar file
+    :tpye tar_obj: tarfile.TarInfo
+    :returns: A TarInfo object with permissions changed (a+rX)
+    :rtype: tarfile.TarInfo
+    """
+    tar_obj.mode = _fix_perms(tar_obj.mode)
+    return tar_obj
+
+
+def upload_resources(src_dir, project=None, folder='/', ensure_upload=False, force_symlinks=False):
+    """
+    :param ensure_upload: If True, will bypass checksum of resources directory
+                          and upload resources bundle unconditionally;
+                          will NOT be able to reuse this bundle in future builds.
+                          Else if False, will compute checksum and upload bundle
+                          if checksum is different from a previously uploaded
+                          bundle's checksum.
+    :type ensure_upload: boolean
+    :param force_symlinks: If true, will bypass the attempt to dereference any
+                           non-local symlinks and will unconditionally include
+                           the link as-is.  Note that this will almost certainly
+                           result in a broken link within the resource directory
+                           unless you really know what you're doing.
+    :type force_symlinks: boolean
     :returns: A list (possibly empty) of references to the generated archive(s)
     :rtype: list
 
@@ -150,20 +225,200 @@ def upload_resources(src_dir, project=None, folder='/'):
 
     resources_dir = os.path.join(src_dir, "resources")
     if os.path.exists(resources_dir) and len(os.listdir(resources_dir)) > 0:
-        logger.debug("Uploading in " + src_dir)
+        target_folder = applet_spec['folder'] if 'folder' in applet_spec else folder
 
-        with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tar_fh:
-            subprocess.check_call(['tar', '-C', resources_dir, '-czf', tar_fh.name, '.'])
-            if 'folder' in applet_spec:
-                try:
-                    dxpy.get_handler(dest_project).new_folder(applet_spec['folder'], parents=True)
-                except dxpy.exceptions.DXAPIError:
-                    pass # TODO: make this better
-            target_folder = applet_spec['folder'] if 'folder' in applet_spec else folder
-            dx_resource_archive = dxpy.upload_local_file(tar_fh.name, wait_on_close=True,
-                                                         project=dest_project, folder=target_folder, hidden=True)
+        # While creating the resource bundle, optimistically look for a
+        # resource bundle with the same contents, and reuse it if possible.
+        # The resource bundle carries a property 'resource_bundle_checksum'
+        # that indicates the checksum; the way in which the checksum is
+        # computed is given below.   If the checksum matches  (and
+        # ensure_upload is False), then we will use the existing file,
+        # otherwise, we will compress and upload the tarball.
+
+
+        # The input to the SHA1 contains entries of the form (whitespace
+        # only included here for readability):
+        #
+        # / \0 MODE \0 MTIME \0
+        # /foo \0 MODE \0 MTIME \0
+        # ...
+        #
+        # where there is one entry for each directory or file (order is
+        # specified below), followed by a numeric representation of the
+        # mode, and the mtime in milliseconds since the epoch.
+        #
+        # Note when looking at a link, if the link is to be dereferenced,
+        # the mtime and mode used are that of the target (using os.stat())
+        # If the link is to be kept as a link, the mtime and mode are those
+        # of the link itself (using os.lstat())
+
+        with tempfile.NamedTemporaryFile(suffix=".tar") as tar_tmp_fh:
+
+            output_sha1 = hashlib.sha1()
+            tar_fh = tarfile.open(fileobj=tar_tmp_fh, mode='w')
+
+            for dirname, subdirs, files in os.walk(resources_dir):
+                if not dirname.startswith(resources_dir):
+                    raise AssertionError('Expected %r to start with root directory %r' % (dirname, resources_dir))
+
+                # Add an entry for the directory itself
+                relative_dirname = dirname[len(resources_dir):]
+                dir_stat = os.lstat(dirname)
+                if not relative_dirname.startswith('/'):
+                    relative_dirname = '/' + relative_dirname
+
+                fields = [relative_dirname, str(_fix_perms(dir_stat.st_mode)), str(int(dir_stat.st_mtime * 1000))]
+                output_sha1.update(b''.join(s.encode('utf-8') + b'\0' for s in fields))
+
+                # add an entry in the tar file for the current directory, but
+                # do not recurse!
+                tar_fh.add(dirname, arcname='.' + relative_dirname, recursive=False, filter=_fix_perm_filter)
+
+                # Canonicalize the order of subdirectories; this is the order in
+                # which they will be visited by os.walk
+                subdirs.sort()
+
+                # check the subdirectories for symlinks.  We should throw an error
+                # if there are any links that point outside of the directory (unless
+                # --force-symlinks is given).  If a link is pointing internal to
+                # the directory (or --force-symlinks is given), we should add it
+                # as a file.
+                for subdir_name in subdirs:
+                    dir_path = os.path.join(dirname, subdir_name)
+
+                    # If we do have a symlink,
+                    if os.path.islink(dir_path):
+                        # Let's get the pointed-to path to ensure that it is
+                        # still in the directory
+                        link_target = os.readlink(dir_path)
+
+                        # If this is a local link, add it to the list of files (case 1)
+                        # else raise an error
+                        if force_symlinks or is_link_local(link_target):
+                            files.append(subdir_name)
+                        else:
+                            raise AppBuilderException("Cannot include symlinks to directories outside of the resource directory.  '%s' points to directory '%s'" % (dir_path, os.path.realpath(dir_path)))
+
+
+                # Canonicalize the order of files so that we compute the
+                # checksum in a consistent order
+                for filename in sorted(files):
+                    deref_link = False
+
+                    relative_filename = os.path.join(relative_dirname, filename)
+                    true_filename = os.path.join(dirname, filename)
+
+                    file_stat = os.lstat(true_filename)
+                    # check for a link here, please!
+                    if os.path.islink(true_filename):
+
+                        # Get the pointed-to path
+                        link_target = os.readlink(true_filename)
+
+                        if not (force_symlinks or is_link_local(link_target)):
+                            # if we are pointing outside of the directory, then:
+                            # try to get the true stat of the file and make sure
+                            # to dereference the link!
+                            try:
+                                file_stat = os.stat(os.path.join(dirname, link_target))
+                                deref_link = True
+                            except OSError:
+                                # uh-oh! looks like we have a broken link!
+                                # since this is guaranteed to cause problems (and
+                                # we know we're not forcing symlinks here), we
+                                # should throw an error
+                                raise AppBuilderException("Broken symlink: Link '%s' points to '%s', which does not exist" % (true_filename, os.path.realpath(true_filename)) )
+
+
+                    fields = [relative_filename, str(_fix_perms(file_stat.st_mode)), str(int(file_stat.st_mtime * 1000))]
+                    output_sha1.update(b''.join(s.encode('utf-8') + b'\0' for s in fields))
+
+                    # If we are to dereference, use the target fn
+                    if deref_link:
+                        true_filename = os.path.realpath(true_filename)
+
+                    tar_fh.add(true_filename, arcname='.' + relative_filename, filter=_fix_perm_filter)
+
+                # end for filename in sorted(files)
+
+            # end for dirname, subdirs, files in os.walk(resources_dir):
+
+            # at this point, the tar is complete, so close the tar_fh
+            tar_fh.close()
+
+            # Optimistically look for a resource bundle with the same
+            # contents, and reuse it if possible. The resource bundle
+            # carries a property 'resource_bundle_checksum' that indicates
+            # the checksum; the way in which the checksum is computed is
+            # given in the documentation of _directory_checksum.
+
+            if ensure_upload:
+                properties_dict = {}
+                existing_resources = False
+            else:
+                directory_checksum = output_sha1.hexdigest()
+                properties_dict = dict(resource_bundle_checksum=directory_checksum)
+                existing_resources = dxpy.find_one_data_object(
+                    project=dest_project,
+                    folder=target_folder,
+                    properties=dict(resource_bundle_checksum=directory_checksum),
+                    visibility='either',
+                    zero_ok=True,
+                    state='closed',
+                    return_handler=True
+                )
+
+            if existing_resources:
+                logger.info("Found existing resource bundle that matches local resources directory: " +
+                            existing_resources.get_id())
+
+                dx_resource_archive = existing_resources
+            else:
+
+                logger.debug("Uploading in " + src_dir)
+                # We need to compress the tar that we've created
+
+
+                targz_fh = tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False)
+
+                # compress the file by reading the tar file and passing
+                # it though a GzipFile object, writing the given
+                # block size (by default 8192 bytes) at a time
+                targz_gzf = gzip.GzipFile(fileobj=targz_fh)
+                tar_tmp_fh.seek(0)
+                dat = tar_tmp_fh.read(io.DEFAULT_BUFFER_SIZE)
+                while dat:
+                    targz_gzf.write(dat)
+                    dat = tar_tmp_fh.read(io.DEFAULT_BUFFER_SIZE)
+
+                targz_gzf.flush()
+                targz_gzf.close()
+                targz_fh.close()
+
+                if 'folder' in applet_spec:
+                    try:
+                        dxpy.get_handler(dest_project).new_folder(applet_spec['folder'], parents=True)
+                    except dxpy.exceptions.DXAPIError:
+                        pass # TODO: make this better
+
+                dx_resource_archive = dxpy.upload_local_file(
+                    targz_fh.name,
+                    wait_on_close=True,
+                    project=dest_project,
+                    folder=target_folder,
+                    hidden=True,
+                    properties=properties_dict
+                )
+
+                os.unlink(targz_fh.name)
+
+                # end compressed file creation and upload
+
             archive_link = dxpy.dxlink(dx_resource_archive.get_id())
-            return [{'name': 'resources.tar.gz', 'id': archive_link}]
+
+        # end tempfile.NamedTemporaryFile(suffix=".tar") as tar_fh
+
+        return [{'name': 'resources.tar.gz', 'id': archive_link}]
     else:
         return []
 
@@ -192,6 +447,7 @@ def _inline_documentation_files(app_spec, src_dir):
                     app_spec['developerNotes'] = fh.read()
                 break
 
+
 def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overwrite=False, archive=False, project=None, override_folder=None, override_name=None, dx_toolkit_autodep="stable", dry_run=False, **kwargs):
     """
     Creates a new applet object.
@@ -202,10 +458,23 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
     :type override_folder: str
     :param override_name: name for the resulting applet which, if specified, overrides that given in dxapp.json
     :type override_name: str
-    :param dx_toolkit_autodep: What type of dx-toolkit dependency to inject if none is present. "stable" for the APT package; "git" for HEAD of dx-toolkit master branch; or False for no dependency.
+    :param dx_toolkit_autodep: What type of dx-toolkit dependency to
+        inject if none is present. "stable" for the APT package; "git"
+        for HEAD of dx-toolkit master branch; or False for no
+        dependency.
     :type dx_toolkit_autodep: boolean or string
+
     """
     applet_spec = _get_applet_spec(src_dir)
+
+    system_requirements = get_regional_system_requirements_by_project(applet_spec, project, dry_run)
+    if system_requirements is None:
+        # The top-level "systemRequirements", if present, will be respected.
+        pass
+    else:
+        # Override the top-level "systemRequirements" in memory.
+        # TODO: Assert that "systemRequirements" is not set at the top level?
+        applet_spec["runSpec"]["systemRequirements"] = system_requirements
 
     if project is None:
         dest_project = applet_spec['project']
@@ -230,15 +499,19 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
     if 'dxapi' not in applet_spec:
         applet_spec['dxapi'] = dxpy.API_VERSION
 
+    applets_to_overwrite = []
     archived_applet = None
     if check_name_collisions and not dry_run:
         destination_path = applet_spec['folder'] + ('/' if not applet_spec['folder'].endswith('/') else '') + applet_spec['name']
         logger.debug("Checking for existing applet at " + destination_path)
         for result in dxpy.find_data_objects(classname="applet", name=applet_spec["name"], folder=applet_spec['folder'], project=dest_project, recurse=False):
             if overwrite:
-                logger.info("Deleting applet %s" % (result['id']))
-                # TODO: test me
-                dxpy.DXProject(dest_project).remove_objects([result['id']])
+                # Don't remove the old applet until after the new one
+                # has been created. This avoids a race condition where
+                # we remove the old applet, but that causes garbage
+                # collection of the bundled resources that will be
+                # shared with the new applet
+                applets_to_overwrite.append(result['id'])
             elif archive:
                 logger.debug("Archiving applet %s" % (result['id']))
                 proj = dxpy.DXProject(dest_project)
@@ -265,10 +538,6 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
 
     # Inline the code of the program
     if "runSpec" in applet_spec and "file" in applet_spec["runSpec"]:
-        # Avoid using runSpec.file for now, it's not fully implemented
-        #code_filename = os.path.join(src_dir, applet_spec["runSpec"]["file"])
-        #f = dxpy.upload_local_file(code_filename, wait_on_close=True)
-        #applet_spec["runSpec"]["file"] = f.get_id()
         # Put it into runSpec.code instead
         with open(os.path.join(src_dir, applet_spec["runSpec"]["file"])) as code_fh:
             applet_spec["runSpec"]["code"] = code_fh.read()
@@ -279,6 +548,50 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
         applet_spec["runSpec"].setdefault("bundledDepends", [])
         applet_spec["runSpec"]["bundledDepends"].extend(uploaded_resources)
 
+    if "runSpec" in applet_spec and "assetDepends" in applet_spec["runSpec"]:
+        # Check that the assetDepends is a list and contains a hash for each item in the list
+        asset_depends = applet_spec["runSpec"]["assetDepends"]
+        if type(asset_depends) is not list or any(type(dep) is not dict for dep in asset_depends):
+            raise AppBuilderException("Expected runSpec.assetDepends to be an array of objects")
+        for asset in asset_depends:
+            asset_project = asset.get("project", None)
+            asset_folder = asset.get("folder", '/')
+            if "id" in asset:
+                asset_record = dxpy.DXRecord(asset["id"]).describe(fields={'details'}, default_fields=True)
+            elif "name" in asset and asset_project is not None and "version" in asset:
+                asset_record = dxpy.find_one_data_object(zero_ok=True, classname="record", typename="AssetBundle",
+                                                         name=asset["name"], properties=dict(version=asset["version"]),
+                                                         project=asset_project, folder=asset_folder,
+                                                         describe={"defaultFields": True, "fields": {"details": True}},
+                                                         state="closed")
+            else:
+                raise AppBuilderException("Each runSpec.assetDepends element must have either {'id'} or "
+                                          "{'name', 'project' and 'version'} field(s).")
+
+            if asset_record:
+                if "id" in asset:
+                    asset_details = asset_record["details"]
+                else:
+                    asset_details = asset_record["describe"]["details"]
+                if "archiveFileId" in asset_details:
+                    archive_file_id = asset_details["archiveFileId"]
+                else:
+                    raise AppBuilderException("The required field 'archiveFileId' was not found in "
+                                              "the details of the asset bundle %s " % asset_record["id"])
+                archive_file_name = dxpy.DXFile(archive_file_id).describe()["name"]
+                bundle_depends = {
+                    "name": archive_file_name,
+                    "id": archive_file_id
+                }
+                applet_spec["runSpec"]["bundledDepends"].append(bundle_depends)
+                # If the file is not found in the applet destination project, clone it from the asset project
+                if (not dry_run and
+                        dxpy.DXRecord(dxid=asset_record["id"], project=dest_project).describe()["project"] != dest_project):
+                    dxpy.DXRecord(asset_record["id"], project=asset_record["project"]).clone(dest_project)
+            else:
+                raise AppBuilderException("No asset bundle was found that matched the specification %s"
+                                          % (json.dumps(asset)))
+
     # Include the DNAnexus client libraries as an execution dependency, if they are not already
     # there
     if dx_toolkit_autodep == "git":
@@ -287,8 +600,7 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
                           "url": "git://github.com/dnanexus/dx-toolkit.git",
                           "tag": "master",
                           "build_commands": "make install DESTDIR=/ PREFIX=/opt/dnanexus"}
-    # TODO: reject "beta" and "unstable" eventually
-    elif dx_toolkit_autodep in ("stable", "beta", "unstable"):
+    elif dx_toolkit_autodep == "stable":
         dx_toolkit_dep = {"name": "dx-toolkit", "package_manager": "apt"}
     elif dx_toolkit_autodep:
         raise AppBuilderException("dx_toolkit_autodep must be one of 'stable', 'git', or False; got %r instead" % (dx_toolkit_autodep,))
@@ -319,15 +631,23 @@ def upload_applet(src_dir, uploaded_resources, check_name_collisions=True, overw
         print("*** DRY-RUN-- no applet was created ***")
         return None, None
 
+    if applet_spec.get("categories", []):
+        if "tags" not in applet_spec:
+            applet_spec["tags"] = []
+        applet_spec["tags"] = list(set(applet_spec["tags"]) | set(applet_spec["categories"]))
+
     applet_id = dxpy.api.applet_new(applet_spec)["id"]
 
-    if "categories" in applet_spec:
-        dxpy.DXApplet(applet_id, project=dest_project).add_tags(applet_spec["categories"])
-
     if archived_applet:
-        archived_applet.set_properties({'replacedWith': archived_applet.get_id()})
+        archived_applet.set_properties({'replacedWith': applet_id})
+
+    # Now it is permissible to delete the old applet(s), if any
+    if applets_to_overwrite:
+        logger.info("Deleting applet(s) %s" % (','.join(applets_to_overwrite)))
+        dxpy.DXProject(dest_project).remove_objects(applets_to_overwrite)
 
     return applet_id, applet_spec
+
 
 def _create_or_update_version(app_name, version, app_spec, try_update=True):
     """
@@ -368,15 +688,47 @@ def _update_version(app_name, version, app_spec, try_update=True):
             return None
         raise e
 
-def create_app(applet_id, applet_name, src_dir, publish=False, set_default=False, billTo=None, try_versions=None, try_update=True, confirm=True):
+
+def create_app_multi_region(regional_options, app_name, src_dir, publish=False, set_default=False, billTo=None,
+                            try_versions=None, try_update=True, confirm=True):
+    """
+    Creates a new app object from the specified applet(s).
+
+    :param regional_options: Region-specific options for the app. See
+        https://wiki.dnanexus.com/API-Specification-v1.0.0/Apps#API-method:-/app/new
+        for details; this should contain keys for each region the app is
+        to be enabled in, and for the values, a dict containing (at
+        minimum) a key "applet" whose value is an applet ID for that
+        region.
+    :type regional_options: dict
+    """
+    return _create_app(dict(regionalOptions=regional_options), app_name, src_dir, publish=publish,
+                       set_default=set_default, billTo=billTo, try_versions=try_versions, try_update=try_update,
+                       confirm=confirm)
+
+
+def create_app(applet_id, applet_name, src_dir, publish=False, set_default=False, billTo=None, try_versions=None,
+               try_update=True, confirm=True, regional_options=None):
     """
     Creates a new app object from the specified applet.
+
+    .. deprecated:: 0.204.0
+       Use :func:`create_app_multi_region()` instead.
+
     """
+    # In this case we don't know the region of the applet, so we use the
+    # legacy API {"applet": applet_id} without specifying a region
+    # specifically.
+    return _create_app(dict(applet=applet_id), applet_name, src_dir, publish=publish, set_default=set_default,
+                       billTo=billTo, try_versions=try_versions, try_update=try_update, confirm=confirm)
+
+
+def _create_app(applet_or_regional_options, app_name, src_dir, publish=False, set_default=False, billTo=None,
+                try_versions=None, try_update=True, confirm=True):
     app_spec = _get_app_spec(src_dir)
     logger.info("Will create app with spec: %s" % (app_spec,))
 
-    app_spec["applet"] = applet_id
-    app_spec["name"] = applet_name
+    app_spec.update(applet_or_regional_options, name=app_name)
 
     # Inline Readme.md and Readme.developer.md
     _inline_documentation_files(app_spec, src_dir)
@@ -539,8 +891,76 @@ def create_app(applet_id, applet_name, src_dir, publish=False, set_default=False
         # If no versions of this app have ever been published, then
         # we'll set the "default" tag to point to the latest
         # (unpublished) version.
-        no_published_versions = len(list(dxpy.find_apps(name=applet_name, published=True, limit=1))) == 0
+        no_published_versions = len(list(dxpy.find_apps(name=app_name, published=True, limit=1))) == 0
         if no_published_versions:
             dxpy.api.app_add_tags(app_id, input_params={'tags': ['default']})
 
     return app_id
+
+
+def get_regional_options(app_spec):
+    """Gets the regional options specified in dxapp.json. This function is
+    agnostic to apps versus applets.
+    """
+    regional_options = app_spec.get("regionalOptions")
+    if regional_options is None:
+        return None
+    if not isinstance(regional_options, dict):
+        raise AppBuilderException("The field 'regionalOptions' in dxapp.json must be a mapping")
+    if len(regional_options.keys()) < 1:
+        raise AppBuilderException("The field 'regionalOptions' in dxapp.json must be a non-empty mapping")
+    return regional_options
+
+
+def get_regional_system_requirements_by_project(executable_spec, project, dry_run):
+    """Gets the regional system requirements based on the region of the
+    specified project, if possible. Current-schema dxapp.json may contain
+    system requirements by region. Old-schema dxapp.json do not contain
+    regional options at all.
+    """
+    if dry_run:
+        return None
+
+    region = dxpy.api.project_describe(project, input_params={"fields": {"region": True}})["region"]
+    # We cannot assume that "regional_options" is None here even though this
+    # function is only called at app creation time because we need to be
+    # backward compatible with old-schema dxapp.json files.
+    regional_options = get_regional_options(executable_spec)
+    if regional_options is None:
+        return None
+    return regional_options[region].get("systemRequirements")
+
+
+def assert_consistent_regions(from_app_spec, from_command_line):
+    """
+    :param from_app_spec: The regional options specified in dxapp.json.
+    :type from_app_spec: dict or None.
+    :param from_command_line: The regional options specified on the
+    command-line via --region.
+    :type from_command_line: list or None.
+    """
+    if from_app_spec is None or from_command_line is None:
+        return
+    if set(from_app_spec) != set(from_command_line):
+        raise dxpy.app_builder.AppBuilderException("--region and the 'regionalOptions' key in dxapp.json do not agree")
+
+
+def get_enabled_regions(from_app_spec, from_command_line):
+    """
+    :param from_app_spec: The regional options specified in dxapp.json.
+    :type from_app_spec: dict or None.
+    :param from_command_line: The regional options specified on the
+    command-line via --region.
+    :type from_command_line: list or None.
+    """
+    assert_consistent_regions(from_app_spec, from_command_line)
+
+    enabled_regions = None
+    if from_app_spec is not None:
+        enabled_regions = from_app_spec.keys()
+    elif from_command_line is not None:
+        enabled_regions = from_command_line
+
+    if enabled_regions is not None and len(enabled_regions) == 0:
+        raise AssertionError("This app should be enabled in at least one region")
+    return enabled_regions

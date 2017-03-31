@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -14,7 +14,7 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import socket, json, time, os, logging
 
@@ -41,20 +41,20 @@ class DXLogHandler(SysLogHandler):
     def __init__(self, priority_log_address="/opt/dnanexus/log/priority",
                  bulk_log_address="/opt/dnanexus/log/bulk",
                  source="DX_APP"):
+        logging.Handler.__init__(self)
+
+        self.priority_log_address = priority_log_address
+        self.priority_log_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+        self.bulk_log_address = bulk_log_address
+        self.bulk_log_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
         if not os.path.exists(priority_log_address):
             raise DXError("The path %s does not exist, but is required for application logging" % (priority_log_address))
         if not os.path.exists(bulk_log_address):
             raise DXError("The path %s does not exist, but is required for application logging" % (bulk_log_address))
 
-        logging.Handler.__init__(self)
-
-        self.priority_log_address = priority_log_address
-        self.priority_log_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.priority_log_socket.connect(priority_log_address)
-
-        self.bulk_log_address = bulk_log_address
-        self.bulk_log_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.bulk_log_socket.connect(bulk_log_address)
 
         self.source = source
@@ -70,11 +70,23 @@ class DXLogHandler(SysLogHandler):
 
     def emit(self, record):
         level = self.encodePriority(record)
-        data = json.dumps({"source": self.source, "timestamp": int(round(time.time() * 1000)),
-                           "level": level, "msg": record.getMessage()})
+        message = record.getMessage()
+        # The Linux domain socket datagram size limit is 8 KB, but
+        # with the extra padding introduced by the log function, the
+        # incoming message needs to be smaller - we truncate it to
+        # at most 8015 bytes here.
+        # Note: we use Python 2 semantics here (byte strings). This
+        # script is not Python 3 ready. If *line* was a unicode string
+        # with wide chars, its byte length would exceed the limit.
+        if len(message) > 8015:
+            message = message[:8000] + "... [truncated]"
 
-        if int(record.levelno) > 40:
-            # Critical, alert or emerg
+        data = json.dumps({"source": self.source, "timestamp": int(round(time.time() * 1000)),
+                           "level": level, "msg": message})
+
+        levelno = int(record.levelno)
+        if levelno >= logging.CRITICAL or (levelno == logging.INFO and message.startswith(b"CPU: ")):
+            # Critical, alert, emerg, or resource status
             cur_socket = self.priority_log_socket
             cur_socket_address = self.priority_log_address
         else:

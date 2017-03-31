@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -19,16 +19,17 @@ This file contains utility functions for interactive scripts such as
 dx for tab-completion, resolving naming conflicts, etc.
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import sys
 
-from argcomplete import warn
+from ..packages.argcomplete import warn
 from collections import namedtuple, OrderedDict
 import dxpy
-from dxpy.utils.resolver import (get_first_pos_of_char, get_last_pos_of_char, clean_folder_path, resolve_path,
-                                 split_unescaped, ResolutionError)
-from dxpy.utils.printing import fill
+from .resolver import (get_first_pos_of_char, get_last_pos_of_char, clean_folder_path, resolve_path,
+                       split_unescaped, ResolutionError)
+from .printing import fill
+from ..compat import str
 
 def startswith(text):
     return (lambda string: string.startswith(text))
@@ -231,7 +232,7 @@ def path_completer(text, expected=None, classes=None, perm_level=None,
         try:
             proj_ids, folderpath, entity_name = resolve_path(text, multi_projects=True)
         except ResolutionError as details:
-            sys.stderr.write("\n" + fill(unicode(details)))
+            sys.stderr.write("\n" + fill(str(details)))
             return matches
         for proj in proj_ids:
             # protects against dxpy.WORKSPACE_ID being garbage
@@ -334,7 +335,7 @@ class LocalCompleter():
         self.matches = []
 
     def _populate_matches(self, prefix):
-        from argcomplete.completers import FilesCompleter
+        from ..packages.argcomplete.completers import FilesCompleter
         completer = FilesCompleter()
         self.matches = completer(prefix)
 
@@ -417,23 +418,16 @@ class MultiCompleter():
 
 class InstanceTypesCompleter():
     InstanceTypeSpec = namedtuple('InstanceTypeSpec', ('Name', 'Memory_GB', 'Storage_GB', 'CPU_Cores'))
-    instance_types = OrderedDict()
+    preferred_instance_types = OrderedDict()
     for i in (InstanceTypeSpec('mem1_ssd1_x2', 3.8, 32, 2),
               InstanceTypeSpec('mem1_ssd1_x4', 7.5, 80, 4),
               InstanceTypeSpec('mem1_ssd1_x8', 15.0, 160, 8),
               InstanceTypeSpec('mem1_ssd1_x16', 30.0, 320, 16),
               InstanceTypeSpec('mem1_ssd1_x32', 60.0, 640, 32),
 
-              InstanceTypeSpec('mem1_hdd2_x8', 7.0, 1680, 8),
-              InstanceTypeSpec('mem1_hdd2_x32', 60.5, 3360, 32),
-
               InstanceTypeSpec('mem2_ssd1_x2', 7.5, 32, 2),
               InstanceTypeSpec('mem2_ssd1_x4', 15.0, 80, 4),
               InstanceTypeSpec('mem2_ssd1_x8', 30.0, 160, 8),
-
-              InstanceTypeSpec('mem2_hdd2_x1', 3.8, 410, 1),
-              InstanceTypeSpec('mem2_hdd2_x2', 7.5, 840, 2),
-              InstanceTypeSpec('mem2_hdd2_x4', 15.0, 1680, 4),
 
               InstanceTypeSpec('mem3_ssd1_x2', 15.0, 32, 2),
               InstanceTypeSpec('mem3_ssd1_x4', 30.5, 80, 4),
@@ -441,10 +435,25 @@ class InstanceTypesCompleter():
               InstanceTypeSpec('mem3_ssd1_x16', 122.0, 320, 16),
               InstanceTypeSpec('mem3_ssd1_x32', 244.0, 640, 32),
 
+              InstanceTypeSpec('mem1_ssd2_x2', 3.8, 160, 2),
+              InstanceTypeSpec('mem1_ssd2_x4', 7.5, 320, 4),
+              InstanceTypeSpec('mem1_ssd2_x8', 15, 640, 8),
+              InstanceTypeSpec('mem1_ssd2_x16', 30, 1280, 16),
+              InstanceTypeSpec('mem1_ssd2_x36', 60, 2880, 36)):
+        preferred_instance_types[i.Name] = i
+    instance_types = OrderedDict(preferred_instance_types)
+    for i in (InstanceTypeSpec('mem1_hdd2_x8', 7.0, 1680, 8),
+              InstanceTypeSpec('mem1_hdd2_x32', 60.5, 3360, 32),
+
+              InstanceTypeSpec('mem2_hdd2_x1', 3.8, 410, 1),
+              InstanceTypeSpec('mem2_hdd2_x2', 7.5, 840, 2),
+              InstanceTypeSpec('mem2_hdd2_x4', 15.0, 1680, 4),
+
               InstanceTypeSpec('mem3_hdd2_x2', 17.1, 420, 2),
               InstanceTypeSpec('mem3_hdd2_x4', 34.2, 850, 4),
               InstanceTypeSpec('mem3_hdd2_x8', 68.4, 1680, 8)):
         instance_types[i.Name] = i
+    default_instance_type = instance_types['mem1_ssd1_x4']
     instance_type_names = instance_types.keys()
 
     def complete(self, text, state):

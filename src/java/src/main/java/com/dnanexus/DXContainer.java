@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -91,13 +91,10 @@ public class DXContainer extends DXObject {
      */
     @JsonInclude(Include.NON_NULL)
     private static class ContainerMoveRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<String> objects;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<String> folders;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String destination;
 
@@ -129,7 +126,7 @@ public class DXContainer extends DXObject {
             objectIds.add(dataObj.getId());
         }
         DXAPI.containerMove(this.getId(), new ContainerMoveRequest(objectIds.build(), folders,
-                destinationFolder), ContainerMoveResponse.class);
+                destinationFolder), ContainerMoveResponse.class, this.env);
     }
 
     /**
@@ -159,11 +156,9 @@ public class DXContainer extends DXObject {
      */
     @JsonInclude(Include.NON_NULL)
     private static class ContainerNewFolderRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String folder;
         @JsonProperty
-        @SuppressWarnings("unused")
         private final Boolean parents;
 
         private ContainerNewFolderRequest(String folder) {
@@ -190,7 +185,7 @@ public class DXContainer extends DXObject {
      */
     public void newFolder(String folderPath) {
         DXAPI.containerNewFolder(this.getId(), new ContainerNewFolderRequest(folderPath),
-                ContainerNewFolderResponse.class);
+                ContainerNewFolderResponse.class, this.env);
     }
 
     /**
@@ -201,7 +196,7 @@ public class DXContainer extends DXObject {
      */
     public void newFolder(String folderPath, boolean parents) {
         DXAPI.containerNewFolder(this.getId(), new ContainerNewFolderRequest(folderPath, parents),
-                ContainerNewFolderResponse.class);
+                ContainerNewFolderResponse.class, this.env);
     }
 
     /**
@@ -209,11 +204,9 @@ public class DXContainer extends DXObject {
      */
     @JsonInclude(Include.NON_NULL)
     private static class ContainerRenameFolderRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String folder;
         @JsonProperty
-        @SuppressWarnings("unused")
         private final String name;
 
         private ContainerRenameFolderRequest(String folder, String name) {
@@ -243,7 +236,7 @@ public class DXContainer extends DXObject {
         // available
         DXAPI.containerRenameFolder(this.getId(),
                 new ContainerRenameFolderRequest(folderPath, name),
-                ContainerRenameFolderResponse.class);
+                ContainerRenameFolderResponse.class, this.env);
     }
 
     /**
@@ -251,11 +244,9 @@ public class DXContainer extends DXObject {
      */
     @JsonInclude(Include.NON_NULL)
     private static class ContainerRemoveFolderRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String folder;
         @JsonProperty
-        @SuppressWarnings("unused")
         private final Boolean recurse;
 
         private ContainerRemoveFolderRequest(String folder) {
@@ -282,7 +273,7 @@ public class DXContainer extends DXObject {
      */
     public void removeFolder(String folderPath) {
         DXAPI.containerRemoveFolder(this.getId(), new ContainerRemoveFolderRequest(folderPath),
-                ContainerRemoveFolderResponse.class);
+                ContainerRemoveFolderResponse.class, this.env);
     }
 
     /**
@@ -293,7 +284,7 @@ public class DXContainer extends DXObject {
      */
     public void removeFolder(String folderPath, boolean recurse) {
         DXAPI.containerRemoveFolder(this.getId(), new ContainerRemoveFolderRequest(folderPath,
-                recurse), ContainerRemoveFolderResponse.class);
+                recurse), ContainerRemoveFolderResponse.class, this.env);
     }
 
     /**
@@ -301,7 +292,6 @@ public class DXContainer extends DXObject {
      */
     @JsonInclude(Include.NON_NULL)
     private static class ContainerRemoveObjectsRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<String> objects;
 
@@ -332,12 +322,11 @@ public class DXContainer extends DXObject {
      */
     public void removeObjects(List<? extends DXDataObject> objects) {
         DXAPI.containerRemoveObjects(this.getId(), new ContainerRemoveObjectsRequest(objects),
-                ContainerRemoveObjectsResponse.class);
+                ContainerRemoveObjectsResponse.class, this.env);
     }
 
     @JsonInclude(Include.NON_NULL)
     private static class ContainerListFolderRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String folder;
 
@@ -417,7 +406,7 @@ public class DXContainer extends DXObject {
         // TODO: parameters describe and includeHidden
         ContainerListFolderResponse r =
                 DXAPI.containerListFolder(this.getId(), new ContainerListFolderRequest(folderPath),
-                        ContainerListFolderResponse.class);
+                        ContainerListFolderResponse.class, this.env);
         return new FolderContents(r.objects, r.folders, this, this.env);
     }
 

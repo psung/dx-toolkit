@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -26,7 +26,9 @@ import datetime
 import platform
 from dxpy.utils.printing import *
 from dxpy.utils.describe import job_output_to_str, io_val_to_str
+from dxpy.cli import prompt_for_yn, INTERACTIVE_CLI
 from dxpy.cli.exec_io import *
+from dxpy.exceptions import err_exit
 from dxpy.scripts import dx_build_app
 import dxpy.utils.local_exec_utils as local_exec_utils
 from dxpy.compat import open, wrap_env_var_handlers
@@ -41,9 +43,13 @@ parser.add_argument('-i', '--input', help=fill('An input to be used in calling t
 parser.add_argument('-j', '--input-json', help=fill('The full input JSON (keys=input field names, values=input field values)', width_adjustment=-24))
 parser.add_argument('-f', '--input-json-file', dest='filename', help=fill('Load input JSON from FILENAME ("-" to use stdin)'))
 parser.add_argument('-x', help='Adds the -x flag for bash apps so that each command is echoed to stderr', action='store_true')
+parser.add_argument('-y', '--yes', dest='confirm', help='Do not ask for confirmation', action='store_false')
 args = parser.parse_args()
 
 args.path = os.path.abspath(args.path)
+
+if dxpy.AUTH_HELPER is None:
+    err_exit("You must be logged in to the DNAnexus Platform to run this command; e.g. please run 'dx login'", code=3)
 
 # Do the equivalent of "dx build --dry-run" to do some basic checking
 with tempfile.TemporaryFile() as fd:
@@ -56,7 +62,7 @@ with tempfile.TemporaryFile() as fd:
     build_error = None
     try:
         dx_build_app.build_and_upload_locally(args.path, 'app', dry_run=True)
-    except Exception as e:
+    except BaseException as e:
         build_error = e
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
@@ -74,6 +80,9 @@ with open(path_to_dxapp_json, 'r') as fd:
     dxapp_json = json.load(fd)
 
 interpreter = dxapp_json['runSpec']['interpreter']
+
+if interpreter not in ('python2.7', 'bash'):
+    err_exit('Unknown interpreter {} in {}'.format(interpreter, path_to_dxapp_json), code=3)
 
 running_main = args.function == 'main'
 
@@ -95,7 +104,7 @@ if not os.path.isdir(args.workspace_path):
     parser.exit(1,
                 fill('Error: The path to be used for job home directories is not a directory') + '\n')
 
-job_homedirs = os.path.join(args.workspace_path, datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S'))
+job_homedirs = os.path.join(args.workspace_path, datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S-%f'))
 os.mkdir(job_homedirs)
 all_job_outputs_path = os.path.join(job_homedirs, 'job_outputs.json')
 with open(all_job_outputs_path, 'w') as fd:
@@ -138,10 +147,21 @@ if platform.system() == 'Darwin':
 os.environ['DX_FS_ROOT'] = resources_path
 os.environ['DX_TEST_CODE_PATH'] = code_path
 os.environ['DX_TEST_JOB_HOMEDIRS'] = job_homedirs
+os.environ['DX_TEST_DXAPP_JSON'] = path_to_dxapp_json
+
 if args.x:
     os.environ['DX_TEST_X_FLAG'] = '1'
 
-print('About to run app ' + dxapp_json['name'] + ' locally')
+print()
+print('Using input JSON:')
+print(json.dumps(job_inputs.inputs, indent=4))
+print()
+
+# Ask for confirmation if a tty and if input was not given as a
+# single JSON.
+if args.confirm and INTERACTIVE_CLI:
+    if not prompt_for_yn('Confirm running the executable with this input', default=True):
+        parser.exit(0)
 
 main_job_id = local_exec_utils.queue_entry_point(function=args.function,
                                                  input_hash=job_inputs.inputs)

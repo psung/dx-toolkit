@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -70,7 +70,11 @@ namespace dx {
       cur_state = describe()["state"].get<string>();
       if (cur_state == state)
         return;
+#if !WINDOWS_BUILD
       sleep(2);
+#else
+      boost::this_thread::sleep(boost::posix_time::milliseconds(2 * 1000));
+#endif
       elapsed += 2;
     } while (elapsed <= timeout);
   }

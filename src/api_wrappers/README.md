@@ -25,7 +25,8 @@ whose elements are arrays themselves. This is what it looks like:
     {
       "objectMethod": false,
       "retryable": false,
-      "wikiLink": "https://wiki.dnanexus.com/API-Specification-v1.0.0/Files#API-method%3A-%2Ffile%2Fnew"
+      "wikiLink": "https://wiki.dnanexus.com/API-Specification-v1.0.0/Files#API-method%3A-%2Ffile%2Fnew",
+      "acceptsNonce": true
     }
   ],
   ...,
@@ -40,6 +41,7 @@ Each route is described by an array with exactly 3 elements:
     * `objectMethod`: boolean; true for routes that are called on a specific object ID (e.g. `/record-xxxx/describe`), and false for routes that are not bound to a specific object ID (e.g. `/system/findJobs`, `/record/new`).
     * `retryable`: boolean; true if the route is "safe" to retry for failed requests. This information is used by the API wrappers to decide when to retry a failed request.
     * `wikiLink`: either null or a string; if provided, contains a URL for documentation for the route. This information can be used to add wiki links in api wrapper documentation.
+    * `acceptsNonce`: boolean; (optional) if present, the route accepts a nonce that is used to uniquely identify a request.
 
 Adding wrappers for a new language
 ----------------------------------
@@ -47,7 +49,8 @@ Adding wrappers for a new language
 By convention we create a file `generateXXXXAPIWrappers.py` in this directory
 for each supported language. This is a Python script which reads
 `wrapper_table.json` from stdin, and produces a language-specific wrapper file
-on stdout.
+on stdout. There are also some unsupported wrappers for additional languages in
+the `contrib` directory of dx-toolkit.
 
 To add wrappers for your favorite language (say, Ruby):
 
@@ -60,15 +63,45 @@ To add wrappers for your favorite language (say, Ruby):
 HTTP Retry logic
 ----------------
 
-An HTTP request to the API server should be retried (up to some fixed number of retries) if any of the following are true:
+An HTTP request to the API server should be retried (up to some fixed
+number of retries) if any of the following are true:
 
-* A response is received from the server, and the response has an HTTP status code in 5xx range.
+* A response is received from the server, and the response has an HTTP
+  status code in 5xx range.
     * This may indicate that the server encountered a transient error.
-    * If the status code is 503 (Service Unavailable) and Retry-After is set, the failure should not count against the maximum allowed number of retries.
-* *safe_to_retry* (caller-supplied parameter; for compatibility reasons this is called *always_retry* in some language bindings) is True, or the request *method* is "GET"; and one of the following is true:
-    * No response is received from the server.
-    * A response is received from the server, and the content length received does not match the "Content-Length" header.
-        * This indicates that the response was likely corrupted (truncated).
-    * A response is received from the server, the "Content-Length" header is not set, and the response JSON cannot be parsed.
-        * This is a mechanism that allows for the server to indicate a transient error encountered during a streaming response (after the headers have been sent), simply by halting output.
-* It is certain that the request was never received by the server (some clients may not be able to determine whether this was the case).
+    * If the status code is 503 (Service Unavailable) and Retry-After is
+      set, the failure should not count against the maximum allowed
+      number of retries.
+* *safe_to_retry* (caller-supplied parameter; for compatibility reasons
+  this is called *always_retry* in some language bindings) is True, or
+  the request *method* is "GET"; and one of the following is true:
+    * No response is received from the server. (For example, this may
+      manifest in the requests library as BadStatusLine.)
+    * A response is received from the server, and the content length
+      received does not match the "Content-Length" header (possibly
+      because the connection has been dropped). (For example, this may
+      manifest in the requests library as ContentLengthError or
+      ProtocolError.)
+        * This indicates that the response was likely corrupted
+          (truncated).
+    * A response is received from the server, the "Content-Length"
+      header is not set, and the response JSON cannot be parsed.
+        * This is a mechanism that allows for the server to indicate a
+          transient error encountered during a streaming response (after
+          the headers have been sent), simply by halting output.
+    * The HTTP client library signals an unhandled exception or other
+      protocol error.
+* The request *method* is "PUT", and one of the following is true:
+    * The HTTP status code is 400, and S3 returns a RequestTimeout
+      error. (See:
+      [Amazon S3 error codes](http://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html))
+    * The HTTP client library signals an unhandled exception or other
+      protocol error.
+* It is certain that the request was never received by the server (some
+  clients may not be able to determine whether this was the case).
+
+If a download request (i.e. against a URL returned by
+/file-xxxx/download) fails and is retryable under the conditions above,
+the client may also consider splitting the byte range into smaller byte
+ranges and issuing separate requests for each (with each subrange itself
+being retryable using the logic specified above).

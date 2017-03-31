@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -36,7 +36,8 @@ import com.google.common.collect.Maps;
 public enum DataObjectState {
     OPEN("open"),
     CLOSING("closing"),
-    CLOSED("closed");
+    CLOSED("closed"),
+    ABANDONED("abandoned");
 
     private static Map<String, DataObjectState> createMap;
 
@@ -48,7 +49,6 @@ public enum DataObjectState {
         createMap = ImmutableMap.copyOf(result);
     }
 
-    @SuppressWarnings("unused")
     @JsonCreator
     private static DataObjectState create(String value) {
         return createMap.get(value);

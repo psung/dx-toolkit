@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -32,7 +32,7 @@ import imghdr
 import json
 import os
 import re
-from dxpy.packages import requests
+import requests
 
 parser = argparse.ArgumentParser(description="Constructs and saves/uploads an HTML report from HTML and/or linked images")
 parser.add_argument("src", help="Source image or HTML file(s)", nargs="+")
@@ -47,7 +47,7 @@ def _image_to_data(img):
     Does the work of encoding an image into Base64
     """
     # If the image is already encoded in Base64, we have nothing to do here
-    if not "src" in img.attrs or img["src"].startswith("data:"):
+    if "src" not in img.attrs or img["src"].startswith("data:"):
         return
     elif re.match("https?://", img["src"]):
         img_data = _load_url(img["src"]).read()

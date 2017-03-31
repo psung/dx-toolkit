@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -22,11 +22,13 @@ contents of describe hashes for various DNAnexus entities (projects,
 containers, dataobjects, apps, and jobs).
 '''
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import datetime, time, json, math, sys, copy
+import subprocess
 from collections import defaultdict
 
+import dxpy
 from .printing import (RED, GREEN, BLUE, YELLOW, WHITE, BOLD, UNDERLINE, ENDC, DELIMITER, get_delimiter, fill)
 from ..compat import basestring
 
@@ -54,14 +56,21 @@ def DATA_STATES(state):
 
 SIZE_LEVEL = ['bytes', 'KB', 'MB', 'GB', 'TB']
 
+
 def get_size_str(size):
+    """
+    Formats a byte size as a string.
+
+    The returned string is no more than 9 characters long.
+    """
     if size == 0:
         magnitude = 0
         level = 0
     else:
         magnitude = math.floor(math.log(size, 10))
-        level = int(min(math.floor(magnitude / 3), 4))
+        level = int(min(math.floor(magnitude // 3), 4))
     return ('%d' if level == 0 else '%.2f') % (float(size) / 2**(level*10)) + ' ' + SIZE_LEVEL[level]
+
 
 def parse_typespec(thing):
     if isinstance(thing, basestring):
@@ -240,34 +249,58 @@ def job_output_to_str(job_output, prefix='\n', title="Output: ", title_len=None)
                                                                    subsequent_indent=' '*9,
                                                                    break_long_words=False) for key, value in job_output.items()])
 
+
 def get_io_field(io_hash, defaults=None, delim='=', highlight_fields=()):
+
+    def highlight_value(key, value):
+        if key in highlight_fields:
+            return YELLOW() + value + ENDC()
+        else:
+            return value
+
     if defaults is None:
         defaults = {}
     if io_hash is None:
         return '-'
     if len(io_hash) == 0 and len(defaults) == 0:
         return '-'
-    def highlight_value(key, value):
-        if key in highlight_fields:
-            return YELLOW() + value + ENDC()
-        else:
-            return value
     if get_delimiter() is not None:
         return ('\n' + get_delimiter()).join([(key + delim + highlight_value(key, io_val_to_str(value))) for key, value in io_hash.items()] +
                                              [('[' + key + delim + io_val_to_str(value) + ']') for key, value in defaults.items()])
     else:
-        return ('\n').join([fill(key + ' ' + delim + ' ' + highlight_value(key, io_val_to_str(value)),
-                                 initial_indent=' '*16,
-                                 subsequent_indent=' '*17,
-                                 break_long_words=False) for key, value in io_hash.items()] +
-                           [fill('[' + key + ' ' + delim + ' ' + io_val_to_str(value) + ']',
-                                 initial_indent=' '*16,
-                                 subsequent_indent=' '*17,
-                                 break_long_words=False) for key, value in defaults.items()])[16:]
+        lines = [fill(key + ' ' + delim + ' ' + highlight_value(key, io_val_to_str(value)),
+                      initial_indent=' ' * FIELD_NAME_WIDTH,
+                      subsequent_indent=' ' * (FIELD_NAME_WIDTH + 1),
+                      break_long_words=False)
+                 for key, value in io_hash.items()]
+        lines.extend([fill('[' + key + ' ' + delim + ' ' + io_val_to_str(value) + ']',
+                           initial_indent=' ' * FIELD_NAME_WIDTH,
+                           subsequent_indent=' ' * (FIELD_NAME_WIDTH + 1),
+                           break_long_words=False)
+                      for key, value in defaults.items()])
+        return '\n'.join(lines)[FIELD_NAME_WIDTH:]
 
 def get_resolved_jbors(resolved_thing, orig_thing, resolved_jbors):
+    if resolved_thing == orig_thing:
+        return
     if is_job_ref(orig_thing):
-        resolved_jbors[jbor_to_str(orig_thing)] = resolved_thing
+        jbor_str = jbor_to_str(orig_thing)
+        if jbor_str not in resolved_jbors:
+            try:
+                from dxpy.api import job_describe
+                job_output = job_describe(get_job_from_jbor(orig_thing)).get('output')
+                if job_output is not None:
+                    field_value = job_output.get(get_field_from_jbor(orig_thing))
+                    jbor_index = get_index_from_jbor(orig_thing)
+                    if jbor_index is not None:
+                        if isinstance(field_value, list):
+                            resolved_jbors[jbor_str] = field_value[jbor_index]
+                    else:
+                        resolved_jbors[jbor_str] = field_value
+            except:
+                # Just don't report any resolved JBORs if there are
+                # any problems
+                pass
     elif isinstance(orig_thing, list):
         for i in range(len(orig_thing)):
             get_resolved_jbors(resolved_thing[i], orig_thing[i], resolved_jbors)
@@ -276,7 +309,26 @@ def get_resolved_jbors(resolved_thing, orig_thing, resolved_jbors):
             get_resolved_jbors(resolved_thing[key], orig_thing[key], resolved_jbors)
 
 def render_bundleddepends(thing):
-    return [item["name"] + " (" + item["id"]["$dnanexus_link"] + ")" for item in thing]
+    from ..bindings.search import find_one_data_object
+    from ..exceptions import DXError
+    bundles = []
+    for item in thing:
+        bundle_asset_record = dxpy.DXFile(item["id"]["$dnanexus_link"]).get_properties().get("AssetBundle")
+        asset = None
+
+        if bundle_asset_record:
+            asset = dxpy.DXRecord(bundle_asset_record)
+
+        if asset:
+            try:
+                bundles.append(asset.describe().get("name") + " (" + asset.get_id() + ")")
+            except DXError:
+                asset = None
+
+        if not asset:
+            bundles.append(item["name"] + " (" + item["id"]["$dnanexus_link"] + ")")
+
+    return bundles
 
 def render_execdepends(thing):
     rendered = []
@@ -318,19 +370,29 @@ def render_stage(title, stage, as_stage_of=None):
         print_field(line[0], line[1])
 
 def render_short_timestamp(timestamp):
-    return str(datetime.datetime.fromtimestamp(timestamp/1000))
+    return str(datetime.datetime.fromtimestamp(timestamp//1000))
 
 def render_timestamp(timestamp):
-    return datetime.datetime.fromtimestamp(timestamp/1000).ctime()
+    return datetime.datetime.fromtimestamp(timestamp//1000).ctime()
+
+
+FIELD_NAME_WIDTH = 20
+
 
 def print_field(label, value):
     if get_delimiter() is not None:
         sys.stdout.write(label + get_delimiter() + value + '\n')
     else:
-        sys.stdout.write(label + " " * (16-len(label)) + fill(value, subsequent_indent=' '*16, width_adjustment=-16) + '\n')
+        sys.stdout.write(
+            label + " " * (FIELD_NAME_WIDTH-len(label)) + fill(value,
+                                                               subsequent_indent=' '*FIELD_NAME_WIDTH,
+                                                               width_adjustment=-FIELD_NAME_WIDTH) +
+            '\n')
+
 
 def print_nofill_field(label, value):
-    sys.stdout.write(label + DELIMITER(" " * (16-len(label))) + value + '\n')
+    sys.stdout.write(label + DELIMITER(" " * (FIELD_NAME_WIDTH - len(label))) + value + '\n')
+
 
 def print_list_field(label, values):
     print_field(label, ('-' if len(values) == 0 else DELIMITER(', ').join(values)))
@@ -338,11 +400,19 @@ def print_list_field(label, values):
 def print_json_field(label, json_value):
     print_field(label, json.dumps(json_value, ensure_ascii=False))
 
-def print_project_desc(desc, verbose=False):
-    recognized_fields = ['id', 'class', 'name', 'summary', 'description', 'protected', 'restricted', 'created', 'modified', 'dataUsage', 'sponsoredDataUsage', 'tags', 'level', 'folders', 'objects', 'permissions', 'properties', 'appCaches', 'billTo', 'version', 'createdBy',
-                         # Following are app container-specific
-                         'destroyAt', 'project', 'type', 'app', 'appName']
 
+def print_project_desc(desc, verbose=False):
+    recognized_fields = [
+        'id', 'class', 'name', 'summary', 'description', 'protected', 'restricted', 'created', 'modified',
+        'dataUsage', 'sponsoredDataUsage', 'tags', 'level', 'folders', 'objects', 'permissions', 'properties',
+        'appCaches', 'billTo', 'version', 'createdBy', 'totalSponsoredEgressBytes', 'consumedSponsoredEgressBytes',
+        'containsPHI', 'region', 'storageCost', 'pendingTransfer', 'archivalState', 'atSpendingLimit',
+        'archivalProgress',
+        # Following are app container-specific
+        'destroyAt', 'project', 'type', 'app', 'appName'
+    ]
+
+    # Basic metadata
     print_field("ID", desc["id"])
     print_field("Class", desc["class"])
     if "name" in desc:
@@ -353,12 +423,30 @@ def print_project_desc(desc, verbose=False):
         print_field("Description", desc['description'])
     if 'version' in desc and verbose:
         print_field("Version", str(desc['version']))
+
+    # Ownership and permissions
     if 'billTo' in desc:
         print_field("Billed to",  desc['billTo'][5 if desc['billTo'].startswith('user-') else 0:])
+    if 'pendingTransfer' in desc and (verbose or desc['pendingTransfer'] is not None):
+        print_json_field('Pending transfer to', desc['pendingTransfer'])
+    if "level" in desc:
+        print_field("Access level", desc["level"])
+    if 'region' in desc:
+        print_field('Region', desc['region'])
+
+    # Project settings
     if 'protected' in desc:
         print_json_field("Protected", desc["protected"])
     if 'restricted' in desc:
         print_json_field("Restricted", desc["restricted"])
+    if 'containsPHI' in desc:
+        print_json_field('Contains PHI', desc['containsPHI'])
+    if 'archivalState' in desc and verbose:
+        print_field('Archival state', desc['archivalState'])
+    if 'archivalProgress' in desc and verbose:
+        print_json_field('Archival progress', desc['archivalProgress'])
+
+    # Usage
     print_field("Created", render_timestamp(desc['created']))
     if 'createdBy' in desc:
         print_field("Created by", desc['createdBy']['user'][desc['createdBy']['user'].find('-') + 1:])
@@ -366,46 +454,56 @@ def print_project_desc(desc, verbose=False):
     print_field("Data usage", ('%.2f' % desc["dataUsage"]) + ' GB')
     if 'sponsoredDataUsage' in desc:
         print_field("Sponsored data", ('%.2f' % desc["sponsoredDataUsage"]) + ' GB')
+    if 'storageCost' in desc:
+        print_field("Storage cost", "$%.3f/month" % desc["storageCost"])
+    if 'totalSponsoredEgressBytes' in desc or 'consumedSponsoredEgressBytes' in desc:
+        total_egress_str = '%.2f GB' % (desc['totalSponsoredEgressBytes'] / 1073741824.,) \
+                           if 'totalSponsoredEgressBytes' in desc else '??'
+        consumed_egress_str = '%.2f GB' % (desc['consumedSponsoredEgressBytes'] / 1073741824.,) \
+                              if 'consumedSponsoredEgressBytes' in desc else '??'
+        print_field('Sponsored egress',
+                    ('%s used of %s total' % (consumed_egress_str, total_egress_str)))
+    if 'atSpendingLimit' in desc:
+        print_json_field("At spending limit?", desc['atSpendingLimit'])
+
+    # Misc metadata
     if "objects" in desc:
         print_field("# Files", str(desc["objects"]))
-    if 'tags' in desc:
-        print_list_field("Tags", desc["tags"])
-    if "level" in desc:
-        print_field("Access level", desc["level"])
     if "folders" in desc:
         print_list_field("Folders", desc["folders"])
     if "permissions" in desc:
-        print_list_field("Permissions", [key[5 if key.startswith('user-') else 0:] + ':' + value for key, value in desc["permissions"].items()])
+        print_list_field(
+            "Permissions",
+            [key[5 if key.startswith('user-') else 0:] + ':' + value for key, value in desc["permissions"].items()]
+        )
+    if 'tags' in desc:
+        print_list_field("Tags", desc["tags"])
     if "properties" in desc:
         print_list_field("Properties", [key + '=' + value for key, value in desc["properties"].items()])
+
     if "appCaches" in desc:
         print_json_field("App caches", desc["appCaches"])
+
+    # Container-specific
     if 'type' in desc:
         print_field("Container type", desc["type"])
     if 'project' in desc:
-        print_field("Assoc. project", desc["project"])
+        print_field("Associated project", desc["project"])
     if 'destroyAt' in desc:
         print_field("To be destroyed", render_timestamp(desc['modified']))
     if 'app' in desc:
-        print_field("Assoc. App ID", desc["app"])
+        print_field("Associated App ID", desc["app"])
     if 'appName' in desc:
-        print_field("Assoc. App", desc["appName"])
+        print_field("Associated App", desc["appName"])
 
     for field in desc:
         if field not in recognized_fields:
             print_json_field(field, desc[field])
 
+
 def print_app_desc(desc, verbose=False):
     recognized_fields = ['id', 'class', 'name', 'version', 'aliases', 'createdBy', 'created', 'modified', 'deleted', 'published', 'title', 'subtitle', 'description', 'categories', 'access', 'dxapi', 'inputSpec', 'outputSpec', 'runSpec', 'resources', 'billTo', 'installed', 'openSource', 'summary', 'applet', 'installs', 'billing', 'details', 'developerNotes',
                          'authorizedUsers']
-
-    advanced_inputs = []
-    details = desc["details"]
-    if isinstance(details, dict) and "advancedInputs" in details:
-        if not verbose:
-            advanced_inputs = details["advancedInputs"]
-        del details["advancedInputs"]
-
     print_field("ID", desc["id"])
     print_field("Class", desc["class"])
     if 'billTo' in desc:
@@ -421,6 +519,13 @@ def print_app_desc(desc, verbose=False):
     print_json_field('Open source', desc['openSource'])
     print_json_field('Deleted', desc['deleted'])
     if not desc['deleted']:
+        advanced_inputs = []
+        details = desc["details"]
+        if isinstance(details, dict) and "advancedInputs" in details:
+            if not verbose:
+                advanced_inputs = details["advancedInputs"]
+            del details["advancedInputs"]
+
         if 'published' not in desc or desc["published"] < 0:
             print_field("Published", "-")
         else:
@@ -556,7 +661,7 @@ def print_data_obj_desc(desc, verbose=False):
                 else:
                     print_field("Size", str(desc['size']))
             elif field == "length":
-                if desc["class"] == "gtable" or desc['class'] == 'table':
+                if desc["class"] == "gtable":
                     print_field("Size (rows)", str(desc['length']))
                 else:
                     print_field("Length", str(desc['length']))
@@ -571,8 +676,19 @@ def print_data_obj_desc(desc, verbose=False):
             else: # Unhandled prettifying
                 print_json_field(field, desc[field])
 
+
+def printable_ssh_host_key(ssh_host_key):
+    try:
+        keygen = subprocess.Popen(["ssh-keygen", "-lf", "/dev/stdin"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        (stdout, stderr) = keygen.communicate(ssh_host_key)
+    except:
+        return ssh_host_key.strip()
+    else:
+        return stdout.replace(" no comment", "").strip()
+
+
 def print_execution_desc(desc):
-    recognized_fields = ['id', 'class', 'project', 'workspace',
+    recognized_fields = ['id', 'class', 'project', 'workspace', 'region',
                          'app', 'applet', 'executable', 'workflow',
                          'state',
                          'rootExecution', 'parentAnalysis', 'parentJob', 'originJob', 'analysis', 'stage',
@@ -582,7 +698,7 @@ def print_execution_desc(desc):
                          'name', 'instanceType', 'systemRequirements', 'executableName', 'failureFrom', 'billTo',
                          'startedRunning', 'stoppedRunning', 'stateTransitions',
                          'delayWorkspaceDestruction', 'stages', 'totalPrice', 'isFree', 'invoiceMetadata',
-                         'priority']
+                         'priority', 'sshHostKey']
 
     print_field("ID", desc["id"])
     print_field("Class", desc["class"])
@@ -591,6 +707,8 @@ def print_execution_desc(desc):
     if "executableName" in desc and desc['executableName'] is not None:
         print_field("Executable name", desc['executableName'])
     print_field("Project context", desc["project"])
+    if 'region' in desc:
+        print_field("Region", desc["region"])
     if 'billTo' in desc:
         print_field("Billed to",  desc['billTo'][5 if desc['billTo'].startswith('user-') else 0:])
     if 'workspace' in desc:
@@ -654,17 +772,17 @@ def print_execution_desc(desc):
             print_field("Started running", render_timestamp(desc['startedRunning']))
         else:
             print_field("Started running", "{t} (running for {rt})".format(t=render_timestamp(desc['startedRunning']),
-                rt=datetime.timedelta(seconds=int(time.time())-desc['startedRunning']/1000)))
+                rt=datetime.timedelta(seconds=int(time.time())-desc['startedRunning']//1000)))
     if 'stoppedRunning' in desc:
         print_field("Stopped running", "{t} (Runtime: {rt})".format(
             t=render_timestamp(desc['stoppedRunning']),
-            rt=datetime.timedelta(seconds=(desc['stoppedRunning']-desc['startedRunning'])/1000)))
+            rt=datetime.timedelta(seconds=(desc['stoppedRunning']-desc['startedRunning'])//1000)))
     if desc.get('class') == 'analysis' and 'stateTransitions' in desc and desc['stateTransitions']:
         # Display finishing time of the analysis if available
         if desc['stateTransitions'][-1]['newState'] in ['done', 'failed', 'terminated']:
             print_field("Finished", "{t} (Wall-clock time: {wt})".format(
                 t=render_timestamp(desc['stateTransitions'][-1]['setAt']),
-                wt=datetime.timedelta(seconds=(desc['stateTransitions'][-1]['setAt']-desc['created'])/1000)))
+                wt=datetime.timedelta(seconds=(desc['stateTransitions'][-1]['setAt']-desc['created'])//1000)))
     print_field("Last modified", render_timestamp(desc['modified']))
     if 'waitingOnChildren' in desc:
         print_list_field('Pending subjobs', desc['waitingOnChildren'])
@@ -713,9 +831,11 @@ def print_execution_desc(desc):
                 else:
                     print_nofill_field(" sys reqs", YELLOW() + json.dumps(cloned_sys_reqs) + ENDC())
     if not desc.get('isFree') and desc.get('totalPrice') is not None:
-        print_field('Total Price', "%.2f" % desc['totalPrice'])
+        print_field('Total Price', "$%.2f" % desc['totalPrice'])
     if desc.get('invoiceMetadata'):
         print_json_field("Invoice Metadata", desc['invoiceMetadata'])
+    if desc.get('sshHostKey'):
+        print_nofill_field("SSH Host Key", printable_ssh_host_key(desc['sshHostKey']))
 
     for field in desc:
         if field not in recognized_fields:
@@ -726,6 +846,11 @@ def print_user_desc(desc):
     print_field("Name", desc["first"] + " " + ((desc["middle"] + " ") if desc["middle"] != '' else '') + desc["last"])
     if "email" in desc:
         print_field("Email", desc["email"])
+
+    bill_to_label = "Default bill to"
+    if "billTo" in desc:
+        print_field(bill_to_label, desc["billTo"])
+
     if "appsInstalled" in desc:
         print_list_field("Apps installed", desc["appsInstalled"])
 
@@ -761,8 +886,24 @@ def get_ls_desc(desc, print_id=False):
     else:
         return desc['name'] + addendum
 
+
 def print_ls_desc(desc, **kwargs):
     print(get_ls_desc(desc, **kwargs))
+
+
+def get_ls_l_header():
+    return (BOLD() +
+            'State' + DELIMITER('   ') +
+            'Last modified' + DELIMITER('       ') +
+            'Size' + DELIMITER('      ') +
+            'Name' + DELIMITER(' (') +
+            'ID' + DELIMITER(')') +
+            ENDC())
+
+
+def print_ls_l_header():
+    print(get_ls_l_header())
+
 
 def get_ls_l_desc(desc, include_folder=False, include_project=False):
     if 'state' in desc:
@@ -789,12 +930,19 @@ def get_ls_l_desc(desc, include_folder=False, include_project=False):
         size_str = get_size_str(desc['size'])
     elif 'length' in desc:
         size_str = str(desc['length']) + ' rows'
-    size_padding = ' '*(max(0, 8 - len(size_str)))
+    size_padding = ' ' * max(0, 9 - len(size_str))
 
-    return state_str + DELIMITER(' '*(8 - state_len)) + render_short_timestamp(desc['modified']) + DELIMITER(' ') + size_str + DELIMITER(size_padding + ' ') + name_str + DELIMITER(' (') + ((desc['project'] + DELIMITER(':')) if include_project else '') + desc['id'] + DELIMITER(')')
+    return (state_str +
+            DELIMITER(' '*(8 - state_len)) + render_short_timestamp(desc['modified']) +
+            DELIMITER(' ') + size_str +
+            DELIMITER(size_padding + ' ') + name_str +
+            DELIMITER(' (') + ((desc['project'] + DELIMITER(':')) if include_project else '') + desc['id'] +
+            DELIMITER(')'))
+
 
 def print_ls_l_desc(desc, **kwargs):
     print(get_ls_l_desc(desc, **kwargs))
+
 
 def get_find_executions_string(desc, has_children, single_result=False, show_outputs=True,
                                is_cached_result=False):
@@ -842,10 +990,10 @@ def get_find_executions_string(desc, has_children, single_result=False, show_out
         # Only print runtime if it ever started running
         if desc.get('startedRunning'):
             if desc['state'] in ['done', 'failed', 'terminated', 'waiting_on_output']:
-                runtime = datetime.timedelta(seconds=int(desc['stoppedRunning']-desc['startedRunning'])/1000)
+                runtime = datetime.timedelta(seconds=int(desc['stoppedRunning']-desc['startedRunning'])//1000)
                 cached_and_runtime_strs.append("runtime " + str(runtime))
             elif desc['state'] == 'running':
-                seconds_running = max(int(time.time()-desc['startedRunning']/1000), 0)
+                seconds_running = max(int(time.time()-desc['startedRunning']//1000), 0)
                 msg = "running for {rt}".format(rt=datetime.timedelta(seconds=seconds_running))
                 cached_and_runtime_strs.append(msg)
 

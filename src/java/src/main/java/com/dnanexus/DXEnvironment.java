@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -89,6 +89,7 @@ public class DXEnvironment {
         private String jobId;
         private String workspaceId;
         private String projectContextId;
+        private boolean disableRetry;
 
         /**
          * Initializes a Builder object using JSON config in the file
@@ -109,6 +110,7 @@ public class DXEnvironment {
             jobId = templateEnvironment.jobId;
             workspaceId = templateEnvironment.workspaceId;
             projectContextId = templateEnvironment.projectContextId;
+            disableRetry = templateEnvironment.disableRetry;
         }
 
         private Builder(File jsonConfigFile) {
@@ -120,12 +122,13 @@ public class DXEnvironment {
             jobId = null;
             workspaceId = null;
             projectContextId = null;
+            disableRetry = false;
 
             // (2) JSON file
             if (jsonConfigFile.exists()) {
                 try {
-                    JsonNode jsonConfig =
-                            jsonFactory.createJsonParser(jsonConfigFile).readValueAsTree();
+                    JsonNode jsonConfig = jsonFactory.createParser(jsonConfigFile)
+                            .readValueAsTree();
                     if (getTextValue(jsonConfig, "DX_APISERVER_HOST") != null) {
                         apiserverHost = getTextValue(jsonConfig, "DX_APISERVER_HOST");
                     }
@@ -180,8 +183,8 @@ public class DXEnvironment {
 
             try {
                 if (securityContextTxt != null) {
-                    securityContext =
-                            jsonFactory.createJsonParser(securityContextTxt).readValueAsTree();
+                    securityContext = jsonFactory.createParser(securityContextTxt)
+                            .readValueAsTree();
                 } else {
                     securityContext = null;
                 }
@@ -197,7 +200,7 @@ public class DXEnvironment {
          */
         public DXEnvironment build() {
             return new DXEnvironment(apiserverHost, apiserverPort, apiserverProtocol,
-                    securityContext, jobId, workspaceId, projectContextId);
+                    securityContext, jobId, workspaceId, projectContextId, disableRetry);
         }
 
         /**
@@ -301,6 +304,18 @@ public class DXEnvironment {
             return this;
         }
 
+        /**
+         * Disables automatic retry of HTTP requests.
+         *
+         * @param disableRetryLogic boolean
+         *
+         * @return the same Builder object
+         */
+        public Builder disableRetry() {
+            disableRetry = true;
+            return this;
+        }
+
     }
 
     private final String apiserverHost;
@@ -310,6 +325,7 @@ public class DXEnvironment {
     private final String jobId;
     private final String workspaceId;
     private final String projectContextId;
+    private final boolean disableRetry;
 
     private static final JsonFactory jsonFactory = new MappingJsonFactory();
     /**
@@ -327,14 +343,15 @@ public class DXEnvironment {
 
     private static String getTextValue(JsonNode jsonNode, String key) {
         JsonNode value = jsonNode.get(key);
-        if (value == null) {
+        if (value == null || value.isNull()) {
             return null;
         }
         return value.asText();
     }
 
     private DXEnvironment(String apiserverHost, String apiserverPort, String apiserverProtocol,
-            JsonNode securityContext, String jobId, String workspaceId, String projectContextId) {
+            JsonNode securityContext, String jobId, String workspaceId, String projectContextId, boolean
+            disableRetry) {
         this.apiserverHost = apiserverHost;
         this.apiserverPort = apiserverPort;
         this.apiserverProtocol = apiserverProtocol;
@@ -342,6 +359,7 @@ public class DXEnvironment {
         this.jobId = jobId;
         this.workspaceId = workspaceId;
         this.projectContextId = projectContextId;
+        this.disableRetry = disableRetry;
 
         // TODO: additional validation on the project/workspace, and check that
         // apiserverProtocol is either "http" or "https".
@@ -417,5 +435,14 @@ public class DXEnvironment {
             return null;
         }
         return DXContainer.getInstanceWithEnvironment(this.workspaceId, this);
+    }
+
+    /**
+     * Returns whether the retry of HTTP requests should be disabled.
+     *
+     * @return boolean
+     */
+    public boolean isRetryDisabled() {
+        return this.disableRetry;
     }
 }

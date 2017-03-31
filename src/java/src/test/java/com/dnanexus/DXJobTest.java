@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -156,5 +156,51 @@ public class DXJobTest {
         // forward compatibility)
         DXJSON.safeTreeToValue(DXJSON.parseJson("{\"notAField\": true}"),
                 DXJob.DescribeResponseHash.class);
+    }
+
+    @Test
+    public void testJobDescribeDeserializationWithNullValues() throws IOException {
+        // input, output, runInput and originalInput are missing (as if "io": false were supplied).
+        // Ensure that the accessors return IllegalStateException.
+        String describeJson = "{\"id\": \"job-000000000000000000000000\"}";
+
+        DXJob.Describe describe = new DXJob.Describe(DXJSON.safeTreeToValue(
+                DXJSON.parseJson(describeJson), DXJob.DescribeResponseHash.class),
+                DXEnvironment.create());
+
+        Assert.assertEquals("job-000000000000000000000000", describe.getId());
+        try {
+            describe.getInput(ExampleInput.class);
+            Assert.fail("Expected retrieving input to fail");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getOriginalInput(ExampleInput.class);
+            Assert.fail("Expected retrieving original input to fail");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getRunInput(ExampleInput.class);
+            Assert.fail("Expected retrieving run input to fail");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+        try {
+            describe.getOutput(ExampleOutput.class);
+            Assert.fail("Expected retrieving output to fail");
+        } catch (IllegalStateException e) {
+            // Expected
+        }
+
+        // output is null (as if the job had not completed yet).
+        describeJson = "{\"id\": \"job-000000000000000000000000\", \"output\": null}";
+
+        describe = new DXJob.Describe(DXJSON.safeTreeToValue(DXJSON.parseJson(describeJson),
+                DXJob.DescribeResponseHash.class), DXEnvironment.create());
+
+        Assert.assertEquals("job-000000000000000000000000", describe.getId());
+        Assert.assertEquals(null, describe.getOutput(ExampleOutput.class));
     }
 }

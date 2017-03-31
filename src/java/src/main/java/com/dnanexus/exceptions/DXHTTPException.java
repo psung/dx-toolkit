@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -30,6 +30,13 @@ public class DXHTTPException extends RuntimeException {
      */
     public DXHTTPException(Throwable cause) {
         super(cause);
+    }
+
+    /**
+     * Initializes a new {@code DXHTTPException}.
+     */
+    public DXHTTPException() {
+        super("Error occurred while making HTTP request");
     }
 
     private static final long serialVersionUID = -6944363469302926283L;

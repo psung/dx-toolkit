@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -26,12 +26,13 @@ full object handler.
 
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import dxpy
 from . import DXDataObject
 from . import __dict__ as all_bindings
 from ..exceptions import DXError
+from ..compat import basestring
 
 def dxlink(object_id, project_id=None):
     '''
@@ -41,10 +42,16 @@ def dxlink(object_id, project_id=None):
     :type project_id: string
 
     Creates a DXLink (a dict formatted as a symbolic DNAnexus object
-    reference) to the specified object.
+    reference) to the specified object.  Returns *object_id* if it
+    appears to be a DXLink already.
     '''
     if isinstance(object_id, DXDataObject):
         object_id = object_id.get_id()
+    if isinstance(object_id, dict):
+        if '$dnanexus_link' in object_id:
+            # In this case, dxlink was called on something that
+            # already looks like a link
+            return object_id
     if project_id is None:
         return {'$dnanexus_link': object_id}
     else:
@@ -57,7 +64,17 @@ def is_dxlink(x):
     Returns whether *x* appears to be a DNAnexus link (is a dict with
     key ``"$dnanexus_link"``) with a referenced data object.
     '''
-    return isinstance(x, dict) and '$dnanexus_link' in x and (isinstance(x['$dnanexus_link'], basestring) or isinstance(x['$dnanexus_link'], dict) and 'id' in x['$dnanexus_link'])
+    if not isinstance(x, dict):
+        return False
+    if '$dnanexus_link' not in x:
+        return False
+    link = x['$dnanexus_link']
+    if isinstance(link, basestring):
+        return True
+    elif isinstance(link, dict):
+        return ('id' in link or 'job' in link)
+    else:
+        return False
 
 def get_dxlink_ids(link):
     '''
@@ -81,7 +98,7 @@ def _guess_link_target_type(link):
             link = link['$dnanexus_link']
         else:
             link = link['$dnanexus_link']['id']
-    class_name, _id = link.split("-")
+    class_name, _id = link.split("-", 1)
     class_name = 'DX'+class_name.capitalize()
     if class_name == 'DXGtable':
         class_name = 'DXGTable'
@@ -100,7 +117,7 @@ def get_handler(id_or_link, project=None):
 
     Example::
 
-        get_handler("gtable-1234").get_col_names()
+        get_handler("file-1234")
     '''
     try:
         cls = _guess_link_target_type(id_or_link)
@@ -129,7 +146,8 @@ def get_handler(id_or_link, project=None):
 
 def describe(id_or_link, **kwargs):
     '''
-    :param id_or_link: String containing an object ID or dict containing a DXLink
+    :param id_or_link: String containing an object ID or dict containing a DXLink,
+                       or a list of object ID's or dict's containing a DXLink.
 
     Given an object ID, calls :meth:`~dxpy.bindings.DXDataObject.describe` on the object.
 
@@ -137,8 +155,23 @@ def describe(id_or_link, **kwargs):
 
         describe("file-1234")
     '''
-    handler = get_handler(id_or_link)
-    return handler.describe(**kwargs)
+    # If this is a list, extract the ids.
+    if isinstance(id_or_link, basestring) or is_dxlink(id_or_link):
+        handler = get_handler(id_or_link)
+        return handler.describe(**kwargs)
+    else:
+        links = []
+        for link in id_or_link:
+            # If this entry is a dxlink, then get the id.
+            if is_dxlink(link):
+                # Guaranteed by is_dxlink that one of the following will work
+                if isinstance(link['$dnanexus_link'], basestring):
+                    link = link['$dnanexus_link']
+                else:
+                    link = link['$dnanexus_link']['id']
+            links.append(link)
+        data_object_descriptions = dxpy.api.system_describe_data_objects({'objects': links})
+        return [desc['describe'] for desc in data_object_descriptions['results']]
 
 def get_details(id_or_link, **kwargs):
     '''

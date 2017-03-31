@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -19,13 +19,13 @@
 #include <cmath>
 #include <limits>
 
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/regex.hpp>
 
 #include "dxcpp/dxlog.h"
-#include "dxjson/dxjson.h"
 #include "dxcpp/dxcpp.h"
 
 #if MAC_BUILD
@@ -48,8 +48,15 @@ const int DEFAULT_UPLOAD_THREADS = 8;
 #endif
 
 const int DEFAULT_READ_THREADS = 2;
+const int MAX_FILE_UPLOAD = 1000;
 
-Options::Options() {
+
+Options::Options():
+  properties(dx::JSON_OBJECT),
+  type(dx::JSON_ARRAY),
+  tags(dx::JSON_ARRAY),
+  details(dx::JSON_OBJECT)
+{
   int defaultCompressThreads = std::min(8, std::max(int(boost::thread::hardware_concurrency()) - 1, 1)); //don't use more than 8 cores for compression (by default)
 
   vector<string> defaultFolders;
@@ -64,6 +71,12 @@ Options::Options() {
     ("project,p", po::value<vector<string> >(&projects), "Name or ID of the destination project")
     ("folder,f", po::value<vector<string> >(&folders)->default_value(defaultFolders, "/"), "Name of the destination folder")
     ("name,n", po::value<vector<string> >(&names), "Name of the remote file (Note: Extension \".gz\" will be appended if the file is compressed before uploading)")
+    ("visibility", po::value<string>(&visibility)->default_value("visible"), "Use \"--visibility hidden\" to set the file's visibility as hidden.")
+    ("property", po::value<vector<string> >(&propertiesInput), "Key-value pair to add as a property; repeat as necessary, e.g. \"--property key1=val1 --property key2=val2\"")
+    ("type", po::value<vector<string> >(&typeInput), "Type of the data object; repeat as necessary, e.g. \"--type type1 --type type2\"")
+    ("tag", po::value<vector<string> >(&tagsInput), "Tag of the data object; repeat as necessary, e.g. \"--tag tag1 --tag tag2\"")
+    ("details", po::value<string>(&detailsInput), "JSON to store as details")
+    ("recursive", po::bool_switch(&recursive)->default_value(false), "Recursively upload the directories")
     ("read-threads", po::value<int>(&readThreads)->default_value(DEFAULT_READ_THREADS), "Number of parallel disk read threads")
     ("compress-threads,c", po::value<int>(&compressThreads)->default_value(defaultCompressThreads), "Number of parallel compression threads")
     ("upload-threads,u", po::value<int>(&uploadThreads)->default_value(DEFAULT_UPLOAD_THREADS), "Number of parallel upload threads")
@@ -75,12 +88,8 @@ Options::Options() {
     ("verbose,v", po::bool_switch(&verbose), "Verbose logging")
     ("wait-on-close", po::bool_switch(&waitOnClose), "Wait for file objects to be closed before exiting")
     ("do-not-resume", po::bool_switch(&doNotResume), "Do not attempt to resume any incomplete uploads")
-    // Options for running import apps
-    ("reads", po::bool_switch(&reads), "After uploading is complete, run import app to convert file(s) to Reads object(s)")
-    ("paired-reads", po::bool_switch(&pairedReads), "Same as --reads option, but assumes file sequence to be pairs of left, and right reads (e.g., L1 R1 L2 R2 L3 R3 ...)")
-    ("mappings", po::bool_switch(&mappings), "After uploading is complete, run import app to convert file(s) to Mappings object(s)")
-    ("variants", po::bool_switch(&variants), "After uploading is complete, run import app to convert file(s) to Variants object(s)")
-    ("ref-genome", po::value<string>(&refGenome), "ID or name of the reference genome (must be present if and only if --mappings, or, --variants flag is used)")
+    ("test", "Test upload agent settings")
+    ("read-from-stdin,i", po::bool_switch(&standardInput), "Read file content from stdin")
     ;
 
   hidden_opts = new po::options_description();
@@ -91,6 +100,13 @@ Options::Options() {
     ("apiserver-port", po::value<int>(&apiserverPort)->default_value(-1), "API server port")
     ("certificate-file", po::value<string>(&certificateFile)->default_value(""), "Certificate file (for verifying peer). Set to NOVERIFY for no check.")
     ("no-round-robin-dns", po::bool_switch(&noRoundRobinDNS), "Disable explicit resolution of ip address by /UPLOAD calls (for round robin DNS)")
+    ("override-file-limit", po::bool_switch(&overrideFileLimit), "Override the file number limit")
+    // Options for running import apps
+    ("reads", po::bool_switch(&reads), "After uploading is complete, run import app to convert file(s) to Reads object(s)")
+    ("paired-reads", po::bool_switch(&pairedReads), "Same as --reads option, but assumes file sequence to be pairs of left, and right reads (e.g., L1 R1 L2 R2 L3 R3 ...)")
+    ("mappings", po::bool_switch(&mappings), "After uploading is complete, run import app to convert file(s) to Mappings object(s)")
+    ("variants", po::bool_switch(&variants), "After uploading is complete, run import app to convert file(s) to Variants object(s)")
+    ("ref-genome", po::value<string>(&refGenome), "ID or name of the reference genome (must be present if and only if --mappings, or, --variants flag is used)")
     ;
 
   command_line_opts = new po::options_description();
@@ -134,6 +150,25 @@ size_t parseSize(const string &sizeStr) {
   }
 }
 
+void parseKeyValuePairs(const vector<string> &items, dx::JSON &result) {
+  for (vector<string>::const_iterator it = items.begin(); it != items.end(); ++it) {
+    DXLOG(logINFO) << "Parsing property: " << *it;
+    vector<string> kv;
+    boost::split(kv, *it, boost::is_any_of("="));
+    if(kv.size() != 2 || kv[0].empty() || kv[1].empty()) {
+      throw runtime_error("Invalid property argument; provide properties in key=value format");
+    }
+    result[kv[0]] = kv[1];
+  }
+}
+
+void populateJsonArray(const vector<string> &items, dx::JSON &result) {
+  assert(result.type() == JSON_ARRAY);
+  for (vector<string>::const_iterator it = items.begin(); it != items.end(); ++it) {
+    result.push_back(*it);
+  }    
+}
+
 void Options::parse(int argc, char * argv[]) {
   po::store(po::command_line_parser(argc, argv).options(*command_line_opts).positional(*pos_opts).run(), vm);
   po::notify(vm);
@@ -161,6 +196,22 @@ void Options::parse(int argc, char * argv[]) {
     } else {
       DXLOG(logINFO) << "Number of upload threads is " << uploadThreads << "." << endl;
     }
+  }
+
+  try {
+    parseKeyValuePairs(propertiesInput, properties);  
+    populateJsonArray(typeInput, type);
+    populateJsonArray(tagsInput, tags); 
+    
+    if (!detailsInput.empty()) {
+      details = dx::JSON::parse(detailsInput);
+      if (!(details.type() == JSON_OBJECT || details.type() == JSON_ARRAY)) {
+	throw runtime_error("JSON Data must be a JSON object or JSON array");
+      }
+    }
+  }
+  catch (dx::JSONException &e) {
+    throw runtime_error("Error formating Json Data: " + string(e.what()));
   }
 }
 
@@ -312,34 +363,71 @@ bool Options::env() {
   return vm.count("env");
 }
 
+bool Options::test() {
+  return vm.count("test");
+}
+
 void Options::printHelp(char * programName) {
-  cerr << "Usage: " << programName << " [options] <file> [...]" << endl
+  DXLOG(logUSERINFO)
+       << "Usage: " << programName << " [options] <file> [...]" << endl
        << endl
        << (*visible_opts) << endl;
 }
 
+unsigned int Options::getNumberOfFilesInDirectory(const fs::path &dir) {
+  unsigned int fileCount = 0;
+  for (fs::directory_iterator iter(dir); iter != fs::directory_iterator(); ++iter) {
+
+    fs::path currPath(*iter);
+    if (fs::is_directory(currPath) && recursive) {
+      fileCount += getNumberOfFilesInDirectory(currPath);
+    }
+    else if (fs::is_regular_file(currPath)) {
+      fileCount++;
+    }
+  }
+  return fileCount;
+}
+
 void Options::validate() {
-  if (!files.empty()) {
+  if (files.empty()) {
+    throw runtime_error("Must specify at least one file to upload");
+  } else if (standardInput) {
+    if (files.size() != 1) {
+      throw runtime_error("Only one filename can be specified when reading from stdin.");
+    }
+  } else {
     // - Check that all file actually exist
     // - Resolve all symlinks
-    // - Ensure that the inputs are regular files (not directories, etc.)
+    // - Ensure that the inputs are regular files or directories
+    // - Don't allow uploading more than MAX_FILE_UPLOAD files at a time
+    if (!overrideFileLimit && files.size() > MAX_FILE_UPLOAD) {
+      ostringstream errorMsg;
+      errorMsg << "The number of files to upload is limited to " << MAX_FILE_UPLOAD;
+      throw runtime_error(errorMsg.str());
+    }
+
+    unsigned int totalNumberOfFiles = 0;
     for (unsigned i = 0; i < files.size(); ++i) {
       fs::path p(files[i]);
       if (!fs::exists(p)) {
         throw runtime_error("File \"" + files[i] + "\" does not exist");
       }
-      if (fs::is_symlink(p)) {
-        p = fs::read_symlink(p);
-        files[i] = p.string();
-      }
       if (fs::is_directory(p)) {
-        throw runtime_error("Argument " + files[i] + " is a directory; recursive directory upload is not currently supported.");
-      } else if (!fs::is_regular_file(p)) {
-        throw runtime_error("Argument " + files[i] + " is not a regular file.");
+        totalNumberOfFiles += getNumberOfFilesInDirectory(fs::path(files[i]));
+      } else if (fs::is_regular_file(p)) {
+        totalNumberOfFiles++;
+      }
+      else {
+        throw runtime_error("Argument " + files[i] + " is not a regular file or directory.");
+      }
+      if (!overrideFileLimit && totalNumberOfFiles > MAX_FILE_UPLOAD) {
+        ostringstream errorMsg;
+        errorMsg << "The number of files to upload is limited to " << MAX_FILE_UPLOAD;
+        throw runtime_error(errorMsg.str());
       }
     }
-  } else {
-    throw runtime_error("Must specify at least one file to upload");
+    DXLOG(logINFO) << "Found " << totalNumberOfFiles << " files ";
   }
 
   if (names.size() == 0) {
@@ -435,13 +523,16 @@ void Options::validate() {
   }
 
   if (throttle < 0) {
-    cerr << "Upload throttling is disabled." << endl;
+    // Don't print this message -- users have been known to get confused
+    // and think that it indicates that something is wrong.
+
+    //DXLOG(logUSERINFO) << "Upload throttling is disabled.";
   } else if (throttle < 4 * 1024) {
     throw runtime_error("Uploads are throttled to " + boost::lexical_cast<string>(throttle) + " bytes/sec, which is less than 4 Kbytes/sec. Choose a larger value.");
   } else if (throttle < 256 * 1024) {
-    cerr << "WARNING: Uploads are throttled to " << throttle << " bytes/sec, which is less than 256 KBytes/sec. We recommend allowing higher speeds for better performance." << endl;
+    DXLOG(logUSERINFO) << "WARNING: Uploads are throttled to " << throttle << " bytes/sec, which is less than 256 KBytes/sec. We recommend allowing higher speeds for better performance." << endl;
   } else {
-    cerr << "Uploads are throttled to " << throttle << " bytes/sec." << endl;
+    DXLOG(logUSERINFO) << "Uploads are throttled to " << throttle << " bytes/sec." << endl;
   }
 
   // Check that at most one import flag is present.
@@ -501,7 +592,8 @@ ostream &operator<<(ostream &out, const Options &opt) {
       out << " \"" << opt.files[i] << "\"";
     out << endl;
 
-    out << "  read-threads: " << opt.readThreads << endl
+    out << "  recursive directory upload: " << opt.recursive << endl
+        << "  read-threads: " << opt.readThreads << endl
         << "  compress-threads: " << opt.compressThreads << endl
         << "  upload-threads: " << opt.uploadThreads << endl
         << "  chunk-size: " << opt.chunkSize << endl
@@ -511,6 +603,7 @@ ostream &operator<<(ostream &out, const Options &opt) {
         << "  verbose: " << opt.verbose << endl
         << "  wait on close: " << opt.waitOnClose << endl
         << "  do-not-resume: " << opt.doNotResume << endl
+        << "  read-from-stdin: " << opt.standardInput << endl
         << "  reads: " << opt.reads << endl
         << "  paired-reads: " << opt.pairedReads << endl
         << "  mappings: " << opt.mappings << endl

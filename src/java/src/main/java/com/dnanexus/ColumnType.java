@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -84,7 +84,6 @@ public enum ColumnType {
         createMap = ImmutableMap.copyOf(result);
     }
 
-    @SuppressWarnings("unused")
     @JsonCreator
     private static ColumnType create(String value) {
         return createMap.get(value);

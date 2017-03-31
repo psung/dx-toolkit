@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -68,31 +68,22 @@ public abstract class ExecutableRunner<T extends DXExecution> {
     @JsonInclude(Include.NON_NULL)
     private static class ExecutableRunRequest {
 
-        @SuppressWarnings("unused")
         @JsonProperty
         private final JsonNode input;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String name;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<String> dependsOn;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String project;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String folder;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final Boolean delayWorkspaceDestruction;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final JsonNode details;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<String> tags;
-        @SuppressWarnings("unused")
         @JsonProperty
         private Map<String, String> properties;
 

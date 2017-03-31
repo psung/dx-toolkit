@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -108,11 +108,11 @@ void checkForUpdates() {
                         "\nPlease download latest version (v" + ver + ") from " + url + "\n**********");
   }
   // If we are here => A recommended update is available. Show user a message to that effect
-  DXLOG(logINFO);
-  cerr <<"*********** Update Available ***********" << endl
-       << "A new version of Upload Agent (v" << ver << ") is available for your platform!" << endl
-       << "It's highly recommended that you download the latest version from here " << url << endl
-       << "****************************************" << endl;
+  DXLOG(logUSERINFO)
+    <<"*********** Update Available ***********" << endl
+    << "A new version of Upload Agent (v" << ver << ") is available for your platform!" << endl
+    << "It's highly recommended that you download the latest version from here " << url << endl
+    << "****************************************" << endl;
   return;
 }
 
@@ -191,7 +191,7 @@ string resolveProject(const string &projectSpec) {
 
   if (matchingProjectIdToName.size() == 0) {
     DXLOG(logINFO) << " failure.";
-    throw runtime_error("\"" + projectSpec + "\" does not represent a valid project name or ID (with >=UPLOAD access)");
+    throw runtime_error("\"" + projectSpec + "\" does not represent a valid project name or ID (with >=UPLOAD access). Please check the project name/ID given and whether you have >= UPLOAD permission to project specified.");
   }
 
   if (matchingProjectIdToName.size() > 1) {
@@ -259,7 +259,7 @@ void createFolders(const vector<string> &projects, const vector<string> &folders
  * folder, and with the specified name. The folder and any parent folders
  * are created if they do not exist.
  */
-string createFileObject(const string &project, const string &folder, const string &name, const string &mimeType, const JSON &properties) {
+string createFileObject(const string &project, const string &folder, const string &name, const string &mimeType, const JSON &properties, const dx::JSON &type, const dx::JSON & tags, const std::string &visibility, const dx::JSON &details) {
   JSON params(JSON_OBJECT);
   params["project"] = project;
   params["folder"] = folder;
@@ -267,6 +267,22 @@ string createFileObject(const string &project, const string &folder, const strin
   params["parents"] = true;
   params["media"] = mimeType;
   params["properties"] = properties;
+
+  // optional arguments
+  if (type.size()) {
+    params["types"] = type;
+  }
+  if (tags.size()) {
+    params["tags"] = tags;
+  }
+  if (details.size()) {
+    params["details"] = details;
+  }
+  
+  // the hidden value is false by default
+  if (visibility == "hidden") {
+    params["hidden"] = true;
+  }
 
   DXLOG(logINFO) << "Creating new file with parameters " << params.toString();
 

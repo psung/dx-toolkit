@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -29,7 +29,9 @@ namespace fs = boost::filesystem;
 using namespace std;
 using namespace dx;
 
-string File::createResumeInfoString(const int64_t fileSize, const int64_t modifiedTimestamp, const bool toCompress, const int64_t chunkSize, const string &path) {
+#define MAX_UPLOAD_CHUNKS 10000 // Maximum number of chunks that amazon can process for a single file
+
+string File::createResumeInfoString(const uint64_t fileSize, const int64_t modifiedTimestamp, const bool toCompress, const uint64_t chunkSize, const string &path) {
   using namespace boost;
   string toReturn;
   toReturn += lexical_cast<string>(fileSize) + " ";
@@ -78,13 +80,30 @@ double percentageComplete(const dx::JSON &parts, const int64_t size, const int64
 }
 
 File::File(const string &localFile_, const string &projectSpec_, const string &folder_, const string &name_,
+	   const std::string &visibility_, const dx::JSON &properties_, 
+	   const dx::JSON &type_, const dx::JSON &tags_, const dx::JSON &details_,
            const bool toCompress_, const bool tryResuming, const string &mimeType_,
-           const int64_t chunkSize_, const unsigned fileIndex_)
+           const int64_t chunkSize_, const unsigned fileIndex_, const bool standardInput_)
   : localFile(localFile_), projectSpec(projectSpec_), folder(folder_), name(name_),
+    visibility(visibility_), properties(properties_), type(type_), tags(tags_), details(details_),
     failed(false), waitOnClose(false), closed(false), toCompress(toCompress_), mimeType(mimeType_),
-    chunkSize(chunkSize_), bytesUploaded(0), fileIndex(fileIndex_), atleastOnePartDone(false), jobID() {
+    chunkSize(chunkSize_), bytesUploaded(0), fileIndex(fileIndex_), atleastOnePartDone(false), jobID(), standardInput(standardInput_) {
 
-  init(tryResuming);
+  if (!standardInput) {
+    init(tryResuming);
+  } else {
+    init();
+  }
+}
+
+void File::init(){
+  projectID = resolveProject(projectSpec);
+  string remoteFileName = name;
+  if (toCompress)
+    remoteFileName += ".gz";
+  fileID = createFileObject(projectID, folder, remoteFileName, mimeType, properties, type, tags, visibility, details);
+  isRemoteFileOpen = true;
+  DXLOG(logINFO) << "fileID is " << fileID << endl;
 }
 
 void File::init(const bool tryResuming) {
@@ -98,16 +117,22 @@ void File::init(const bool tryResuming) {
     // Never try to compress empty file!
     toCompress = false;
   }
+
+  if ( chunkSize * MAX_UPLOAD_CHUNKS < size) {
+    chunkSize = size / MAX_UPLOAD_CHUNKS + ( (size % MAX_UPLOAD_CHUNKS) ? 1 : 0);
+    DXLOG(logWARNING) << "Chunk-size too small, will change to " << chunkSize;
+  }
+
   string remoteFileName = name;
 
-  if (toCompress) 
+  if (toCompress)
     remoteFileName += ".gz";
 
   const int64_t modifiedTimestamp = static_cast<int64_t>(fs::last_write_time(p));
-  dx::JSON properties(dx::JSON_OBJECT);
+  //dx::JSON properties(dx::JSON_OBJECT);
 
   // Add property {FILE_SIGNATURE_PROPERTY: "<size> <modified time stamp> <toCompress> <chunkSize> <name of file>"
-  properties[FILE_SIGNATURE_PROPERTY] = File::createResumeInfoString(size, modifiedTimestamp, toCompress, chunkSize, fs::canonical(p).string());
+  properties[FILE_SIGNATURE_PROPERTY] = File::createResumeInfoString(size, modifiedTimestamp, toCompress, chunkSize, fs::canonical(p).generic_string());
 
   DXLOG(logINFO) << "Resume info string: '" << properties[FILE_SIGNATURE_PROPERTY].get<string>() << "'"; 
   dx::JSON findResult;
@@ -127,27 +152,39 @@ void File::init(const bool tryResuming) {
         isRemoteFileOpen = true;
       }
       DXLOG(logINFO) << "A resume target is found .. " << endl;
-      cerr << "Signature of file " << localFile << " matches remote file " << findResult[0]["describe"]["name"].get<string>() 
-           << " (" << fileID << "), which is " << completePercentage << "% complete. Will resume uploading to it." << endl;
-      DXLOG(logINFO) << "Remote resume target is in state: \"" << state << "\"";
+      if (isRemoteFileOpen) {
+        DXLOG(logUSERINFO)
+          << "Signature of file " << localFile << " matches remote file " << findResult[0]["describe"]["name"].get<string>() 
+          << " (" << fileID << "), which is " << completePercentage << "% complete. Will resume uploading to it." << endl;
+        DXLOG(logINFO) << "Remote resume target is in state: \"" << state << "\"";
+      }
+      else {
+        DXLOG(logUSERINFO)
+          << "Signature of file " << localFile << " matches remote file " << findResult[0]["describe"]["name"].get<string>() 
+          << " (" << fileID << "), which is " << completePercentage << "% complete. Will not resume uploading it." << endl;
+        DXLOG(logINFO) << "Remote resume target is in state: \"" << state << "\"";
+      }
+
     }
     if (findResult.size() > 1) {
-      cerr << endl << "More than one resumable targets for local file \"" << localFile << "\" found in the project '" + projectID + "', candidates: " << endl;
+      ostringstream oss;
+      oss << endl << "More than one resumable targets for local file \"" << localFile << "\" found in the project '" + projectID + "', candidates: " << endl;
       for (unsigned i = 0; i < findResult.size(); ++i) {
-        cerr << "\t" << (i + 1) << ". " << findResult[i]["describe"]["name"].get<string>() << " (" << findResult[i]["id"].get<string>() << ")" << endl;
+        oss << "\t" << (i + 1) << ". " << findResult[i]["describe"]["name"].get<string>() << " (" << findResult[i]["id"].get<string>() << ")" << endl;
       }
-      cerr << "Unable to upload: \"" << localFile << "\"" << endl
-           << "Please either clean up the potential candidate files, or run upload agent with '--do-not-resume' option" << endl;
+      oss << "Unable to upload: \"" << localFile << "\"" << endl
+          << "Please either clean up the potential candidate files, or run upload agent with '--do-not-resume' option" << endl;
+      DXLOG(logUSERINFO) << oss.str();
       failed = true;
     }
   }
   if (!tryResuming || (findResult.size() == 0)) {
     // Note: It's fine if mimeType is empty string "" (since default for /file/new is anyway empty media type)
-    fileID = createFileObject(projectID, folder, remoteFileName, mimeType, properties);
+    fileID = createFileObject(projectID, folder, remoteFileName, mimeType, properties, type, tags, visibility, details);
     isRemoteFileOpen = true;
     DXLOG(logINFO) << "fileID is " << fileID << endl;
 
-    cerr << "Uploading file " << localFile << " to file object " << fileID;
+    DXLOG(logUSERINFO) << "Uploading file " << localFile << " to file object " << fileID;
   }
 }
 
@@ -180,9 +217,9 @@ unsigned int File::createChunks(dx::BlockingQueue<Chunk *> &queue, const int tri
   unsigned int countChunks = 0; // to iterate over chunks
   unsigned int actualChunksCreated = 0; // is not incremented for chunks which are already in "complete" state (when resuming)
 
-  for (int64_t start = 0; start < size; start += chunkSize) {
+  for (uint64_t start = 0; start < size; start += chunkSize) {
     string partIndex = boost::lexical_cast<string>(countChunks + 1); // minimum part index is 1
-    const int64_t end = min(start + chunkSize, size);
+    const uint64_t end = min(start + chunkSize, size);
     if (desc["parts"].has(partIndex) && desc["parts"][partIndex]["state"].get<string>() == "complete") {
       DXLOG(logINFO) << "Part index " << partIndex << " for fileID " << fileID << " is in complete state. Will not create an upload chunk for it.";
       bytesUploaded += (end - start);
@@ -197,6 +234,42 @@ unsigned int File::createChunks(dx::BlockingQueue<Chunk *> &queue, const int tri
     ++countChunks;
   }
   return actualChunksCreated++;
+}
+
+unsigned int File::readStdin(dx::BlockingQueue<Chunk *> &chunksToCompress, const int tries) {
+  // Read data from stdin into chunks and put those chunks into the compress queue.
+  std::vector<char> buffer;
+  buffer.resize(chunkSize);
+  unsigned int countChunks = 0;
+  unsigned int bytesRead = 0;
+  unsigned int start = 0;
+  unsigned int end = 0;
+  size = 0;
+
+  DXLOG(logINFO) << "Starting to read data from stdin.";
+  while (std::cin.good()) {
+    std::cin.read(&buffer[0], chunkSize);
+    bytesRead = std::cin.gcount();
+    const bool lastChunk = (std::cin.good() == false);
+    if (lastChunk && bytesRead == 0) {
+      // Last Chunk is empty
+      break;
+    }
+    start = size;
+    end = size + bytesRead;
+    Chunk * c = new Chunk(localFile, fileID, countChunks, tries, start, end, toCompress, lastChunk, fileIndex);
+    c->data.resize(bytesRead);
+    c->data.assign(buffer.begin(), buffer.begin() + bytesRead);
+    size += bytesRead;
+    c->log("created");
+    chunksToCompress.produce(c);
+    countChunks++;
+  }
+  if (std::cin.bad()) {
+    DXLOG(logWARNING) << "Possible error in the input stream: bad bit set.";
+  }
+  DXLOG(logINFO) << "Done reading data from stdin.";
+  return countChunks;
 }
 
 void File::close(void) {

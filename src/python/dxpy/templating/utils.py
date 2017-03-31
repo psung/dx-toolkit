@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -18,21 +18,20 @@
 Miscellaneous utility classes and functions for the dx-app-wizard command-line tool
 '''
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import os, shutil, subprocess, re, json
+import stat
 
 from ..utils.printing import (BOLD, DNANEXUS_LOGO, ENDC, fill)
 from ..cli import prompt_for_yn
 from ..compat import input, open
 
 from . import python
-from . import cpp
 from . import bash
 
 language_options = {
     "Python": python,
-    "C++": cpp,
     "bash": bash
 }
 
@@ -142,11 +141,7 @@ def get_metadata(api_version):
     print(fill('The ' + BOLD() + 'summary' + ENDC() + ' of your app is a short phrase or one-line description of what your app does.  It can be any UTF-8 human-readable string.'))
     summary = prompt_for_var('Summary', '')
 
-    print('')
-    print(fill('The ' + BOLD() + 'description' + ENDC() + ' of your app is a longer piece of text describing your app.  It can be any UTF-8 human-readable string, and it will be interpreted using Markdown (see http://daringfireball.net/projects/markdown/syntax/ for more details).'))
-    description = prompt_for_var('Description', '')
-
-    return title, summary, description
+    return title, summary
 
 def get_version(default=None):
     if default is None:
@@ -156,12 +151,39 @@ def get_version(default=None):
     version = prompt_for_var('Version', default)
     return version
 
+def get_timeout(default=None):
+    # Max timeout is 30 days
+    max_timeout = {'m': 30 * 24 * 60, 'h': 30 * 24, 'd': 30}
+    units = {'m': 'minutes', 'h': 'hours', 'd': 'days'}
+    time_pattern = re.compile('^[1-9]\d*[mhd]$')
+
+    def timeout_dict_to_str(d):
+        # Used to convert app_json inputs:
+        # {'hours': 48} -> '48h'
+        return str(d.values()[0]) + d.keys()[0][0]
+
+    if default is None:
+        default = '48h'
+    else:
+        default = timeout_dict_to_str(default)
+    print('')
+    print(fill('Set a ' + BOLD() + 'timeout policy' + ENDC() + ' for your app. Any single entry point of the app that runs longer than the specified timeout will fail with a TimeoutExceeded error. Enter an int greater than 0 with a single-letter suffix (m=minutes, h=hours, d=days) (e.g. "48h").'))
+    while True:
+        timeout = prompt_for_var('Timeout policy', default)
+        if not time_pattern.match(timeout):
+            print(fill('Error: enter an int with a single-letter suffix (m=minutes, h=hours, d=days)'))
+        elif int(timeout[:-1]) > max_timeout[timeout[-1]]:
+            print(fill('Error: max allowed timeout is 30 days'))
+        else:
+            break
+    return int(timeout[:-1]), units[timeout[-1]]
+
 def get_ordinal_str(num):
     return str(num) + ('th' if 11 <= num % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(num % 10, 'th'))
 
 def get_language():
     #language_choices = language_options.keys()
-    language_choices = ["Python", "C++", "bash"]
+    language_choices = ["Python", "bash"]
     use_completer(Completer(language_choices))
     print('')
     print(fill('You can write your app in any ' + BOLD() + 'programming language' + ENDC() + ', but we provide templates for the following supported languages' + ENDC() + ": " + ', '.join(language_choices)))
@@ -199,26 +221,6 @@ def get_pattern(template_dir):
     use_completer()
     return pattern
 
-def get_parallelized_io(required_file_input_names, gtable_input_names, gtable_output_names):
-    input_field = ''
-    output_field = ''
-
-    if required_file_input_names or gtable_input_names:
-        print('')
-        print(fill('Your app template can be initialized to split and process a ' + BOLD() + 'GTable' + ENDC() + ' input.  The following of your input fields are eligible for this template pattern:'))
-        print('  ' + '\n  '.join(gtable_input_names))
-        use_completer(Completer(gtable_input_names))
-        input_field = prompt_for_var('Input field to process (press ENTER to skip)', '', choices=required_file_input_names + gtable_input_names)
-        use_completer()
-
-    if input_field != '' and len(gtable_output_names) > 0:
-        print('')
-        print(fill('Your app template can be initialized to build a ' + BOLD() + 'GTable' + ENDC() + ' in parallel for your output.  The following of your output fields are eligible for this template pattern:'))
-        print('  ' + '\n  '.join(gtable_output_names))
-        use_completer(Completer(gtable_output_names))
-        output_field = prompt_for_var('Output gtable to build in parallel (press ENTER to skip)', '', choices=gtable_output_names)
-    return input_field, output_field
-
 def fill_in_name_and_ver(template_string, name, version):
     '''
     TODO: Rename this?
@@ -254,6 +256,15 @@ def create_files_from_templates(template_dir, app_json, language,
     # those (after passing it through fill_in_name_and_ver).  For the
     # code.* in src,
 
+    def chmod_755(file):
+        try:
+            os.chmod(file,
+                     stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+                     stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH |
+                     stat.S_IXOTH)
+        except OSError as e:
+            print("Unable to change file {} mode: {}".format(file, e))
+
     def use_template_file(path):
         '''
         :param path: relative path from template_dir
@@ -264,7 +275,7 @@ def create_files_from_templates(template_dir, app_json, language,
             with open(filled_template_filename, 'w') as filled_template_file:
                 filled_template_file.write(file_text)
             if filled_template_filename.endswith('.py') or filled_template_filename.endswith('.sh'):
-                subprocess.call(["chmod", "+x", filled_template_filename])
+                chmod_755(filled_template_filename)
             manifest.append(filled_template_filename)
 
     for template_filename in os.listdir(template_dir):
@@ -305,14 +316,14 @@ def create_files_from_templates(template_dir, app_json, language,
                     code_file_text = code_file_text.replace('DX_APP_WIZARD_DOWNLOAD_ANY_FILES', dl_files_str)
                     code_file_text = code_file_text.replace('DX_APP_WIZARD_UPLOAD_ANY_FILES', ul_files_str)
                     code_file_text = code_file_text.replace('DX_APP_WIZARD_OUTPUT', outputs_str)
-                    code_file_text = code_file_text.replace('DX_APP_WIZARD_||_INPUT', parallelized_input)
-                    code_file_text = code_file_text.replace('DX_APP_WIZARD_||_OUTPUT', parallelized_output)
+                    code_file_text = code_file_text.replace('DX_APP_WIZARD_PARALLELIZED_INPUT', parallelized_input)
+                    code_file_text = code_file_text.replace('DX_APP_WIZARD_PARALLELIZED_OUTPUT', parallelized_output)
 
                     filled_code_filename = os.path.join(name, 'src', template_filename.replace('code' + pattern_suffix, name + '.'))
                     with open(filled_code_filename, 'w') as filled_code_file:
                         filled_code_file.write(code_file_text)
                     if filled_code_filename.endswith('.sh') or filled_code_filename.endswith('.py'):
-                        subprocess.call(["chmod", "+x", os.path.join(filled_code_filename)])
+                        chmod_755(filled_code_filename)
                     manifest.append(filled_code_filename)
         else:
             use_template_file(os.path.join('src', template_filename))

@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -213,7 +213,7 @@ int main(int argc, char * argv[]) {
     return 0;
   } else if (opt.help()) {
     opt.printHelp(argv[0]);
-    return 1;
+    return 0;
   }
 
   LOG << "dx-verify-file" << DX_VERIFY_FILE_VERSION << " (git version: " << DXTOOLKIT_GITVERSION << ")" << endl;

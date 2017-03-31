@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -48,25 +48,18 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
 
     @JsonInclude(Include.NON_NULL)
     private static class AppletNewRequest extends DataObjectNewRequest {
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String title;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String summary;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String description;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<InputParameter> inputSpec;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final List<OutputParameter> outputSpec;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final RunSpecification runSpec;
-        @SuppressWarnings("unused")
         @JsonProperty
         private final String dxapi;
 
@@ -267,6 +260,9 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet description
          */
         public String getDescription() {
+            Preconditions
+                    .checkState(this.description != null,
+                            "description is not available because it was not retrieved with the describe call");
             return description;
         }
 
@@ -276,6 +272,9 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return API version
          */
         public String getDXAPIVersion() {
+            Preconditions
+                    .checkState(this.dxapi != null,
+                            "dxapi version is not available because it was not retrieved with the describe call");
             return dxapi;
         }
 
@@ -285,6 +284,9 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet input specification
          */
         public List<InputParameter> getInputSpecification() {
+            Preconditions
+                    .checkState(this.inputSpec != null,
+                            "input specification is not available because it was not retrieved with the describe call");
             return ImmutableList.copyOf(this.inputSpec);
         }
 
@@ -294,6 +296,9 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet output specification
          */
         public List<OutputParameter> getOutputSpecification() {
+            Preconditions
+                    .checkState(this.outputSpec != null,
+                            "output specification is not available because it was not retrieved with the describe call");
             return ImmutableList.copyOf(this.outputSpec);
         }
 
@@ -303,6 +308,9 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet run specification
          */
         public RunSpecification getRunSpecification() {
+            Preconditions
+                    .checkState(this.runSpec != null,
+                            "run specification is not available because it was not retrieved with the describe call");
             return runSpec;
         }
 
@@ -312,6 +320,8 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet summary
          */
         public String getSummary() {
+            Preconditions.checkState(this.summary != null,
+                    "summary is not available because it was not retrieved with the describe call");
             return summary;
         }
 
@@ -321,6 +331,8 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
          * @return applet title
          */
         public String getTitle() {
+            Preconditions.checkState(this.title != null,
+                    "title is not available because it was not retrieved with the describe call");
             return title;
         }
     }
@@ -332,7 +344,6 @@ public class DXApplet extends DXDataObject implements DXExecutable<DXJob> {
      *
      * @return data object
      */
-    @SuppressWarnings("unused")
     @JsonCreator
     private static DXApplet create(Map<String, Object> value) {
         checkDXLinkFormat(value);

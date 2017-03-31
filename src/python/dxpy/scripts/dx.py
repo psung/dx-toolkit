@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -17,20 +17,55 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division, absolute_import
 
-import os, sys, datetime, getpass, collections, re, json, argparse, copy, hashlib, errno, io, time, subprocess, glob
+import os, sys, datetime, getpass, collections, re, json, argparse, copy, hashlib, io, time, subprocess, glob, logging
 import shlex # respects quoted substrings when splitting
 
-from ..cli import try_call, prompt_for_yn, INTERACTIVE_CLI
-from ..cli import workflow as workflow_cli
-from ..exceptions import err_exit, DXError, DXCLIError, DXAPIError, network_exceptions, default_expected_exceptions
-from ..packages import requests
-from ..compat import USING_PYTHON2, basestring, str, input, wrap_stdio_in_codecs, decode_command_line_args
-from ..utils.env import sys_encoding, set_env_var, get_env_var, get_user_conf_dir
+import requests
+
+logging.basicConfig(level=logging.INFO)
+
+from ..compat import (USING_PYTHON2, basestring, str, input, wrap_stdio_in_codecs, decode_command_line_args,
+                      unwrap_stream, sys_encoding)
 
 wrap_stdio_in_codecs()
 decode_command_line_args()
+
+import dxpy
+
+from ..cli import try_call, prompt_for_yn, INTERACTIVE_CLI
+from ..cli import workflow as workflow_cli
+from ..cli.cp import cp
+from ..cli.download import (download_one_file, download)
+from ..cli.parsers import (no_color_arg, delim_arg, env_args, stdout_args, all_arg, json_arg, parser_dataobject_args,
+                           parser_single_dataobject_output_args, process_properties_args,
+                           find_by_properties_and_tags_args, process_find_by_property_args, process_dataobject_args,
+                           process_single_dataobject_output_args, find_executions_args, add_find_executions_search_gp,
+                           set_env_from_args, extra_args, process_extra_args, DXParserError, exec_input_args,
+                           instance_type_arg, process_instance_type_arg, get_update_project_args,
+                           property_args, tag_args, contains_phi, process_phi_param)
+from ..cli.exec_io import (ExecutableInputs, format_choices_or_suggestions)
+from ..cli.org import (get_org_invite_args, add_membership, remove_membership, update_membership, new_org, update_org,
+                       find_orgs, org_find_members, org_find_projects, org_find_apps)
+from ..exceptions import (err_exit, DXError, DXCLIError, DXAPIError, network_exceptions, default_expected_exceptions,
+                          format_exception)
+from ..utils import warn, group_array_by_field, normalize_timedelta, normalize_time_input
+
+from ..app_categories import APP_CATEGORIES
+from ..utils.printing import (CYAN, BLUE, YELLOW, GREEN, RED, WHITE, UNDERLINE, BOLD, ENDC, DNANEXUS_LOGO,
+                              DNANEXUS_X, set_colors, set_delimiter, get_delimiter, DELIMITER, fill,
+                              tty_rows, tty_cols, pager, format_find_results)
+from ..utils.pretty_print import format_tree, format_table
+from ..utils.resolver import (pick, paginate_and_pick, is_hashid, is_data_obj_id, is_container_id, is_job_id,
+                              is_analysis_id, get_last_pos_of_char, resolve_container_id_or_name, resolve_path,
+                              resolve_existing_path, get_app_from_path, resolve_app, get_exec_handler,
+                              split_unescaped, ResolutionError, resolve_to_objects_or_project, is_project_explicit,
+                              object_exists_in_project, is_jbor_str)
+from ..utils.completer import (path_completer, DXPathCompleter, DXAppCompleter, LocalCompleter,
+                               ListCompleter, MultiCompleter)
+from ..utils.describe import (print_data_obj_desc, print_desc, print_ls_desc, get_ls_l_desc, print_ls_l_header,
+                              print_ls_l_desc, get_io_desc, get_find_executions_string)
 
 try:
     import colorama
@@ -55,7 +90,7 @@ if '_ARGCOMPLETE' not in os.environ:
         if old_term_setting:
             os.environ['TERM'] = old_term_setting
 
-        if 'libedit' in readline.__doc__:
+        if readline.__doc__ and 'libedit' in readline.__doc__:
             print('Warning: incompatible readline module detected (libedit), tab completion disabled', file=sys.stderr)
     except ImportError:
         if os.name != 'nt':
@@ -66,7 +101,7 @@ state = {"interactive": False,
          "delimiter": None,
          "currentproj": None}
 parser_map = {}
-parser_categories_sorted = ["all", "session", "fs", "data", "metadata", "workflow", "exec", "other"]
+parser_categories_sorted = ["all", "session", "fs", "data", "metadata", "workflow", "exec", "org", "other"]
 parser_categories = {"all": {"desc": "\t\tAll commands",
                              "cmds": []},
                      "session": {"desc": "\tManage your login session",
@@ -81,6 +116,8 @@ parser_categories = {"all": {"desc": "\t\tAll commands",
                                   "cmds": []},
                      "exec": {"desc": "\t\tManage and run apps, applets, and workflows",
                               "cmds": []},
+                     "org": {"desc": "\t\tAdminister and operate on orgs",
+                             "cmds": []},
                      "other": {"desc": "\t\tMiscellaneous advanced utilities",
                                "cmds": []}}
 
@@ -99,8 +136,7 @@ def get_json_from_stdin():
     try:
         user_json = json.loads(user_json_str)
     except ValueError:
-        parser.exit(1, 'Error: user input could not be parsed as JSON\n')
-        return None
+        raise DXCLIError('Error: user input could not be parsed as JSON')
     return user_json
 
 def set_cli_colors(args=argparse.Namespace()):
@@ -118,43 +154,8 @@ def set_delim(args=argparse.Namespace()):
         state['delimiter'] = None
     set_delimiter(state['delimiter'])
 
-# Loading environment
+# Loading command line arguments
 args_list = sys.argv[1:]
-
-# Hard-coding a shortcut so that it won't print out the warning in
-# import dxpy when clearing it anyway.
-if len(args_list) > 0 and args_list[0] == 'clearenv':
-    from dxpy.utils.env import clearenv
-    clearenv(argparse.Namespace(interactive=False, reset=True if '--reset' in args_list else False))
-    exit(0)
-
-# importing dxpy will now appropriately load env variables
-import dxpy
-from dxpy.app_categories import APP_CATEGORIES
-from dxpy.utils import group_array_by_field, normalize_timedelta, normalize_time_input
-from dxpy.utils.env import clearenv, write_env_var
-from dxpy.utils.printing import (CYAN, BLUE, YELLOW, GREEN, RED, WHITE, UNDERLINE, BOLD, ENDC, DNANEXUS_LOGO,
-                                 DNANEXUS_X, set_colors, set_delimiter, get_delimiter, DELIMITER, fill,
-                                 tty_rows, tty_cols, pager)
-from dxpy.utils.pretty_print import format_tree, format_table
-from dxpy.utils.resolver import (pick, paginate_and_pick, is_hashid, is_data_obj_id, is_container_id, is_job_id, is_analysis_id,
-                                 get_last_pos_of_char, resolve_container_id_or_name, resolve_path,
-                                 resolve_existing_path, get_app_from_path, resolve_app, get_exec_handler,
-                                 cached_project_names, split_unescaped,
-                                 ResolutionError, get_first_pos_of_char, resolve_to_objects_or_project)
-from dxpy.utils.completer import (path_completer, DXPathCompleter, DXAppCompleter, LocalCompleter,
-                                  ListCompleter, MultiCompleter)
-from dxpy.utils.describe import (print_data_obj_desc, print_desc, print_ls_desc, get_ls_l_desc, print_ls_l_desc,
-                                 get_io_desc, get_find_executions_string)
-from dxpy.cli.parsers import (no_color_arg, delim_arg, env_args, stdout_args, all_arg, json_arg,
-                              parser_dataobject_args, parser_single_dataobject_output_args,
-                              process_properties_args,
-                              find_by_properties_and_tags_args, process_find_by_property_args,
-                              process_dataobject_args, process_single_dataobject_output_args, find_executions_args, add_find_executions_search_gp,
-                              set_env_from_args,
-                              extra_args, process_extra_args, DXParserError,
-                              exec_input_args, instance_type_arg, process_instance_type_arg)
-from dxpy.cli.exec_io import (ExecutableInputs, format_choices_or_suggestions)
 
 # Loading other variables used for pretty-printing
 if "LESS" in os.environ:
@@ -162,19 +163,22 @@ if "LESS" in os.environ:
 else:
     os.environ["LESS"] = "-RS"
 
-# This completer is for the command-line in the shell.  It assumes the
-# first word is always a subcommand and that if the first word is a
+# This completer is for the command line in the shell (i.e., `dx sh`). It
+# assumes the first word is always a subcommand and that if the first word is a
 # subcommand with further subcommands, then the second word must be an
 # appropriate sub-subcommand.
 class DXCLICompleter():
-    subcommands = {'find': ['data ', 'projects ', 'apps ', 'jobs ', 'executions ', 'analyses '],
-                   'new': ['record ', 'gtable ', 'project '],
-                   'add': ['developers ', 'users ', 'stage '],
-                   'remove': ['developers ', 'users ', 'stage '],
-                   'update': ['stage ', 'workflow ']}
+    subcommands = {'find': ['data ', 'projects ', 'apps ', 'jobs ', 'executions ', 'analyses ', 'orgs ', 'org '],
+                   'new': ['record ', 'project ', 'workflow ', 'org ', 'user '],
+                   'add': ['developers ', 'users ', 'stage ', 'member '],
+                   'remove': ['developers ', 'users ', 'stage ', 'member '],
+                   'update': ['stage ', 'workflow ', 'org ', 'member ', 'project '],
+                   'org': ['projects ', 'members ']}
+
+    silent_commands = set(['export'])
 
     def __init__(self):
-        self.commands = [subcmd + ' ' for subcmd in subparsers.choices.keys()]
+        self.commands = [subcmd + ' ' for subcmd in subparsers.choices.keys() if subcmd not in self.silent_commands]
         self.matches = []
         self.text = None
 
@@ -271,52 +275,69 @@ def login(args):
     default_authserver = 'https://auth.dnanexus.com'
     using_default = False
 
+    if args.auth_token and not args.token:
+        args.token = args.auth_token
+        args.auth_token = None
+
     # API server should have already been set up if --host or one of
     # the --special-host flags has been set.
     if args.token is None:
-        if args.host is not None or args.port is not None:
-            if args.host is None or args.port is None:
-                parser.exit(2, fill('Error: Only one of --host and --port were provided; provide either both or neither of the values') + '\n')
-            protocol = args.protocol or ("https" if (args.port == 443) else "http")
-            authserver = protocol + '://' + args.host
-            authserver += ':' + str(args.port)
-        else:
-            authserver = default_authserver
+        if (args.host is None) != (args.port is None):
+            err_exit('Error: Only one of --host and --port were provided; provide either both or neither of the values', 2)
+        authserver = dxpy.get_auth_server_name(args.host, args.port, args.protocol)
 
         using_default = authserver == default_authserver
 
-        print('Acquiring credentials from ' + authserver)
-
-        try:
-            if 'DX_USERNAME' in os.environ:
-                username = input('Username [' + os.environ['DX_USERNAME'] + ']: ') or os.environ['DX_USERNAME']
-            else:
-                username = input('Username: ')
-            write_env_var('DX_USERNAME', username)
-            password = getpass.getpass()
-        except (KeyboardInterrupt, EOFError):
-            parser.exit(1, '\n')
-
         def get_token(**data):
-            return dxpy.DXHTTPRequest(authserver+"/authorizations", data,
+            return dxpy.DXHTTPRequest(authserver+"/system/newAuthToken", data,
                                       prepend_srv=False, auth=None, always_retry=True)
-        try:
-            token_res = get_token(username=username, password=password,
-                                  expires=normalize_time_input(args.timeout, future=True))
-        except dxpy.DXAPIError as e:
-            if e.name == 'OTPRequiredError':
-                otp = input('Verification code: ')
-                try:
-                    token_res = get_token(username=username, password=password, otp=otp,
-                                          expires=normalize_time_input(args.timeout, future=True))
-                except:
-                    err_exit("Login error", arg_parser=parser)
-            elif e.name == 'UsernameOrPasswordError':
-                err_exit("Incorrect username and/or password", arg_parser=parser)
+
+        def get_credentials(reuse=None, get_otp=False):
+            if reuse:
+                username, password = reuse
             else:
-                err_exit("Login error", arg_parser=parser)
-        except:
-            err_exit("Login error", arg_parser=parser)
+                username = None
+                while not username:
+                    if 'DX_USERNAME' in os.environ:
+                        username = input('Username [' + os.environ['DX_USERNAME'] + ']: ') or os.environ['DX_USERNAME']
+                    else:
+                        username = input('Username: ')
+                dxpy.config.write("DX_USERNAME", username)
+                with unwrap_stream('stdin'):
+                    password = getpass.getpass()
+
+            otp = input('Verification code: ') if get_otp else None
+            return dict(username=username, password=password, otp=otp)
+
+        print('Acquiring credentials from ' + authserver)
+        attempt, using_otp, reuse = 1, False, None
+        while attempt <= 3:
+            try:
+                credentials = get_credentials(reuse=reuse, get_otp=using_otp)
+                token_res = get_token(expires=normalize_time_input(args.timeout, future=True, default_unit='s'),
+                                      **credentials)
+                break
+            except (KeyboardInterrupt, EOFError):
+                err_exit()
+            except dxpy.DXAPIError as e:
+                if e.name == 'OTPRequiredError':
+                    using_otp = True
+                    reuse = (credentials['username'], credentials['password'])
+                    continue
+                elif e.name in ('UsernameOrPasswordError', 'OTPMismatchError'):
+                    if attempt < 3:
+                        if e.name == 'UsernameOrPasswordError':
+                            warn("Incorrect username and/or password")
+                        else:
+                            warn("Incorrect verification code")
+                        attempt += 1
+                        continue
+                    else:
+                        err_exit("Incorrect username and/or password", arg_parser=parser)
+                else:
+                    err_exit("Login error: {}".format(e), arg_parser=parser)
+            except Exception as e:
+                err_exit("Login error: {}".format(e), arg_parser=parser)
 
         sec_context=json.dumps({'auth_token': token_res["access_token"], 'auth_token_type': token_res["token_type"]})
 
@@ -332,7 +353,7 @@ def login(args):
     os.environ['DX_SECURITY_CONTEXT'] = sec_context
     dxpy.set_security_context(json.loads(sec_context))
     if args.save:
-        write_env_var('DX_SECURITY_CONTEXT', sec_context)
+        dxpy.config.write("DX_SECURITY_CONTEXT", sec_context)
 
     # If login via token, obtain current username from auth server.
     if args.token is not None:
@@ -340,24 +361,27 @@ def login(args):
         if dxpy.APISERVER_HOST not in ['api.dnanexus.com', 'stagingapi.dnanexus.com']:
             host, port = args.host, args.port
         try:
-            write_env_var('DX_USERNAME', dxpy.user_info(host, port)['username'])
+            dxpy.config.write("DX_USERNAME", dxpy.user_info(host, port)['username'])
         except DXError as details:
             # Consider failure to obtain username to be a non-fatal error.
             print("Could not obtain username from auth server. Consider setting both --host and --port.", file=sys.stderr)
             print(fill(str(details)), file=sys.stderr)
 
     if using_default or args.staging:
-        greeting = dxpy.api.system_greet({'client': 'dxclient', 'version': 'v'+dxpy.TOOLKIT_VERSION})
-        if greeting.get('messages'):
-            print(BOLD("New messages from ") + DNANEXUS_LOGO())
-            for message in greeting['messages']:
-                print(BOLD("Date:    ") + datetime.datetime.fromtimestamp(message['date']/1000).ctime())
-                print(BOLD("Subject: ") + fill(message['title'], subsequent_indent=' '*9))
-                body = message['body'].splitlines()
-                if len(body) > 0:
-                    print(BOLD("Message: ") + body[0])
-                    for line in body[1:]:
-                        print(' '*9 + line)
+        try:
+            greeting = dxpy.api.system_greet({'client': 'dxclient', 'version': 'v'+dxpy.TOOLKIT_VERSION})
+            if greeting.get('messages'):
+                print(BOLD("New messages from ") + DNANEXUS_LOGO())
+                for message in greeting['messages']:
+                    print(BOLD("Date:    ") + datetime.datetime.fromtimestamp(message['date']//1000).ctime())
+                    print(BOLD("Subject: ") + fill(message['title'], subsequent_indent=' '*9))
+                    body = message['body'].splitlines()
+                    if len(body) > 0:
+                        print(BOLD("Message: ") + body[0])
+                        for line in body[1:]:
+                            print(' '*9 + line)
+        except Exception as e:
+            warn("Error while retrieving greet data: {}".format(e))
 
     args.current = False
     args.name = None
@@ -373,64 +397,53 @@ def login(args):
         msg = "You are now logged in. Your credentials are stored in {conf_dir} and will expire in {timeout}. {tip}"
         tip = "Use " + BOLD("dx login --timeout") + " to control the expiration date, or " + BOLD("dx logout") + \
               " to end this session."
-        print(fill(msg.format(conf_dir=get_user_conf_dir(),
-                              timeout=datetime.timedelta(seconds=normalize_time_input(args.timeout)/1000),
+        timeout = datetime.timedelta(seconds=normalize_time_input(args.timeout, default_unit='s') // 1000)
+        print(fill(msg.format(conf_dir=dxpy.config.get_user_conf_dir(),
+                              timeout=timeout,
                               tip=tip)))
 
 def logout(args):
     if dxpy.AUTH_HELPER is not None:
-        authserver = dxpy.get_auth_server_name(args.host, args.port)
-        print('Deleting credentials from ' + authserver + '...')
-        session = requests.session()
-        token = dxpy.AUTH_HELPER.security_context['auth_token']
+        authserver = dxpy.get_auth_server_name(args.host, args.port, args.protocol)
+        print("Deleting credentials from {}...".format(authserver))
+        token = dxpy.AUTH_HELPER.security_context["auth_token"]
         try:
             token_sig = hashlib.sha256(token).hexdigest()
-            response = session.delete(authserver + '/authorizations/' + token_sig, auth=dxpy.AUTH_HELPER)
-            if response.status_code not in (requests.codes.forbidden, requests.codes.not_found):
-                response.raise_for_status()
-            if response.status_code == requests.codes.ok:
-                print('Deleted token with signature', token_sig)
+            response = dxpy.DXHTTPRequest(authserver + "/system/destroyAuthToken",
+                                          dict(tokenSignature=token_sig),
+                                          prepend_srv=False,
+                                          max_retries=1)
+            print("Deleted token with signature", token_sig)
+        except dxpy.DXAPIError as e:
+            print(format_exception(e))
         except:
             err_exit()
-        if not state['interactive']:
-            write_env_var("DX_SECURITY_CONTEXT", None)
-        else:
+        if state["interactive"]:
             dxpy.AUTH_HELPER = None
+        else:
+            dxpy.config.write("DX_SECURITY_CONTEXT", None)
 
 def set_api(protocol, host, port, write):
-    os.environ['DX_APISERVER_PROTOCOL'] = protocol
-    os.environ['DX_APISERVER_HOST'] = host
-    os.environ['DX_APISERVER_PORT'] = port
+    dxpy.config.update(DX_APISERVER_PROTOCOL=protocol,
+                       DX_APISERVER_HOST=host,
+                       DX_APISERVER_PORT=port)
     if write:
-        write_env_var("DX_APISERVER_PROTOCOL", protocol)
-        write_env_var("DX_APISERVER_HOST", host)
-        write_env_var("DX_APISERVER_PORT", port)
-    dxpy.set_api_server_info(host=host, port=port, protocol=protocol)
+        dxpy.config.save()
 
 def set_project(project, write, name=None):
     if dxpy.JOB_ID is None:
-        os.environ['DX_PROJECT_CONTEXT_ID'] = project
-        if name is not None:
-            set_env_var("DX_PROJECT_CONTEXT_NAME", name)
-        if write:
-            write_env_var("DX_PROJECT_CONTEXT_ID", project)
-            if name is not None:
-                write_env_var("DX_PROJECT_CONTEXT_NAME", name)
-            else:
-                try:
-                    os.remove(os.path.expanduser('~/.dnanexus_config/DX_PROJECT_CONTEXT_NAME'))
-                except:
-                    pass
+        dxpy.config["DX_PROJECT_CONTEXT_ID"] = project
+        dxpy.config["DX_PROJECT_CONTEXT_NAME"] = name
     else:
-        os.environ['DX_WORKSPACE_ID'] = project
-        if write:
-            write_env_var('DX_WORKSPACE_ID', project)
+        dxpy.config["DX_WORKSPACE_ID"] = project
+    if write:
+        dxpy.config.save()
     dxpy.set_workspace_id(project)
 
 def set_wd(folder, write):
-    set_env_var('DX_CLI_WD', folder)
+    dxpy.config.update(DX_CLI_WD=folder)
     if write:
-        write_env_var("DX_CLI_WD", folder)
+        dxpy.config.save()
 
 # Will raise KeyboardInterrupt, EOFError
 def prompt_for_env_var(prompt_str, env_var_str):
@@ -448,13 +461,15 @@ def prompt_for_env_var(prompt_str, env_var_str):
         elif default is not None:
             return default
 
+
 def pick_and_set_project(args):
     try:
         result_generator = dxpy.find_projects(describe=True,
                                               name=args.name, name_mode='glob',
                                               level=('VIEW' if args.public else args.level),
                                               explicit_perms=(not args.public if not args.public else None),
-                                              public=(args.public if args.public else None))
+                                              public=(args.public if args.public else None),
+                                              first_page_size=10)
     except:
         err_exit('Error while listing available projects')
     any_results = False
@@ -475,7 +490,7 @@ def pick_and_set_project(args):
                                        " VIEW permissions, use " + BOLD("dx select --level VIEW") + " or " +
                                        BOLD("dx select --public") + ".") + '\n')
         elif len(results) == 0:
-            parser.exit(1, 'No projects left to choose from.\n')
+            err_exit('No projects left to choose from.', 3)
 
         if first_pass:
             if not args.public and args.level == "CONTRIBUTE":
@@ -512,25 +527,18 @@ def pick_and_set_project(args):
 
 def whoami(args):
     if dxpy.AUTH_HELPER is None:
-        parser.exit(3, 'You are not logged in; run "dx login" to obtain a token.\n')
-    try:
-        user_info = dxpy.user_info(args.host, args.port)
-    except DXError as details:
-        print("Error obtaining user info; consider setting --host and --port.", file=sys.stderr)
-        parser.exit(3, fill(str(details)))
+        err_exit('You are not logged in; run "dx login" to obtain a token.', 3)
+    user_id = dxpy.whoami()
     if args.user_id:
-        print(user_info['userId'])
+        print(user_id)
     else:
-        print(user_info['username'])
+        print(dxpy.api.user_describe(user_id)['handle'])
 
 def setenv(args):
     if not state['interactive']:
         args.save = True
     if args.current:
-        env_vars = ['DX_SECURITY_CONTEXT', 'DX_APISERVER_HOST', 'DX_APISERVER_PORT', 'DX_PROJECT_CONTEXT_ID', 'DX_CLI_WD', 'DX_USERNAME', 'DX_WORKSPACE_ID']
-        for var in env_vars:
-            if var in os.environ:
-                write_env_var(var, os.environ[var])
+        dxpy.config.save()
     else:
         try:
             api_protocol = prompt_for_env_var('API server protocol (choose "http" or "https")', 'DX_APISERVER_PROTOCOL')
@@ -538,7 +546,7 @@ def setenv(args):
             api_port = prompt_for_env_var('API server port', 'DX_APISERVER_PORT')
             set_api(api_protocol, api_host, api_port, args.save)
         except:
-            parser.exit(1, '\n')
+            raise DXCLIError("Error setting up API variables")
 
     if args.projects:
         args.name = None
@@ -546,6 +554,12 @@ def setenv(args):
         args.current = False
         args.level = 'CONTRIBUTE'
         pick_and_set_project(args)
+
+def clearenv(args):
+    if args.interactive:
+        print("The clearenv command is not available in the interactive shell")
+        return
+    dxpy.config.clear(reset=args.reset)
 
 def env(args):
     if args.bash:
@@ -582,8 +596,8 @@ def env(args):
         print("API server port\t\t" + dxpy.APISERVER_PORT)
         print("Current workspace\t" + str(dxpy.WORKSPACE_ID))
         if "DX_PROJECT_CONTEXT_NAME" in os.environ:
-            print(u'Current workspace name\t"{n}"'.format(n=get_env_var("DX_PROJECT_CONTEXT_NAME")))
-        print("Current folder\t\t" + get_env_var("DX_CLI_WD", "None"))
+            print(u'Current workspace name\t"{n}"'.format(n=dxpy.config.get("DX_PROJECT_CONTEXT_NAME")))
+        print("Current folder\t\t" + dxpy.config.get("DX_CLI_WD", "None"))
         print("Current user\t\t" + str(os.environ.get("DX_USERNAME")))
 
 def get_pwd():
@@ -596,7 +610,7 @@ def get_pwd():
             except:
                 pass
     if state['currentproj'] is not None:
-        pwd_str = state['currentproj'] + ':' + get_env_var('DX_CLI_WD', u'/')
+        pwd_str = state['currentproj'] + ':' + dxpy.config.get('DX_CLI_WD', u'/')
     return pwd_str
 
 def pwd(args):
@@ -604,7 +618,7 @@ def pwd(args):
     if pwd_str is not None:
         print(pwd_str)
     else:
-        parser.exit(1, 'Current project is not set\n')
+        err_exit('Current project is not set', 3)
 
 def api(args):
     json_input = json.loads(args.input_json)
@@ -614,7 +628,7 @@ def api(args):
             try:
                 json_input = json.loads(data)
             except ValueError:
-                parser.exit(1, 'Error: file contents could not be parsed as JSON\n')
+                err_exit('Error: file contents could not be parsed as JSON', 3)
     resp = None
     try:
         resp = dxpy.DXHTTPRequest('/' + args.resource + '/' + args.method,
@@ -624,7 +638,7 @@ def api(args):
     try:
         print(json.dumps(resp, indent=4))
     except ValueError:
-        parser.exit(1, 'Error: server response could not be parsed as JSON\n')
+        err_exit('Error: server response could not be parsed as JSON', 3)
 
 def invite(args):
     # If --project is a valid project (ID or name), then appending ":"
@@ -633,10 +647,13 @@ def invite(args):
         args.project += ':'
     project, _none, _none = try_call(resolve_existing_path,
                                      args.project, 'project')
-    if args.invitee != 'PUBLIC' and not '-' in args.invitee and not '@' in args.invitee:
+    if args.invitee != 'PUBLIC' and '-' not in args.invitee and '@' not in args.invitee:
         args.invitee = 'user-' + args.invitee.lower()
+    project_invite_input = {"invitee": args.invitee, "level": args.level}
+    if not args.send_email:
+        project_invite_input["suppressEmailNotification"] = not args.send_email
     try:
-        resp = dxpy.api.project_invite(project, {"invitee": args.invitee, "level": args.level})
+        resp = dxpy.api.project_invite(project, project_invite_input)
     except:
         err_exit()
     print('Invited ' + args.invitee + ' to ' + project + ' (' + resp['state'] + ')')
@@ -648,7 +665,7 @@ def uninvite(args):
         args.project += ':'
     project, _none, _none = try_call(resolve_existing_path,
                                      args.project, 'project')
-    if args.entity != 'PUBLIC' and not '-' in args.entity:
+    if args.entity != 'PUBLIC' and '-' not in args.entity:
         args.entity = 'user-' + args.entity.lower()
     try:
         dxpy.api.project_decrease_permissions(project, {args.entity: None})
@@ -680,7 +697,7 @@ def cd(args):
             set_project(project, not state['interactive'], name=project_name)
             state['currentproj'] = project_name
     else:
-        parser.exit(1, 'Error: No current project was given\n')
+        err_exit('Error: No current project was given', 3)
 
     # TODO: attempt to add caching later if it's an issue
     # if project in cached_project_paths and folderpath in cached_project_paths[project]:
@@ -690,8 +707,7 @@ def cd(args):
         dxproj = dxpy.get_handler(dxpy.WORKSPACE_ID)
         dxproj.list_folder(folder=folderpath)
     except:
-        parser.exit(1, fill(folderpath + ': No such file or directory found in project ' + dxpy.WORKSPACE_ID) + '\n')
-        return
+        err_exit(fill(folderpath + ': No such file or directory found in project ' + dxpy.WORKSPACE_ID), 3)
 
     set_wd(folderpath, not state['interactive'])
 
@@ -704,7 +720,7 @@ def ls(args):
                                                    ask_to_resolve=False)
 
     if project is None:
-        parser.exit(1, fill('Current project must be set or specified before any data can be listed') + '\n')
+        err_exit('Current project must be set or specified before any data can be listed', 3)
     dxproj = dxpy.get_handler(project)
     only = ""
     if args.obj and not args.folders and not args.full:
@@ -717,16 +733,23 @@ def ls(args):
     resp = None
     if entity_results is None:
         try:
+            # Request the minimal set of describe fields possible
+            if args.brief:
+                describe_input = dict(fields={'id': True, 'name': True})
+            elif args.verbose:
+                describe_input = True
+            else:
+                describe_input = dict(fields={'id': True, 'class': True, 'name': True})
             resp = dxproj.list_folder(folder=folderpath,
-                                      describe={},
+                                      describe=describe_input,
                                       only=only,
                                       includeHidden=args.all)
 
             # Listing the folder was successful
 
             if args.verbose:
-                print(UNDERLINE() + 'Project:' + ENDC() + ' ' + dxproj.describe()['name'] + ' (' + project + ')')
-                print(UNDERLINE() + 'Folder :' + ENDC() + ' ' + folderpath)
+                print(UNDERLINE('Project:') + ' ' + dxproj.describe()['name'] + ' (' + project + ')')
+                print(UNDERLINE('Folder :') + ' ' + folderpath)
 
             if not args.obj:
                 folders_to_print = ['/.', '/..'] if args.all else []
@@ -740,10 +763,11 @@ def ls(args):
                 resp["objects"] = sorted(resp["objects"], key=cmp_names)
                 if args.verbose:
                     if len(resp['objects']) > 0:
-                        print(BOLD() + 'State' + DELIMITER('\t') + 'Last modified' + DELIMITER('       ') + 'Size' + DELIMITER('     ') + 'Name' + DELIMITER(' (') + 'ID' + DELIMITER(')') + ENDC())
+                        print_ls_l_header()
                     else:
                         print("No data objects found in the folder")
-                name_counts = collections.Counter(obj['describe']['name'] for obj in resp['objects'])
+                if not args.brief and not args.verbose:
+                    name_counts = collections.Counter(obj['describe']['name'] for obj in resp['objects'])
                 for obj in resp['objects']:
                     if args.brief:
                         print(obj['id'])
@@ -787,7 +811,7 @@ def mkdir(args):
             print("  " + str(details))
             had_error = True
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def rmdir(args):
     had_error = False
@@ -807,7 +831,7 @@ def rmdir(args):
             print("  " + str(details))
             had_error = True
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def rm(args):
     had_error = False
@@ -844,19 +868,26 @@ def rm(args):
     for project in projects:
         for folder in projects[project]['folders']:
             try:
-                dxpy.api.project_remove_folder(project, {"folder": folder, "recurse": True})
+                # set force as true so the underlying API requests are idempotent
+                dxpy.api.project_remove_folder(project,
+                                               {"folder": folder, "recurse": True, "force": True},
+                                               always_retry=True)
             except Exception as details:
                 print("Error while removing " + folder + " from " + project)
                 print("  " + str(details))
                 had_error = True
         try:
-            dxpy.api.project_remove_objects(project, {"objects": projects[project]['objects']})
+            # set force as true so the underlying API requests are idempotent
+            dxpy.api.project_remove_objects(project,
+                                            {"objects": projects[project]['objects'], "force": True},
+                                            always_retry=True)
         except Exception as details:
             print("Error while removing " + json.dumps(projects[project]['objects']) + " from " + project)
             print("  " + str(details))
             had_error = True
     if had_error:
-        parser.exit(1)
+        # TODO: 'dx rm' and related commands should separate out user error exceptions and internal code exceptions
+        err_exit('', 3)
 
 def rmproject(args):
     had_error = False
@@ -900,21 +931,18 @@ def rmproject(args):
             if not args.quiet:
                 print(fill('Successfully deleted project "' + proj_desc['name'] + '"'))
         except EOFError:
-            print('')
-            parser.exit(1)
+            err_exit('', 3)
         except KeyboardInterrupt:
-            print('')
-            parser.exit(1)
+            err_exit('', 3)
         except Exception as details:
             print(fill('Was unable to remove ' + project + ', ' + str(details)))
             had_error = True
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 # ONLY for within the SAME project.  Will exit fatally otherwise.
 def mv(args):
-    dest_proj, dest_path, _none = try_call(resolve_path,
-                                          args.destination, 'folder')
+    dest_proj, dest_path, _none = try_call(resolve_path, args.destination, expected='folder')
     try:
         if dest_path is None:
             raise ValueError()
@@ -922,11 +950,11 @@ def mv(args):
         dx_dest.list_folder(folder=dest_path, only='folders')
     except:
         if dest_path is None:
-            parser.exit(1, 'Cannot move to a hash ID\n')
+            err_exit('Cannot move to a hash ID', 3)
         # Destination folder path is new => renaming
         if len(args.sources) != 1:
             # Can't rename more than one object
-            parser.exit(1, 'The destination folder does not exist\n')
+            err_exit('The destination folder does not exist', 3)
         last_slash_pos = get_last_pos_of_char('/', dest_path)
         if last_slash_pos == 0:
             dest_folder = '/'
@@ -936,7 +964,7 @@ def mv(args):
         try:
             dx_dest.list_folder(folder=dest_folder, only='folders')
         except:
-            parser.exit(1, 'The destination folder does not exist\n')
+            err_exit('The destination folder does not exist', 3)
 
         # Either rename the data object or rename the folder
         src_proj, src_path, src_results = try_call(resolve_existing_path,
@@ -944,11 +972,11 @@ def mv(args):
                                                    allow_mult=True, all_mult=args.all)
 
         if src_proj != dest_proj:
-            parser.exit(1, fill('Error: Using "mv" for moving something from one project to another is unsupported.') + '\n')
+            err_exit(fill('Error: Using "mv" for moving something from one project to another is unsupported.'), 3)
 
         if src_results is None:
             if src_path == '/':
-                parser.exit(1, fill('Cannot rename root folder; to rename the project, please use the "dx rename" subcommand.') + '\n')
+                err_exit(fill('Cannot rename root folder; to rename the project, please use the "dx rename" subcommand.'), 3)
             try:
                 dxpy.api.project_rename_folder(src_proj, {"folder": src_path, "newpath": dest_path})
                 return
@@ -969,7 +997,7 @@ def mv(args):
                 err_exit()
 
     if len(args.sources) == 0:
-        parser.exit(1, 'No sources provided to move\n')
+        err_exit('No sources provided to move', 3)
     src_objects = []
     src_folders = []
     for source in args.sources:
@@ -977,7 +1005,7 @@ def mv(args):
                                                          source,
                                                          allow_mult=True, all_mult=args.all)
         if src_proj != dest_proj:
-            parser.exit(1, fill('Using "mv" for moving something from one project to another is unsupported.  Please use "cp" and "rm" instead.') + '\n')
+            err_exit(fill('Using "mv" for moving something from one project to another is unsupported.  Please use "cp" and "rm" instead.'), 3)
 
         if src_results is None:
             src_folders.append(src_folderpath)
@@ -991,124 +1019,13 @@ def mv(args):
     except:
         err_exit()
 
-# ONLY for between DIFFERENT projects.  Will exit fatally otherwise.
-def cp(args):
-    dest_proj, dest_path, _none = try_call(resolve_path,
-                                           args.destination, 'folder')
-    try:
-        if dest_path is None:
-            raise ValueError()
-        dx_dest = dxpy.get_handler(dest_proj)
-        dx_dest.list_folder(folder=dest_path, only='folders')
-    except:
-        if dest_path is None:
-            parser.exit(1, 'Cannot copy to a hash ID\n')
-        # Destination folder path is new => renaming
-        if len(args.sources) != 1:
-            # Can't copy and rename more than one object
-            parser.exit(1, 'The destination folder does not exist\n')
-        last_slash_pos = get_last_pos_of_char('/', dest_path)
-        if last_slash_pos == 0:
-            dest_folder = '/'
-        else:
-            dest_folder = dest_path[:last_slash_pos]
-        dest_name = dest_path[last_slash_pos + 1:].replace('\/', '/')
-        try:
-            dx_dest.list_folder(folder=dest_folder, only='folders')
-        except dxpy.DXAPIError as details:
-            if details.code == requests.codes.not_found:
-                parser.exit(1, 'The destination folder does not exist\n')
-            else:
-                raise
-        except:
-            err_exit()
-
-        # Clone and rename either the data object or the folder
-        # src_result is None if it could not be resolved to an object
-        src_proj, src_path, src_results = try_call(resolve_existing_path,
-                                                   args.sources[0],
-                                                   allow_mult=True, all_mult=args.all)
-
-        if src_proj == dest_proj:
-            if is_hashid(args.sources[0]):
-                # This is the only case in which the source project is
-                # purely assumed, so give a better error message.
-                parser.exit(1, fill('Error: You must specify a source project for ' + args.sources[0]) + '\n')
-            else:
-                parser.exit(1, fill('A source path and the destination path resolved to the same project or container.  Please specify different source and destination containers, e.g.') + '\n  dx cp source-project:source-id-or-path dest-project:dest-path' + '\n')
-
-        if src_results is None:
-            try:
-                contents = dxpy.api.project_list_folder(src_proj,
-                                                        {"folder": src_path, "includeHidden": True})
-                dxpy.api.project_new_folder(dest_proj, {"folder": dest_path})
-                exists = dxpy.api.project_clone(src_proj,
-                                                {"folders": contents['folders'],
-                                                 "objects": [result['id'] for result in contents['objects']],
-                                                 "project": dest_proj,
-                                                 "destination": dest_path})['exists']
-                if len(exists) > 0:
-                    print(fill('The following objects already existed in the destination container and were not copied:') + '\n ' + '\n '.join(json.dumps(exists)))
-                return
-            except:
-                err_exit()
-        else:
-            try:
-                exists = dxpy.api.project_clone(src_proj,
-                                                {"objects": [result['id'] for result in src_results],
-                                                 "project": dest_proj,
-                                                 "destination": dest_folder})['exists']
-                if len(exists) > 0:
-                    print(fill('The following objects already existed in the destination container and were not copied:') + '\n ' + '\n '.join(json.dumps(exists)))
-                for result in src_results:
-                    if result['id'] not in exists:
-                        dxpy.DXHTTPRequest('/' + result['id'] + '/rename',
-                                           {"project": dest_proj,
-                                            "name": dest_name})
-                return
-            except:
-                err_exit()
-
-    if len(args.sources) == 0:
-        parser.exit(1, 'No sources provided to copy to another project\n')
-    src_objects = []
-    src_folders = []
-    for source in args.sources:
-        src_proj, src_folderpath, src_results = try_call(resolve_existing_path,
-                                                         source,
-                                                         allow_mult=True, all_mult=args.all)
-        if src_proj == dest_proj:
-            if is_hashid(source):
-                # This is the only case in which the source project is
-                # purely assumed, so give a better error message.
-                parser.exit(1, fill('Error: You must specify a source project for ' + source) + '\n')
-            else:
-                parser.exit(1, fill('Error: A source path and the destination path resolved to the same project or container.  Please specify different source and destination containers, e.g.') + '\n  dx cp source-project:source-id-or-path dest-project:dest-path' + '\n')
-
-        if src_proj is None:
-            parser.exit(1, fill('Error: A source project must be specified or a current project set in order to clone objects between projects') + '\n')
-
-        if src_results is None:
-            src_folders.append(src_folderpath)
-        else:
-            src_objects += [result['id'] for result in src_results]
-    try:
-        exists = dxpy.DXHTTPRequest('/' + src_proj + '/clone',
-                                    {"objects": src_objects,
-                                     "folders": src_folders,
-                                     "project": dest_proj,
-                                     "destination": dest_path})['exists']
-        if len(exists) > 0:
-            print(fill('The following objects already existed in the destination container and were left alone:') + '\n ' + '\n '.join(exists))
-    except:
-        err_exit()
 
 def tree(args):
     project, folderpath, _none = try_call(resolve_existing_path, args.path,
                                           expected='folder')
 
     if project is None:
-        parser.exit(1, fill('Current project must be set or specified before any data can be listed') + '\n')
+        err_exit(fill('Current project must be set or specified before any data can be listed'), 3)
     dxproj = dxpy.get_handler(project)
 
     tree = collections.OrderedDict()
@@ -1171,13 +1088,23 @@ def describe(args):
                     if details.code != requests.codes.not_found:
                         raise
 
-        # Otherwise, attempt to look for it as a data object.
+        # Otherwise, attempt to look for it as a data object or
+        # execution
         try:
             project, _folderpath, entity_results = resolve_existing_path(args.path,
                                                                          expected='entity',
                                                                          ask_to_resolve=False,
                                                                          describe=json_input)
-        except ResolutionError:
+        except ResolutionError as details:
+            # PermissionDenied or InvalidAuthentication
+            if str(details).endswith('code 401'):
+                # Surface permissions-related errors here (for data
+                # objects, jobs, and analyses). Other types of errors
+                # may be recoverable below.
+                #
+                # TODO: better way of obtaining the response code when
+                # the exception corresponds to an API error
+                raise DXCLIError(str(details))
             project, entity_results = None, None
 
         found_match = False
@@ -1188,7 +1115,6 @@ def describe(args):
 
         # Could be a project
         json_input = {}
-        json_input['countObjects'] = True
         json_input['properties'] = True
         if args.verbose:
             json_input["permissions"] = True
@@ -1229,13 +1155,6 @@ def describe(args):
             if len(entity_results) > 0:
                 found_match = True
             for result in entity_results:
-                if result['describe']['class'] == 'workflow':
-                    # Workflows have more information if described
-                    # directly and not via findDataObjects; redo the
-                    # query to get it before proceeding
-                    json_input['project'] = result['describe']['project']
-                    result['describe'] = dxpy.DXHTTPRequest('/' + result['id'] + '/describe',
-                                                            json_input)
                 if args.json:
                     json_output.append(result['describe'])
                 elif args.name:
@@ -1317,15 +1236,81 @@ def describe(args):
     except:
         err_exit()
 
+
+def _validate_new_user_input(args):
+    # TODO: Support interactive specification of `args.username`.
+    # TODO: Support interactive specification of `args.email`.
+
+    if args.org is None and len(DXNewUserOrgArgsAction.user_specified_opts) > 0:
+        raise DXCLIError("Cannot specify {opts} without specifying --org".format(
+            opts=DXNewUserOrgArgsAction.user_specified_opts
+        ))
+
+
+def _get_user_new_args(args):
+    """
+    PRECONDITION: `_validate_new_user_input()` has been called on `args`.
+    """
+    user_new_args = {"username": args.username,
+                     "email": args.email}
+    if args.first is not None:
+        user_new_args["first"] = args.first
+    if args.last is not None:
+        user_new_args["last"] = args.last
+    if args.middle is not None:
+        user_new_args["middle"] = args.middle
+    if args.token_duration is not None:
+        token_duration_ms = normalize_timedelta(args.token_duration)
+        if token_duration_ms > 30 * 24 * 60 * 60 * 1000:
+            raise ValueError("--token-duration must be 30 days or less")
+        else:
+            user_new_args["tokenDuration"] = token_duration_ms
+    if args.occupation is not None:
+        user_new_args["occupation"] = args.occupation
+    if args.set_bill_to is True:
+        user_new_args["billTo"] = args.org
+    return user_new_args
+
+
+def new_user(args):
+    _validate_new_user_input(args)
+
+    # Create user account.
+    #
+    # We prevent retries here because authserver is closing the server-side
+    # connection in certain situations. We cannot simply set `always_retry` to
+    # False here because we receive a 504 error code from the server.
+    # TODO: Allow retries when authserver issue is resolved.
+    dxpy.DXHTTPRequest(dxpy.get_auth_server_name() + "/user/new",
+                       _get_user_new_args(args),
+                       prepend_srv=False,
+                       max_retries=0)
+
+    user_id = "user-" + args.username.lower()
+    if args.org is not None:
+        # Invite new user to org.
+        dxpy.api.org_invite(args.org, get_org_invite_args(user_id, args))
+
+    if args.brief:
+        print(user_id)
+    else:
+        print(fill("Created new user account ({u})".format(u=user_id)))
+
+
 def new_project(args):
     if args.name == None:
         if INTERACTIVE_CLI:
             args.name = input("Enter name for new project: ")
         else:
-            parser.exit(1, parser_new_project.format_help() +
-                           fill("No project name supplied, and input is not interactive") + '\n')
+            err_exit(parser_new_project.format_help() + fill("No project name supplied, and input is not interactive"), 3)
+    inputs = {"name": args.name}
+    if args.bill_to:
+        inputs["billTo"] = args.bill_to
+    if args.region:
+        inputs["region"] = args.region
+
     try:
-        resp = dxpy.api.project_new({"name": args.name})
+        resp = dxpy.api.project_new(inputs)
         if args.brief:
             print(resp['id'])
         else:
@@ -1336,21 +1321,24 @@ def new_project(args):
     except:
         err_exit()
 
+
 def new_record(args):
     try_call(process_dataobject_args, args)
     try_call(process_single_dataobject_output_args, args)
     init_from = None
+
     if args.init is not None:
         init_project, _init_folder, init_result = try_call(resolve_existing_path,
                                                            args.init,
                                                            expected='entity')
         init_from = dxpy.DXRecord(dxid=init_result['id'], project=init_project)
+
     if args.output is None:
         project = dxpy.WORKSPACE_ID
-        folder = get_env_var('DX_CLI_WD', u'/')
+        folder = dxpy.config.get('DX_CLI_WD', u'/')
         name = None
     else:
-        project, folder, name = resolve_path(args.output)
+        project, folder, name = try_call(resolve_path, args.output)
 
     dxrecord = None
     try:
@@ -1359,6 +1347,7 @@ def new_record(args):
                                      hidden=args.hidden, properties=args.properties,
                                      details=args.details,
                                      folder=folder,
+                                     close=args.close,
                                      parents=args.parents, init_from=init_from)
         if args.brief:
             print(dxrecord.get_id())
@@ -1373,10 +1362,10 @@ def new_gtable(args):
 
     if args.output is None:
         project = dxpy.WORKSPACE_ID
-        folder = get_env_var('DX_CLI_WD', u'/')
+        folder = dxpy.config.get('DX_CLI_WD', u'/')
         name = None
     else:
-        project, folder, name = resolve_path(args.output)
+        project, folder, name = try_call(resolve_path, args.output)
 
     args.columns = split_unescaped(',', args.columns)
     for i in range(len(args.columns)):
@@ -1384,7 +1373,7 @@ def new_gtable(args):
             try:
                 col_name, col_type = args.columns[i].split(':')
             except ValueError:
-                parser.exit(1, 'Too many colons found in column spec ' + args.columns[i] + '\n')
+                err_exit('Too many colons found in column spec ' + args.columns[i], 3)
             if col_type.startswith('bool'):
                 col_type = 'boolean'
         else:
@@ -1421,18 +1410,18 @@ def set_visibility(args):
                                                      allow_mult=True, all_mult=args.all)
 
     if entity_results is None:
-        parser.exit(1, fill('Could not resolve "' + args.path + '" to a name or ID') + '\n')
+        err_exit(fill('Could not resolve "' + args.path + '" to a name or ID'), 3)
 
     for result in entity_results:
         try:
             dxpy.DXHTTPRequest('/' + result['id'] + '/setVisibility',
                                {"hidden": (args.visibility == 'hidden')})
         except (dxpy.DXAPIError,) + network_exceptions as details:
-            print(fill(details.__class__.__name__ + ': ' + str(details)))
+            print(format_exception(details), file=sys.stderr)
             had_error = True
 
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def get_details(args):
     # Attempt to resolve name
@@ -1440,7 +1429,7 @@ def get_details(args):
                                                     args.path, expected='entity')
 
     if entity_result is None:
-        parser.exit(1, fill('Could not resolve "' + args.path + '" to a name or ID') + '\n')
+        err_exit(fill('Could not resolve "' + args.path + '" to a name or ID'), 3)
 
     try:
         print(json.dumps(dxpy.DXHTTPRequest('/' + entity_result['id'] + '/getDetails', {}), indent=4))
@@ -1455,22 +1444,43 @@ def set_details(args):
                                                      allow_mult=True, all_mult=args.all)
 
     if entity_results is None:
-        parser.exit(1, fill('Could not resolve "' + args.path + '" to a name or ID') + '\n')
+        err_exit(exception=ResolutionError('Could not resolve "' + args.path + '" to a name or ID'),
+                 expected_exceptions=(ResolutionError,))
 
-    try:
-        args.details = json.loads(args.details)
-    except ValueError:
-        parser.exit(1, 'Error: details could not be parsed as JSON')
+    # Throw error if both -f/--details-file and details supplied.
+    if args.details is not None and args.details_file is not None:
+        err_exit(exception=DXParserError('Cannot provide both -f/--details-file and details'),
+                 expected_exceptions=(DXParserError,))
+
+    elif args.details is not None:
+        try:
+            details = json.loads(args.details)
+        except ValueError as e:
+            err_exit('Error: Details could not be parsed as JSON', expected_exceptions=(ValueError,), exception=e)
+
+    elif args.details_file is not None:
+        with (sys.stdin if args.details_file == '-' else open(args.details_file, 'r')) as fd:
+            data = fd.read()
+            try:
+                details = json.loads(data)
+            except ValueError as e:
+                err_exit('Error: File contents could not be parsed as JSON', expected_exceptions=(ValueError,),
+                         exception=e)
+
+    # Throw error if missing arguments.
+    else:
+        err_exit(exception=DXParserError('Must set one of -f/--details-file or details'),
+                 expected_exceptions=(DXParserError,))
 
     for result in entity_results:
         try:
-            dxpy.DXHTTPRequest('/' + result['id'] + '/setDetails',
-                               args.details)
-        except (dxpy.DXAPIError,) + network_exceptions as details:
-            print(fill(details.__class__.__name__ + ': ' + str(details)))
+            dxpy.DXHTTPRequest('/' + result['id'] + '/setDetails', details)
+        except (dxpy.DXAPIError,) + network_exceptions as exc_details:
+            print(format_exception(exc_details), file=sys.stderr)
             had_error = True
+
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def add_types(args):
     had_error = False
@@ -1481,17 +1491,17 @@ def add_types(args):
                                                      allow_mult=True, all_mult=args.all)
 
     if entity_results is None:
-        parser.exit(1, fill('Could not resolve "' + args.path + '" to a name or ID') + '\n')
+        err_exit(fill('Could not resolve "' + args.path + '" to a name or ID'), 3)
 
     for result in entity_results:
         try:
             dxpy.DXHTTPRequest('/' + result['id'] + '/addTypes',
                                {"types": args.types})
         except (dxpy.DXAPIError,) + network_exceptions as details:
-            print(fill(details.__class__.__name__ + ': ' + str(details)))
+            print(format_exception(details), file=sys.stderr)
             had_error = True
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def remove_types(args):
     had_error = False
@@ -1502,17 +1512,17 @@ def remove_types(args):
                                                      allow_mult=True, all_mult=args.all)
 
     if entity_results is None:
-        parser.exit(1, fill('Could not resolve "' + args.path + '" to a name or ID') + '\n')
+        err_exit(fill('Could not resolve "' + args.path + '" to a name or ID'), 3)
 
     for result in entity_results:
         try:
             dxpy.DXHTTPRequest('/' + result['id'] + '/removeTypes',
                                {"types": args.types})
         except (dxpy.DXAPIError,) + network_exceptions as details:
-            print(fill(details.__class__.__name__ + ': ' + str(details)))
+            print(format_exception(details), file=sys.stderr)
             had_error = True
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def add_tags(args):
     had_error = False
@@ -1528,12 +1538,12 @@ def add_tags(args):
                                    {"project": project,
                                     "tags": args.tags})
             except (dxpy.DXAPIError,) + network_exceptions as details:
-                print(fill(details.__class__.__name__ + ': ' + str(details)))
+                print(format_exception(details), file=sys.stderr)
                 had_error = True
         if had_error:
-            parser.exit(1)
+            err_exit('', 3)
     elif not project.startswith('project-'):
-        parser.exit(1, 'Cannot add tags to a non-project data container\n')
+        err_exit('Cannot add tags to a non-project data container', 3)
     else:
         try:
             dxpy.DXHTTPRequest('/' + project + '/addTags',
@@ -1555,12 +1565,12 @@ def remove_tags(args):
                                    {"project": project,
                                     "tags": args.tags})
             except (dxpy.DXAPIError,) + network_exceptions as details:
-                print(fill(details.__class__.__name__ + ': ' + str(details)))
+                print(format_exception(details), file=sys.stderr)
                 had_error = True
         if had_error:
-            parser.exit(1)
+            err_exit('', 3)
     elif not project.startswith('project-'):
-        parser.exit(1, 'Cannot remove tags from a non-project data container\n')
+        err_exit('Cannot remove tags from a non-project data container', 3)
     else:
         try:
             dxpy.DXHTTPRequest('/' + project + '/removeTags',
@@ -1582,12 +1592,12 @@ def rename(args):
                                    {"project": project,
                                     "name": args.name})
             except (dxpy.DXAPIError,) + network_exceptions as details:
-                print(fill(details.__class__.__name__ + ': ' + str(details)))
+                print(format_exception(details), file=sys.stderr)
                 had_error = True
         if had_error:
-            parser.exit(1)
+            err_exit('', 3)
     elif not project.startswith('project-'):
-        parser.exit(1, 'Cannot rename a non-project data container\n')
+        err_exit('Cannot rename a non-project data container', 3)
     else:
         try:
             dxpy.api.project_update(project, {"name": args.name})
@@ -1609,12 +1619,12 @@ def set_properties(args):
                                    {"project": project,
                                     "properties": args.properties})
             except (dxpy.DXAPIError,) + network_exceptions as details:
-                print(fill(details.__class__.__name__ + ': ' + str(details)))
+                print(format_exception(details), file=sys.stderr)
                 had_error = True
         if had_error:
-            parser.exit(1)
+            err_exit('', 3)
     elif not project.startswith('project-'):
-        parser.exit(1, 'Cannot set properties on a non-project data container\n')
+        err_exit('Cannot set properties on a non-project data container', 3)
     else:
         try:
             dxpy.api.project_set_properties(project, {"properties": args.properties})
@@ -1637,269 +1647,204 @@ def unset_properties(args):
                                    {"project": project,
                                     "properties": properties})
             except (dxpy.DXAPIError,) + network_exceptions as details:
-                print(fill(details.__class__.__name__ + ': ' + str(details)))
+                print(format_exception(details), file=sys.stderr)
                 had_error = True
         if had_error:
-            parser.exit(1)
+            err_exit('', 3)
     elif not project.startswith('project-'):
-        parser.exit(1, 'Cannot unset properties on a non-project data container\n')
+        err_exit('Cannot unset properties on a non-project data container', 3)
     else:
         try:
             dxpy.api.project_set_properties(project, {"properties": properties})
         except:
             err_exit()
 
+
 def make_download_url(args):
     project, _folderpath, entity_result = try_call(resolve_existing_path, args.path, expected='entity')
     if entity_result is None:
-        parser.exit(1, fill('Could not resolve ' + args.path + ' to a data object') + '\n')
+        err_exit(fill('Could not resolve ' + args.path + ' to a data object'), 3)
 
     if entity_result['describe']['class'] != 'file':
-        parser.exit(1, fill('Error: dx download is only for downloading file objects') + '\n')
+        err_exit(fill('Error: dx download is only for downloading file objects'), 3)
 
     if args.filename is None:
         args.filename = entity_result['describe']['name']
 
+    # TODO: how to do data egress billing for make_download_url?
     try:
         dxfile = dxpy.DXFile(entity_result['id'], project=project)
         url, _headers = dxfile.get_download_url(preauthenticated=True,
-                                                duration=normalize_timedelta(args.duration)/1000 if args.duration else 24*3600,
+                                                duration=normalize_timedelta(args.duration)//1000 if args.duration else 24*3600,
                                                 filename=args.filename,
-                                                project=project)
+                                                project=dxpy.DXFile.NO_PROJECT_HINT)
         print(url)
     except:
         err_exit()
 
-def download_one_file(project, file_desc, dest_filename, args):
-    if not args.overwrite:
-        if os.path.exists(dest_filename):
-            err_exit(fill('Error: path "' + dest_filename + '" already exists but -f/--overwrite was not set'))
 
-    if file_desc['class'] != 'file':
-        print("Skipping non-file data object {name} ({id})".format(**file_desc), file=sys.stderr)
-        return
-
-    if file_desc['state'] != 'closed':
-        print("Skipping file {name} ({id}) because it is not closed".format(**file_desc), file=sys.stderr)
-        return
-
-    try:
-        show_progress = args.show_progress
-    except AttributeError:
-        show_progress = False
-
-    try:
-        dxpy.download_dxfile(file_desc['id'], dest_filename, show_progress=show_progress, project=project)
-    except:
-        err_exit()
-
-def download(args):
+def get_record(entity_result, args):
     if args.output == '-':
-        cat(parser.parse_args(['cat'] + args.paths))
-        return
-
-    from dxpy.utils import pathmatch
-
-    def ensure_local_dir(d):
-        if not os.path.isdir(d):
-            if os.path.exists(d):
-                err_exit(fill('Error: path "' + d + '" already exists and is not a directory'))
-            os.makedirs(d)
-
-    def download_one_folder(project, folder, strip_prefix, destdir):
-        assert(folder.startswith(strip_prefix))
-        if not args.recursive:
-            err_exit('Error: "' + folder + '" is a folder but the -r/--recursive option was not given')
-
-        for subfolder in list_subfolders(project, folder, recurse=True):
-            ensure_local_dir(os.path.join(destdir, subfolder[len(strip_prefix):].lstrip('/')))
-
-        # TODO: control visibility=hidden
-        for f in dxpy.search.find_data_objects(classname='file', state='closed', project=project, folder=folder,
-                                               recurse=True, describe=True):
-            file_desc = f['describe']
-            dest_filename = os.path.join(destdir, file_desc['folder'][len(strip_prefix):].lstrip('/'), file_desc['name'])
-            download_one_file(project, file_desc, dest_filename, args)
-
-    def download_files(files, destdir, dest_filename=None):
-        for project in files:
-            for f in files[project]:
-                file_desc = f['describe']
-                dest = dest_filename or os.path.join(destdir, file_desc['name'].replace('/', '%2F'))
-                download_one_file(project, file_desc, dest, args)
-
-    def download_folders(folders, destdir):
-        for project in folders:
-            for folder, strip_prefix in folders[project]:
-                download_one_folder(project, folder, strip_prefix, destdir)
-
-    def is_glob(path):
-        return get_first_pos_of_char('*', path) > -1 or get_first_pos_of_char('?', path) > -1
-
-    def rel2abs(path, project):
-        if path.startswith('/') or dxpy.WORKSPACE_ID != project:
-            abs_path, strip_prefix = path, ''
-        else:
-            wd = get_env_var('DX_CLI_WD', u'/')
-            abs_path, strip_prefix = os.path.join(wd, path), wd
-        if len(abs_path) > 1:
-            abs_path = abs_path.rstrip('/')
-        return abs_path, strip_prefix
-
-    cached_folder_lists = {}
-    def list_subfolders(project, path, recurse=True):
-        if project not in cached_folder_lists:
-            cached_folder_lists[project] = dxpy.get_handler(project).describe(input_params={'folders': True})['folders']
-        # TODO: support shell-style path globbing (i.e. /a*/c matches /ab/c but not /a/b/c)
-        # return pathmatch.filter(cached_folder_lists[project], os.path.join(path, '*'))
-        if recurse:
-            return [f for f in cached_folder_lists[project] if f.startswith(path)]
-        else:
-            return [f for f in cached_folder_lists[project] if f.startswith(path) and '/' not in f[len(path)+1:]]
-
-    folders_to_get, files_to_get, count = collections.defaultdict(list), collections.defaultdict(list), 0
-    for path in args.paths:
-        # Attempt to resolve name. If --all is given or the path looks like a glob, download all matches.
-        # Otherwise, the resolver will display a picker (or error out if there is no tty to display to).
-        resolver_kwargs = {'allow_empty_string': False}
-        if args.all or is_glob(path):
-            resolver_kwargs.update({'allow_mult': True, 'all_mult': True})
-        project, folderpath, matching_files = try_call(resolve_existing_path, path, **resolver_kwargs)
-        if matching_files is None:
-            matching_files = []
-        elif not isinstance(matching_files, list):
-            matching_files = [matching_files]
-
-        matching_folders = []
-        if project is not None:
-            # project may be none if path is an ID and there is no project context
-            abs_path, strip_prefix = rel2abs(path, project)
-
-            parent_folder = os.path.dirname(abs_path)
-            #folder_listing = dxpy.get_handler(project).list_folder(folder=parent_folder, only='folders')['folders'] # includeHidden=
-            folder_listing = list_subfolders(project, parent_folder, recurse=False)
-            matching_folders = pathmatch.filter(folder_listing, abs_path)
-
-        if len(matching_files) == 0 and len(matching_folders) == 0:
-            err_exit(fill('Error: {path} is neither a file nor a folder name'.format(path=path)))
-
-        files_to_get[project].extend(matching_files)
-        folders_to_get[project].extend(((f, strip_prefix) for f in matching_folders))
-        count += len(matching_files) + len(matching_folders)
-
-    if args.output is None:
-        destdir, dest_filename = os.getcwd(), None
-    elif count > 1:
-        if not os.path.exists(args.output):
-            err_exit(fill("Error: When downloading multiple objects, --output must be an existing directory"))
-        destdir, dest_filename = args.output, None
-    elif os.path.isdir(args.output):
-        destdir, dest_filename = args.output, None
-    elif args.output.endswith('/'):
-        err_exit(fill("Error: {path} could not be found".format(path=args.output)))
-    else:
-        destdir, dest_filename = os.getcwd(), args.output
-
-    download_folders(folders_to_get, destdir)
-    download_files(files_to_get, destdir, dest_filename=dest_filename)
-
-def get(args):
-    # Attempt to resolve name
-    project, _folderpath, entity_result = try_call(resolve_existing_path,
-                                                   args.path, expected='entity')
-
-    if entity_result is None:
-        parser.exit(3, fill('Could not resolve ' + args.path + ' to a data object') + '\n')
-
-    if entity_result['describe']['class'] == 'file':
-        download_one_file(project, entity_result['describe'], entity_result['describe']['name'], args)
-        return
-
-    if entity_result['describe']['class'] not in ['record', 'applet']:
-        parser.exit(3, 'Error: The given object is of class ' + entity_result['describe']['class'] + ' but an object of class file, record, or applet was expected\n')
-
-    fd = None
-
-    if entity_result['describe']['class'] == 'applet':
-        if args.output == '-':
-            parser.exit(3, 'Error: An applet cannot be dumped to stdout, please specify a directory\n')
-        output_base = args.output or '.'
-        applet_name = entity_result['describe']['name'].replace('/', '%2F')
-        if os.path.isdir(output_base):
-            output_path = os.path.join(output_base, applet_name)
-        else:
-            output_path = output_base
-        if os.path.isfile(output_path):
-            if not args.overwrite:
-                parser.exit(3, fill('Error: path "' + output_path + '" already exists but -f/--overwrite was not set') + '\n')
-            os.unlink(output_path)
-        # Here, output_path either points to a directory or a nonexistent path
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
-        # Here, output_path points to a directory
-        if len(os.listdir(output_path)):
-            # For safety, refuse to remove an existing non-empty
-            # directory automatically.
-            parser.exit(3, fill('Error: path "' + output_path + '" is an existing directory. Please remove it and try again.') + '\n')
-        # Now output_path points to a empty directory, so we're ready to
-        # go.
-    elif args.output == '-':
         fd = sys.stdout
     else:
         filename = args.output
         if filename is None:
             filename = entity_result['describe']['name'].replace('/', '%2F')
         if args.output is None and not args.no_ext:
-            if entity_result['describe']['class'] == 'record':
-                filename += '.json'
+            filename += '.json'
         if not args.overwrite and os.path.exists(filename):
-            parser.exit(1, fill('Error: path "' + filename + '" already exists but -f/--overwrite was not set') + '\n')
+            err_exit(fill('Error: path "' + filename + '" already exists but -f/--overwrite was not set'), 3)
         try:
             fd = open(filename, 'w')
         except:
             err_exit('Error opening destination file ' + filename)
 
-    if entity_result['describe']['class'] == 'record':
-        try:
-            details = dxpy.DXHTTPRequest('/' + entity_result['id'] + '/getDetails',
-                                         {})
-        except:
-            err_exit()
-        fd.write(json.dumps(details, indent=4))
-    elif entity_result['describe']['class'] == 'applet':
-        from dxpy.utils.app_unbuilder import dump_applet
-        dump_applet(dxpy.DXApplet(entity_result['id'], project=project), output_path)
-    if fd is not None and args.output != '-':
+    try:
+        details = dxpy.api.record_get_details(entity_result['id'])
+    except:
+        err_exit()
+
+    fd.write(json.dumps(details, indent=4))
+
+    if args.output != '-':
         fd.close()
+
+
+def get_output_path(obj_name, obj_class, args):
+    path_name = obj_name.replace('/', '%2F')
+    if args.output == '-':
+        err_exit('Error: An {} '.format(obj_class) + 'cannot be dumped to stdout, please specify a directory', 3)
+    output_base = args.output or '.'
+    if os.path.isdir(output_base):
+        output_path = os.path.join(output_base, path_name)
+    else:
+        output_path = output_base
+    if os.path.isfile(output_path):
+        if not args.overwrite:
+            err_exit(fill('Error: path "' + output_path + '" already exists but -f/--overwrite was not set'), 3)
+        os.unlink(output_path)
+    # Here, output_path either points to a directory or a nonexistent path
+    if not os.path.exists(output_path):
+        print('Creating "{}" output directory'.format(output_path), file=sys.stderr)
+        os.mkdir(output_path)
+    # Here, output_path points to a directory
+    if len(os.listdir(output_path)):
+        # For safety, refuse to remove an existing non-empty
+        # directory automatically.
+        err_exit(fill('Error: path "' + output_path + '" already exists. Remove it and try again.'), 3)
+    return output_path
+
+
+def get_applet(project, entity_result, args):
+    obj_name = entity_result['describe']['name']
+    obj_id = entity_result['id']
+    output_path = get_output_path(obj_name,
+                                  entity_result['describe']['class'],
+                                  args)
+    from dxpy.utils.app_unbuilder import dump_executable
+    print("Downloading applet data", file=sys.stderr)
+    dx_obj = dxpy.DXApplet(obj_id, project=project)
+    describe_output = dx_obj.describe(incl_properties=True,
+                                      incl_details=True)
+    dump_executable(dx_obj,
+                    output_path,
+                    omit_resources=args.omit_resources,
+                    describe_output=describe_output)
+
+
+def get_app(entity_result, args):
+    obj_name = entity_result['describe']['name']
+    obj_id = entity_result['id']
+    output_path = get_output_path(obj_name,
+                                  entity_result['describe']['class'],
+                                  args)
+    from dxpy.utils.app_unbuilder import dump_executable
+    print("Downloading application data", file=sys.stderr)
+    dx_obj = dxpy.DXApp(obj_id)
+    dump_executable(dx_obj, output_path, omit_resources=args.omit_resources)
+
+def get(args):
+    # Decide what to do based on entity's class
+    if not is_hashid(args.path) and ':' not in args.path and args.path.startswith('app-'):
+        desc = dxpy.api.app_describe(args.path)
+        entity_result = {"id": desc["id"], "describe": desc}
+    else:
+        project, _folderpath, entity_result = try_call(resolve_existing_path,
+                                                       args.path,
+                                                       expected='entity')
+
+    if entity_result is None:
+        err_exit('Could not resolve ' + args.path + ' to a data object', 3)
+
+    entity_result_class = entity_result['describe']['class']
+
+    if entity_result_class == 'file':
+        download_one_file(project,
+                          entity_result['describe'],
+                          entity_result['describe']['name'],
+                          args)
+    elif entity_result_class == 'record':
+        get_record(entity_result, args)
+    elif entity_result_class == 'applet':
+        get_applet(project, entity_result, args)
+    elif entity_result_class == 'app':
+        get_app(entity_result, args)
+    else:
+        err_exit('Error: The given object is of class ' + entity_result['describe']['class'] +
+                 ' but an object of class file, record, applet or app was expected', 3)
 
 def cat(args):
     for path in args.path:
         project, _folderpath, entity_result = try_call(resolve_existing_path, path)
 
         if entity_result is None:
-            parser.exit(1, fill('Could not resolve ' + path + ' to a data object') + '\n')
+            err_exit('Could not resolve ' + path + ' to a data object', 3)
 
         if entity_result['describe']['class'] != 'file':
-            parser.exit(1, fill('Error: expected a file object') + '\n')
+            err_exit('Error: expected a file object', 3)
+
+        # If the user did not explicitly provide the project, don't pass any
+        # project parameter to the API call but continue with download resolution
+        path_has_explicit_proj = is_project_explicit(path) or is_jbor_str(path)
+        if not path_has_explicit_proj:
+            project = None
+        elif is_jbor_str(path):
+            project = entity_result['describe']['project']
+        # If the user explicitly provided the project and it doesn't contain
+        # the file, don't allow the download.
+        if path_has_explicit_proj and project is not None and \
+           not object_exists_in_project(entity_result['describe']['id'], project):
+            err_exit('Error: project does not contain specified file object', 3)
 
         try:
-            dxfile = dxpy.DXFile(entity_result['id'], project=project)
+            dxfile = dxpy.DXFile(entity_result['id'])
             while True:
-                chunk = dxfile.read(1024*1024)
+                # If we decided the project specification was not explicit, do
+                # not allow the workspace setting to bleed through
+                chunk = dxfile.read(1024*1024, project=project or dxpy.DXFile.NO_PROJECT_HINT)
                 if len(chunk) == 0:
                     break
                 sys.stdout.buffer.write(chunk)
         except:
             err_exit()
 
+
+def download_or_cat(args):
+    if args.output == '-':
+        cat(parser.parse_args(['cat'] + args.paths))
+        return
+    download(args)
+
+
 def head(args):
     # Attempt to resolve name
     project, _folderpath, entity_result = try_call(resolve_existing_path,
                                                    args.path, expected='entity')
     if entity_result is None:
-        parser.exit(1, fill('Could not resolve ' + args.path + ' to a data object') + '\n')
+        err_exit('Could not resolve ' + args.path + ' to a data object', 3)
     if not entity_result['describe']['class'] in ['gtable', 'file']:
-        parser.exit(1, 'Error: The given object is of class ' + entity_result['describe']['class'] + ' but an object of class gtable or file was expected\n')
+        err_exit('Error: The given object is of class ' + entity_result['describe']['class'] +
+                 ' but an object of class gtable or file was expected', 3)
 
     handler = dxpy.get_handler(entity_result['id'], project=project)
 
@@ -1919,7 +1864,7 @@ def head(args):
                         lo = int(args.gri[1])
                         hi = int(args.gri[2])
                     except:
-                        parser.exit(1, fill('Error: the LO and HI arguments to --gri must be integers') + '\n')
+                        err_exit('Error: the LO and HI arguments to --gri must be integers', 3)
                     gri_query = dxpy.DXGTable.genomic_range_query(args.gri[0],
                                                                   lo,
                                                                   hi,
@@ -1959,6 +1904,12 @@ def upload(args, **kwargs):
     elif args.path is None:
         args.path = args.output
 
+    if len(args.filename) > 1 and args.path is not None and not args.path.endswith("/"):
+        # When called as "dx upload x --dest /y", we upload to "/y"; with --dest "/y/", we upload to "/y/x".
+        # Called as "dx upload x y --dest /z", z is implicitly a folder, so append a slash to avoid incorrect path
+        # resolution.
+        args.path += "/"
+
     paths = copy.copy(args.filename)
     for path in paths:
         args.filename = path
@@ -1972,16 +1923,16 @@ def upload_one(args):
 
     if args.path is None:
         project = dxpy.WORKSPACE_ID
-        folder = get_env_var('DX_CLI_WD', u'/')
+        folder = dxpy.config.get('DX_CLI_WD', u'/')
         name = None if args.filename == '-' else os.path.basename(args.filename)
     else:
-        project, folder, name = resolve_path(args.path)
+        project, folder, name = try_call(resolve_path, args.path)
         if name is None and args.filename != '-':
             name = os.path.basename(args.filename)
 
     if os.path.isdir(args.filename):
         if not args.recursive:
-            parser.exit("Error: {f} is a directory but the -r/--recursive option was not given".format(f=args.filename))
+            err_exit('Error: {f} is a directory but the -r/--recursive option was not given'.format(f=args.filename), 3)
         norm_path = os.path.realpath(args.filename)
         if norm_path in upload_seen_paths:
             print("Skipping {f}: directory loop".format(f=args.filename), file=sys.stderr)
@@ -2005,6 +1956,8 @@ def upload_one(args):
         try:
             dxfile = dxpy.upload_local_file(filename=(None if args.filename == '-' else args.filename),
                                             file=(sys.stdin.buffer if args.filename == '-' else None),
+                                            write_buffer_size=(None if args.write_buffer_size is None
+                                                               else int(args.write_buffer_size)),
                                             name=name,
                                             tags=args.tags,
                                             types=args.types,
@@ -2023,26 +1976,6 @@ def upload_one(args):
                 print_desc(dxfile.describe(incl_properties=True, incl_details=True))
         except:
             err_exit()
-
-def import_csv(args):
-    sys.argv = [sys.argv[0] + ' import csv'] + args.importer_args
-    from dxpy.scripts import dx_csv_to_gtable
-    dx_csv_to_gtable.main()
-
-def import_tsv(args):
-    sys.argv = [sys.argv[0] + ' import tsv'] + args.importer_args
-    from dxpy.scripts import dx_tsv_to_gtable
-    dx_tsv_to_gtable.main()
-
-importers = {
-    "tsv": import_tsv,
-    "csv": import_csv
-}
-
-def dximport(args):
-    if args.format.lower() not in importers:
-        parser.exit(1, fill('Unsupported format: "' + args.format + '".  For a list of supported formats, run "dx help import"') + '\n')
-    importers[args.format.lower()](args)
 
 def export_fastq(args):
     sys.argv = [sys.argv[0] + ' export fastq'] + args.exporter_args
@@ -2079,7 +2012,7 @@ exporters = {
 
 def export(args):
     if args.format.lower() not in exporters:
-        parser.exit(1, fill('Unsupported format: "' + args.format + '".  For a list of supported formats, run "dx help export"') + '\n')
+        err_exit('Unsupported format: "' + args.format + '".  For a list of supported formats, run "dx help export"', 3)
     exporters[args.format.lower()](args)
 
 def find_executions(args):
@@ -2234,14 +2167,18 @@ def find_executions(args):
                             if stage_desc['execution']['id'] not in descriptions:
                                 descriptions[stage_desc['execution']['id']] = stage_desc['execution']
 
-            for execution_result in dxpy.find_executions(**query):
-                process_execution_result(execution_result)
+            # Short-circuit the find_execution API call(s) if there are
+            # no root executions (and therefore we would have gotten 0
+            # results anyway)
+            if len(roots.keys()) > 0:
+                for execution_result in dxpy.find_executions(**query):
+                    process_execution_result(execution_result)
 
-            # ensure roots are sorted by their creation time
-            sorted_roots = sorted(roots.values(), key=lambda x: -descriptions[x]['created'])
+                # ensure roots are sorted by their creation time
+                sorted_roots = sorted(roots, key=lambda root: -descriptions[roots[root]]['created'])
 
-            for root in sorted_roots:
-                process_tree(descriptions[roots[root]], executions_by_parent, descriptions)
+                for root in sorted_roots:
+                    process_tree(descriptions[roots[root]], executions_by_parent, descriptions)
         if args.json:
             print(json.dumps(json_output, indent=4))
 
@@ -2251,6 +2188,13 @@ def find_executions(args):
         err_exit()
 
 def find_data(args):
+    # --folder deprecated to --path.
+    if args.folder is None and args.path is not None:
+        args.folder = args.path
+    elif args.folder is not None and args.path is not None:
+        err_exit(exception=DXParserError('Cannot supply both --folder and --path.'),
+                 expected_exceptions=(DXParserError,))
+
     try_call(process_find_by_property_args, args)
     if args.all_projects:
         args.project = None
@@ -2261,27 +2205,36 @@ def find_data(args):
     else:
         if get_last_pos_of_char(':', args.project) == -1:
             args.project = args.project + ':'
+
+        if args.folder is not None and get_last_pos_of_char(':', args.folder) != -1:
+            err_exit(exception=DXParserError('Cannot supply both --project and --path PROJECTID:FOLDERPATH.'),
+                     expected_exceptions=(DXParserError,))
+
         args.project, _none, _none = try_call(resolve_existing_path,
                                               args.project, 'project')
+
+    if args.folder is not None and not args.folder.startswith('/'):
+        args.project, args.folder, _none = try_call(resolve_path, args.folder, expected='folder')
+
     try:
-        results = list(dxpy.find_data_objects(classname=args.classname,
-                                              state=args.state,
-                                              visibility=args.visibility,
-                                              properties=args.properties,
-                                              name=args.name,
-                                              name_mode='glob',
-                                              typename=args.type,
-                                              tags=args.tag, link=args.link,
-                                              project=args.project,
-                                              folder=args.folder,
-                                              recurse=(args.recurse if not args.recurse else None),
-                                              modified_after=args.mod_after,
-                                              modified_before=args.mod_before,
-                                              created_after=args.created_after,
-                                              created_before=args.created_before,
-                                              describe=(not args.brief)))
+        results = dxpy.find_data_objects(classname=args.classname,
+                                         state=args.state,
+                                         visibility=args.visibility,
+                                         properties=args.properties,
+                                         name=args.name,
+                                         name_mode='glob',
+                                         typename=args.type,
+                                         tags=args.tag, link=args.link,
+                                         project=args.project,
+                                         folder=args.folder,
+                                         recurse=(args.recurse if not args.recurse else None),
+                                         modified_after=args.mod_after,
+                                         modified_before=args.mod_before,
+                                         created_after=args.created_after,
+                                         created_before=args.created_before,
+                                         describe=(not args.brief))
         if args.json:
-            print(json.dumps(results, indent=4))
+            print(json.dumps(list(results), indent=4))
             return
         if args.brief:
             for result in results:
@@ -2296,63 +2249,59 @@ def find_data(args):
     except:
         err_exit()
 
+
 def find_projects(args):
     try_call(process_find_by_property_args, args)
+    try_call(process_phi_param, args)
     try:
-        results = list(dxpy.find_projects(name=args.name, name_mode='glob',
-                                          properties=args.properties, tags=args.tag,
-                                          level=('VIEW' if args.public else args.level),
-                                          describe=(not args.brief),
-                                          explicit_perms=(not args.public if not args.public else None),
-                                          public=(args.public if args.public else None)))
-        if args.json:
-            print(json.dumps(results, indent=4))
-            return
-        if args.brief:
-            for result in results:
-                print(result['id'])
-            return
-        else:
-            for result in results:
-                cached_project_names[result['describe']['name']] = result['id']
-                print(result["id"] + DELIMITER(" : ") + result['describe']['name'] + DELIMITER(' (') + result["level"] + DELIMITER(')'))
-        print("")
-        return [result["id"] for result in results]
+        results = dxpy.find_projects(name=args.name, name_mode='glob',
+                                     properties=args.properties, tags=args.tag,
+                                     level=('VIEW' if args.public else args.level),
+                                     describe=(not args.brief),
+                                     explicit_perms=(not args.public if not args.public else None),
+                                     public=(args.public if args.public else None),
+                                     created_after=args.created_after,
+                                     created_before=args.created_before,
+                                     containsPHI=args.containsPHI)
     except:
         err_exit()
+    format_find_results(args, results)
+
 
 def find_apps(args):
     def maybe_x(result):
         return DNANEXUS_X() if result['describe']['billTo'] == 'org-dnanexus' else ' '
 
     try:
-        results = list(dxpy.find_apps(name=args.name, name_mode='glob', category=args.category,
-                                      all_versions=args.all,
-                                      published=(not args.unpublished),
-                                      billed_to=args.billed_to,
-                                      created_by=args.creator,
-                                      developer=args.developer,
-                                      created_after=args.created_after,
-                                      created_before=args.created_before,
-                                      modified_after=args.mod_after,
-                                      modified_before=args.mod_before,
-                                      describe={"fields": {"name": True, "installed": args.installed,
-                                                           "title": not args.brief,
-                                                           "version": not args.brief,
-                                                           "published": args.verbose,
-                                                           "billTo": not args.brief}}))
+        raw_results = dxpy.find_apps(name=args.name, name_mode='glob', category=args.category,
+                                     all_versions=args.all,
+                                     published=(not args.unpublished),
+                                     billed_to=args.billed_to,
+                                     created_by=args.creator,
+                                     developer=args.developer,
+                                     created_after=args.created_after,
+                                     created_before=args.created_before,
+                                     modified_after=args.mod_after,
+                                     modified_before=args.mod_before,
+                                     describe={"fields": {"name": True,
+                                                          "installed": args.installed,
+                                                          "title": not args.brief,
+                                                          "version": not args.brief,
+                                                          "published": args.verbose,
+                                                          "billTo": not args.brief}})
 
         if args.installed:
-            results = [result for result in results if result['describe']['installed']]
+            maybe_filtered_by_install = (result for result in raw_results if result['describe']['installed'])
+        else:
+            maybe_filtered_by_install = raw_results
 
         if args.brief:
-            results = [{"id": result['id']} for result in results]
-
-        if not args.brief:
-            results.sort(key = lambda result: result['describe']['name'])
+            results = ({"id": result['id']} for result in maybe_filtered_by_install)
+        else:
+            results = sorted(maybe_filtered_by_install, key=lambda result: result['describe']['name'])
 
         if args.json:
-            print(json.dumps(results, indent=4))
+            print(json.dumps(list(results), indent=4))
             return
         if args.brief:
             for result in results:
@@ -2363,6 +2312,25 @@ def find_apps(args):
         else:
             for result in results:
                 print(maybe_x(result) + DELIMITER(" ") + result["id"] + DELIMITER(" ") + result['describe'].get('title', result['describe']['name']) + DELIMITER(' (') + result["describe"]["name"] + DELIMITER('), v') + result['describe']['version'] + DELIMITER(" (") + ("published" if result["describe"].get("published", 0) > 0 else "unpublished") + DELIMITER(")"))
+    except:
+        err_exit()
+
+
+def update_project(args):
+    input_params = get_update_project_args(args)
+
+    # The resolver expects a ':' to separate projects from folders.
+    if ':' not in args.project_id:
+        args.project_id += ':'
+
+    project, _none, _none = try_call(resolve_existing_path,
+                                     args.project_id, 'project')
+    try:
+        results = dxpy.api.project_update(object_id=project, input_params=input_params)
+        if args.brief:
+            print(results['id'])
+        else:
+            print(json.dumps(results))
     except:
         err_exit()
 
@@ -2403,7 +2371,7 @@ def close(args):
             handler._wait_on_close()
 
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def wait(args):
     had_error = False
@@ -2430,7 +2398,7 @@ def wait(args):
                 print("Done")
 
     if had_error:
-        parser.exit(1)
+        err_exit('', 3)
 
 def build(args):
     from dxpy.scripts import dx_build_app
@@ -2495,6 +2463,7 @@ def remove_developers(args):
     except:
         err_exit()
 
+
 def install(args):
     app_desc = try_call(resolve_app, args.app)
 
@@ -2506,14 +2475,18 @@ def install(args):
 
 def uninstall(args):
     app_desc = get_app_from_path(args.app)
-    if app_desc is None:
-        parser.exit(1, 'Could not find the app\n')
+    if app_desc:
+        try_call(dxpy.api.app_uninstall, app_desc['id'])
     else:
-        try:
-            dxpy.api.app_uninstall(app_desc['id'])
-            print('Uninstalled the ' + app_desc['name'] + ' app')
-        except:
-            err_exit()
+        user_data = dxpy.api.user_describe(dxpy.whoami(), {"fields": {"appsInstalled": True}})
+        if args.app in user_data['appsInstalled']:
+            args.app = 'app-' + args.app
+        if args.app.startswith('app-'):
+            try_call(dxpy.api.app_uninstall, args.app)
+            print('Uninstalled the {app} app'.format(app=args.app))
+        else:
+            err_exit('Could not find the app', 3)
+
 
 def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_name_prefix=None,
             is_the_only_job=True):
@@ -2537,6 +2510,10 @@ def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_na
 
     input_json = exec_inputs.inputs
 
+    if args.debug_on:
+        if 'All' in args.debug_on:
+            args.debug_on = ['AppError', 'AppInternalError', 'ExecutionError']
+
     run_kwargs = {
         "project": dest_proj,
         "folder": dest_path,
@@ -2544,8 +2521,9 @@ def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_na
         "tags": args.tags,
         "properties": args.properties,
         "details": args.details,
+        "depends_on": args.depends_on or None,
         "allow_ssh": args.allow_ssh,
-        "debug_on": args.debug_on,
+        "debug": {"debugOn": args.debug_on} if args.debug_on else None,
         "delay_workspace_destruction": args.delay_workspace_destruction,
         "priority": ("high" if args.watch else args.priority),
         "instance_type": args.instance_type,
@@ -2608,8 +2586,8 @@ def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_na
         else:
             check_for_special_access(executable_desc.get('access'))
         if special_access:
-            print(fill(BOLD() + "WARNING" + ENDC() + ": You have requested that jobs be run under " +
-                       BOLD() + "normal" + ENDC() +
+            print(fill(BOLD("WARNING") + ": You have requested that jobs be run under " +
+                       BOLD("normal") +
                        " priority, which may cause them to be restarted at any point, but " +
                        "the executable you are trying to run has " +
                        "requested extra permissions (" + ", ".join(sorted(special_access)) + ").  " +
@@ -2620,11 +2598,7 @@ def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_na
     # Ask for confirmation if a tty and if input was not given as a
     # single JSON.
     if args.confirm and INTERACTIVE_CLI:
-        try:
-            value = input('Confirm running the executable with this input [Y/n]: ')
-        except KeyboardInterrupt:
-            value = 'n'
-        if value != '' and not value.lower().startswith('y'):
+        if not prompt_for_yn('Confirm running the executable with this input', default=True):
             parser.exit(0)
 
     if not args.brief:
@@ -2653,7 +2627,11 @@ def run_one(args, executable, dest_proj, dest_path, preset_inputs=None, input_na
                 print('-------')
                 watch(watch_args)
             elif args.ssh:
-                ssh_args = parser.parse_args(['ssh', dxexecution.get_id()])
+                if args.ssh_proxy:
+                    ssh_args = parser.parse_args(
+                        ['ssh', '--ssh-proxy', args.ssh_proxy, dxexecution.get_id()])
+                else:
+                    ssh_args = parser.parse_args(['ssh', dxexecution.get_id()])
                 ssh(ssh_args, ssh_config_verified=True)
     except Exception:
         err_exit()
@@ -2763,25 +2741,33 @@ def print_run_input_help():
       -f/--input-json-file are provided)
   6) default values set in a workflow or an executable's input spec
 ''')
-    print('SPECIFYING INPUTS BY NAME\n\n' + fill('Use the -i/--input flag to specify each input field by ' + BOLD() + 'name' + ENDC() + ' and ' + BOLD() + 'value' + ENDC() + '.', initial_indent='  ', subsequent_indent='  '))
+    print('SPECIFYING INPUTS BY NAME\n\n' + fill('Use the -i/--input flag to specify each input field by ' + BOLD('name') + ' and ' + BOLD('value') + '.', initial_indent='  ', subsequent_indent='  '))
     print('''
     Syntax :  -i<input name>=<input value>
-    Example:  dx run myApp -inum=34 -istr=ABC -igtables=reads1 -igtables=reads2
+    Example:  dx run myApp -inum=34 -istr=ABC -ifiles=reads1.fq.gz -ifiles=reads2.fq.gz
 ''')
-    print(fill('The example above runs an app called "myApp" with 3 inputs called num (class int), str (class string), and gtables (class array:gtable).  (For this method to work, the app must have an input spec so inputs can be interpreted correctly.)  The same input field can be used multiple times if the input class is an array.', initial_indent='  ', subsequent_indent='  '))
-    print('\n' + fill(BOLD() + 'Job-based object references' + ENDC() + ' can also be provided using the <job id>:<output name> syntax:', initial_indent='  ', subsequent_indent='  '))
+    print(fill('The example above runs an app called "myApp" with 3 inputs called num (class int), str (class string), and files (class array:file).  (For this method to work, the app must have an input spec so inputs can be interpreted correctly.)  The same input field can be used multiple times if the input class is an array.', initial_indent='  ', subsequent_indent='  '))
+    print('\n' + fill(BOLD('Job-based object references') + ' can also be provided using the <job id>:<output name> syntax:', initial_indent='  ', subsequent_indent='  '))
     print('''
     Syntax :  -i<input name>=<job id>:<output name>
     Example:  dx run mapper -ireads=job-B0fbxvGY00j9jqGQvj8Q0001:reads
 ''')
-    print(fill('When executing ' + BOLD() + 'workflows' + ENDC() + ', stage inputs can be specified using the <stage key>.<input name>=<value> syntax:', initial_indent='  ', subsequent_indent='  '))
+    print(fill('You can ' + BOLD('extract an element of an array output') +
+               ' using the <job id>:<output name>.<element> syntax:',
+               initial_indent='  ', subsequent_indent='  '))
+    print('''
+    Syntax :  -i<input name>=<job id>:<output name>.<element>
+    Example:  dx run mapper -ireadsfile=job-B0fbxvGY00j9jqGQvj8Q0001:reads.1
+              # Extracts second element of array output
+''')
+    print(fill('When executing ' + BOLD('workflows') + ', stage inputs can be specified using the <stage key>.<input name>=<value> syntax:', initial_indent='  ', subsequent_indent='  '))
     print('''
     Syntax :  -i<stage key>.<input name>=<input value>
     Example:  dx run my_workflow -i1.reads="My reads file"
 
 SPECIFYING JSON INPUT
 ''')
-    print(fill('JSON input can be used directly using the -j/--input-json or -f/--input-json-file flags.  When running an ' + BOLD() + 'app' + ENDC() + ' or ' + BOLD() + 'applet' + ENDC() + ', the keys should be the input field names for the app or applet.  When running a ' + BOLD() + 'workflow' + ENDC() + ', the keys should be the input field names for each stage, prefixed by the stage key and a period, e.g. "1.reads" for the "reads" input of stage "1".', initial_indent='  ', subsequent_indent='  ') + '\n')
+    print(fill('JSON input can be used directly using the -j/--input-json or -f/--input-json-file flags.  When running an ' + BOLD('app') + ' or ' + BOLD('applet') + ', the keys should be the input field names for the app or applet.  When running a ' + BOLD('workflow') + ', the keys should be the input field names for each stage, prefixed by the stage key and a period, e.g. "1.reads" for the "reads" input of stage "1".', initial_indent='  ', subsequent_indent='  ') + '\n')
     parser.exit(0)
 
 def run(args):
@@ -2790,17 +2776,19 @@ def run(args):
 
     if args.allow_ssh is not None:
         args.allow_ssh = [i for i in args.allow_ssh if i is not None]
-    if args.allow_ssh == [] or (args.ssh and not args.allow_ssh):
+    if args.allow_ssh == [] or ((args.ssh or args.debug_on) and not args.allow_ssh):
         args.allow_ssh = ['*']
-    if args.ssh or args.allow_ssh:
+    if args.ssh_proxy and not args.ssh:
+        err_exit(exception=DXCLIError("Option --ssh-proxy cannot be specified without --ssh"))
+    if args.ssh or args.allow_ssh or args.debug_on:
         verify_ssh_config()
 
     try_call(process_extra_args, args)
     try_call(process_properties_args, args)
 
     if args.clone is None and args.executable == "":
-        parser.exit(2, parser_map['run'].format_help() +
-                       fill("Error: Either the executable must be specified, or --clone must be used to indicate a job or analysis to clone") + "\n")
+        err_exit(parser_map['run'].format_help() +
+                 fill("Error: Either the executable must be specified, or --clone must be used to indicate a job or analysis to clone"), 2)
 
     args.input_from_clone, args.sys_reqs_from_clone = {}, {}
 
@@ -2875,9 +2863,9 @@ def run(args):
                                                                                   has_children=False,
                                                                                   single_result=True)))
                 if result_choice == "none found":
-                    parser.exit(1, "dx run --clone: No matching execution found. Please use a valid job or analysis name or ID.\n")
+                    err_exit("dx run --clone: No matching execution found. Please use a valid job or analysis name or ID.", 3)
                 elif result_choice == "none picked":
-                    parser.exit(1)
+                    err_exit('', 3)
                 else:
                     clone_desc = dxpy.api.job_describe(result_choice["id"])
 
@@ -2922,6 +2910,10 @@ def run(args):
 
     handler = try_call(get_exec_handler, args.executable, args.alias)
 
+    if args.depends_on and isinstance(handler, dxpy.DXWorkflow):
+        err_exit(exception=DXParserError("-d/--depends-on cannot be supplied when running workflows."),
+                 expected_exceptions=(DXParserError,))
+
     # if the destination project has still not been set, use the
     # current project
     if dest_proj is None:
@@ -2941,7 +2933,7 @@ def run(args):
         if is_workflow:
             dest_path = getattr(handler, 'outputFolder', None)
         if dest_path is None:
-            dest_path = get_env_var('DX_CLI_WD', u'/')
+            dest_path = dxpy.config.get('DX_CLI_WD', u'/')
 
     process_instance_type_arg(args, is_workflow)
 
@@ -2972,7 +2964,7 @@ def shell(orig_args):
                 args = [word.decode('utf-8') for word in shlex.split(line.encode('utf-8'))]
                 parsed_args = parser.parse_args(args)
                 set_cli_colors(parsed_args)
-                args.func(parsed_args)
+                parsed_args.func(parsed_args)
         exit(0)
 
     if state['interactive']:
@@ -2997,7 +2989,7 @@ def shell(orig_args):
             if readline.get_completer() is None:
                 readline.set_completer(DXCLICompleter().complete)
                 readline.clear_history()
-                readline.read_history_file(os.path.expanduser('~/.dnanexus_config/.dx_history'))
+                readline.read_history_file(os.path.join(dxpy.config.get_user_conf_dir(), '.dx_history'))
         except:
             pass
         try:
@@ -3019,6 +3011,8 @@ def shell(orig_args):
             args = parser.parse_args(sys.argv[1:])
             set_cli_colors(args)
             set_delim(args)
+            if args.func == clearenv:
+                args.interactive = True
             args.func(args)
         except StopIteration:
             exit(0)
@@ -3046,14 +3040,14 @@ def watch(args):
         args.job_info = False
     elif args.format is None:
         if args.job_ids:
-            args.format = BLUE() + u"{job_name} ({job})" + ENDC() + " {level_color}{level}" + ENDC() + " {msg}"
+            args.format = BLUE("{job_name} ({job})") + " {level_color}{level}" + ENDC() + " {msg}"
         else:
-            args.format = BLUE() + u"{job_name}" + ENDC() + " {level_color}{level}" + ENDC() + " {msg}"
+            args.format = BLUE("{job_name}") + " {level_color}{level}" + ENDC() + " {msg}"
         if args.timestamps:
             args.format = u"{timestamp} " + args.format
 
         def msg_callback(message):
-            message['timestamp'] = str(datetime.datetime.fromtimestamp(message.get('timestamp', 0)/1000))
+            message['timestamp'] = str(datetime.datetime.fromtimestamp(message.get('timestamp', 0)//1000))
             message['level_color'] = level_colors.get(message.get('level', ''), '')
             message['job_name'] = log_client.seen_jobs[message['job']]['name'] if message['job'] in log_client.seen_jobs else message['job']
             print(args.format.format(**message))
@@ -3080,63 +3074,67 @@ def watch(args):
             print("Watching job %s%s. Press Ctrl+C to stop." % (args.jobid, (" and sub-jobs" if args.tree else "")), file=sys.stderr)
         log_client.connect()
     except Exception as details:
-        parser.exit(3, fill(str(details)) + '\n')
+        err_exit(fill(str(details)), 3)
 
 def ssh_config(args):
-    user_id = try_call(dxpy.user_info)['userId']
+    user_id = try_call(dxpy.whoami)
 
-    dnanexus_conf_dir = os.path.expanduser('~/.dnanexus_config')
-    if not os.path.exists(dnanexus_conf_dir):
-        msg = "The DNAnexus configuration directory {d} does not exist. Use {c} to create it."
-        err_exit(msg.format(d=dnanexus_conf_dir, c=BOLD("dx login")))
+    if args.revoke:
+        dxpy.api.user_update(user_id, {"sshPublicKey": None})
+        print(fill("SSH public key has been revoked"))
+    else:
+        dnanexus_conf_dir = dxpy.config.get_user_conf_dir()
+        if not os.path.exists(dnanexus_conf_dir):
+            msg = "The DNAnexus configuration directory {d} does not exist. Use {c} to create it."
+            err_exit(msg.format(d=dnanexus_conf_dir, c=BOLD("dx login")))
 
-    print(fill("Select an SSH key pair to use when connecting to DNAnexus jobs. The public key will be saved to your " +
-               "DNAnexus account (readable only by you). The private key will remain on this computer.") + "\n")
+        print(fill("Select an SSH key pair to use when connecting to DNAnexus jobs. The public key will be saved to your " +
+                   "DNAnexus account (readable only by you). The private key will remain on this computer.") + "\n")
 
-    key_dest = os.path.join(dnanexus_conf_dir, 'ssh_id')
-    pub_key_dest = key_dest + ".pub"
+        key_dest = os.path.join(dnanexus_conf_dir, 'ssh_id')
+        pub_key_dest = key_dest + ".pub"
 
-    if os.path.exists(os.path.realpath(key_dest)) and os.path.exists(os.path.realpath(pub_key_dest)):
-        print(BOLD("dx") + " is already configured to use the SSH key pair at:\n    {}\n    {}".format(key_dest,
-                                                                                                       pub_key_dest))
-        if pick(["Use this SSH key pair", "Select or create another SSH key pair..."]) == 1:
+        if os.path.exists(os.path.realpath(key_dest)) and os.path.exists(os.path.realpath(pub_key_dest)):
+            print(BOLD("dx") + " is already configured to use the SSH key pair at:\n    {}\n    {}".format(key_dest,
+                                                                                                           pub_key_dest))
+            if pick(["Use this SSH key pair", "Select or create another SSH key pair..."]) == 1:
+                os.remove(key_dest)
+                os.remove(pub_key_dest)
+            else:
+                update_pub_key(user_id, pub_key_dest)
+                return
+        elif os.path.exists(key_dest) or os.path.exists(pub_key_dest):
             os.remove(key_dest)
             os.remove(pub_key_dest)
+
+        keys = [k for k in glob.glob(os.path.join(os.path.expanduser("~/.ssh"), "*.pub")) if os.path.exists(k[:-4])]
+
+        choices = ['Generate a new SSH key pair using ssh-keygen'] + keys + ['Select another SSH key pair...']
+        choice = pick(choices, default=0)
+
+        if choice == 0:
+            try:
+                subprocess.check_call(['ssh-keygen', '-f', key_dest] + args.ssh_keygen_args)
+            except subprocess.CalledProcessError:
+                err_exit("Unable to generate a new SSH key pair", expected_exceptions=(subprocess.CalledProcessError, ))
         else:
-            update_pub_key(user_id, pub_key_dest)
-            return
-    elif os.path.exists(key_dest) or os.path.exists(pub_key_dest):
-        os.remove(key_dest)
-        os.remove(pub_key_dest)
-
-    keys = [k for k in glob.glob(os.path.join(os.path.expanduser("~/.ssh"), "*.pub")) if os.path.exists(k[:-4])]
-
-    choices = ['Generate a new SSH key pair using ssh-keygen'] + keys + ['Select another SSH key pair...']
-    choice = pick(choices, default=0)
-
-    if choice == 0:
-        try:
-            subprocess.check_call(['ssh-keygen', '-f', key_dest] + args.ssh_keygen_args)
-        except subprocess.CalledProcessError:
-            err_exit("Unable to generate a new SSH key pair", expected_exceptions=(subprocess.CalledProcessError, ))
-    else:
-        if choice == len(choices) - 1:
-            key_src = input('Enter the location of your SSH key: ')
-            pub_key_src = key_src + ".pub"
-            if os.path.exists(key_src) and os.path.exists(pub_key_src):
-                print("Using {} and {} as the key pair".format(key_src, pub_key_src))
-            elif key_src.endswith(".pub") and os.path.exists(key_src[:-4]) and os.path.exists(key_src):
-                key_src, pub_key_src = key_src[:-4], key_src
-                print("Using {} and {} as the key pair".format(key_src, pub_key_src))
+            if choice == len(choices) - 1:
+                key_src = input('Enter the location of your SSH key: ')
+                pub_key_src = key_src + ".pub"
+                if os.path.exists(key_src) and os.path.exists(pub_key_src):
+                    print("Using {} and {} as the key pair".format(key_src, pub_key_src))
+                elif key_src.endswith(".pub") and os.path.exists(key_src[:-4]) and os.path.exists(key_src):
+                    key_src, pub_key_src = key_src[:-4], key_src
+                    print("Using {} and {} as the key pair".format(key_src, pub_key_src))
+                else:
+                    err_exit("Unable to find {k} and {k}.pub".format(k=key_src))
             else:
-                err_exit("Unable to find {k} and {k}.pub".format(k=key_src))
-        else:
-            key_src, pub_key_src = choices[choice][:-4], choices[choice]
+                key_src, pub_key_src = choices[choice][:-4], choices[choice]
 
-        os.symlink(key_src, key_dest)
-        os.symlink(pub_key_src, pub_key_dest)
+            os.symlink(key_src, key_dest)
+            os.symlink(pub_key_src, pub_key_dest)
 
-    update_pub_key(user_id, pub_key_dest)
+        update_pub_key(user_id, pub_key_dest)
 
 def update_pub_key(user_id, pub_key_file):
     with open(pub_key_file) as fh:
@@ -3149,8 +3147,8 @@ def update_pub_key(user_id, pub_key_file):
 
 def verify_ssh_config():
     try:
-        with open(os.path.expanduser('~/.dnanexus_config/ssh_id.pub')) as fh:
-            user_desc = try_call(dxpy.api.user_describe, try_call(dxpy.user_info)['userId'])
+        with open(os.path.join(dxpy.config.get_user_conf_dir(), 'ssh_id.pub')) as fh:
+            user_desc = try_call(dxpy.api.user_describe, try_call(dxpy.whoami))
             if 'sshPublicKey' not in user_desc:
                 raise DXError("User's SSH public key is not set")
             if fh.read() != user_desc['sshPublicKey']:
@@ -3160,7 +3158,7 @@ def verify_ssh_config():
               ". SSH connection will likely fail. To set up your account for SSH, quit this command and run " + \
               BOLD("dx ssh_config") + ". Continue with the current command?"
         if not prompt_for_yn(fill(msg), default=False):
-            err_exit()
+            err_exit(expected_exceptions=(IOError, DXError))
 
 def ssh(args, ssh_config_verified=False):
     if not re.match("^job-[0-9a-zA-Z]{24}$", args.job_id):
@@ -3175,7 +3173,7 @@ def ssh(args, ssh_config_verified=False):
 
     sys.stdout.write("Waiting for {} to start...".format(args.job_id))
     sys.stdout.flush()
-    while job_desc['state'] != 'running':
+    while job_desc['state'] not in ['running', 'debug_hold']:
         time.sleep(1)
         job_desc = dxpy.describe(args.job_id)
         sys.stdout.write(".")
@@ -3184,10 +3182,11 @@ def ssh(args, ssh_config_verified=False):
 
     sys.stdout.write("Resolving job hostname and SSH host key...")
     sys.stdout.flush()
-    host, host_key = None, None
+    host, host_key, ssh_port = None, None, None
     for i in range(90):
         host = job_desc.get('host')
         host_key = job_desc.get('sshHostKey') or job_desc['properties'].get('ssh_host_rsa_key')
+        ssh_port = job_desc.get('sshPort') or 22
         if host and host_key:
             break
         else:
@@ -3195,20 +3194,66 @@ def ssh(args, ssh_config_verified=False):
             job_desc = dxpy.describe(args.job_id)
             sys.stdout.write(".")
             sys.stdout.flush()
+    sys.stdout.write("\n")
 
     if not (host and host_key):
         msg = "Cannot resolve hostname or hostkey for {}. Please check your permissions and run settings."
         err_exit(msg.format(args.job_id))
 
-    known_hosts_file = os.path.expanduser('~/.dnanexus_config/ssh_known_hosts')
+    known_hosts_file = os.path.join(dxpy.config.get_user_conf_dir(), 'ssh_known_hosts')
     with open(known_hosts_file, 'a') as fh:
-        fh.write("{job_id}.dnanexus.io {key}\n".format(job_id=args.job_id, key=host_key.rstrip()))
+        fh.write("{job_id}.dnanex.us {key}\n".format(job_id=args.job_id, key=host_key.rstrip()))
 
-    print("Connecting to", host)
-    ssh_args = ['ssh', '-i', os.path.expanduser('~/.dnanexus_config/ssh_id'),
-                '-o', 'HostKeyAlias={}.dnanexus.io'.format(args.job_id),
+    import socket
+    connected = False
+    sys.stdout.write("Checking connectivity to {}:{}".format(host, ssh_port))
+    if args.ssh_proxy:
+        proxy_args = args.ssh_proxy.split(':')
+        sys.stdout.write(" through proxy {}".format(proxy_args[0]))
+    sys.stdout.write("...")
+    sys.stdout.flush()
+    for i in range(12):
+        try:
+            if args.ssh_proxy:
+            # Test connecting to host through proxy
+                proxy_socket = socket.socket()
+                proxy_socket.connect((proxy_args[0], int(proxy_args[1])))
+                proxy_file = proxy_socket.makefile('r+')
+                proxy_file.write('CONNECT {host}:{port} HTTP/1.0\r\nhost: {host}\r\n\r\n'
+                                 .format(host=host, port=ssh_port))
+            else:
+                socket.create_connection((host, ssh_port), timeout=5)
+            connected = True
+            break
+        except Exception:
+            time.sleep(2)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+    if args.ssh_proxy:
+    # Force close sockets to prevent memory leaks
+        try:
+            proxy_file.close()
+        except:
+            pass
+        try:
+            proxy_socket.close()
+        except:
+            pass
+    if connected:
+        sys.stdout.write(GREEN("OK") + "\n")
+    else:
+        msg = "Failed to connect to {h}. Please check your connectivity and try {cmd} again."
+        err_exit(msg.format(h=host, cmd=BOLD("dx ssh {}".format(args.job_id))),
+                 exception=DXCLIError())
+
+    print("Connecting to {}:{}".format(host, ssh_port))
+    ssh_args = ['ssh', '-i', os.path.join(dxpy.config.get_user_conf_dir(), 'ssh_id'),
+                '-o', 'HostKeyAlias={}.dnanex.us'.format(args.job_id),
                 '-o', 'UserKnownHostsFile={}'.format(known_hosts_file),
-                '-l', 'dnanexus', host]
+                '-p', str(ssh_port), '-l', 'dnanexus', host]
+    if args.ssh_proxy:
+        ssh_args += ['-o', 'ProxyCommand=nc -X connect -x {proxy} %h %p'.
+                     format(proxy=args.ssh_proxy)]
     ssh_args += args.ssh_args
     exit_code = subprocess.call(ssh_args)
     try:
@@ -3254,19 +3299,13 @@ def print_help(args):
         for cmd in parser_categories[args.command_or_category]['cmds']:
             print('  ' + cmd[0] + ' '*(18-len(cmd[0])) + fill(cmd[1], width_adjustment=-20, subsequent_indent=' '*20))
     elif args.command_or_category not in parser_map:
-        parser.exit(1, 'Unrecognized command: ' + args.command_or_category + '\n')
+        err_exit('Unrecognized command: ' + args.command_or_category, 3)
     elif args.command_or_category == 'export' and args.subcommand is not None:
         if args.subcommand not in exporters:
-            parser.exit(1, 'Unsupported format for dx export: ' + args.subcommand + '\n')
+            err_exit('Unsupported format for dx export: ' + args.subcommand, 3)
         new_args = argparse.Namespace()
         setattr(new_args, 'exporter_args', ['-h'])
         exporters[args.subcommand](new_args)
-    elif args.command_or_category == 'import' and args.subcommand is not None:
-        if args.subcommand not in importers:
-            parser.exit(1, 'Unsupported format for dx import: ' + args.subcommand + '\n')
-        new_args = argparse.Namespace()
-        setattr(new_args, 'importer_args', ['-h'])
-        importers[args.subcommand](new_args)
     elif args.command_or_category == 'run':
         if args.subcommand is None:
             parser_map[args.command_or_category].print_help()
@@ -3275,7 +3314,7 @@ def print_help(args):
     elif args.subcommand is None:
         parser_map[args.command_or_category].print_help()
     elif (args.command_or_category + ' ' + args.subcommand) not in parser_map:
-        parser.exit(1, 'Unrecognized command and subcommand combination: ' + args.command_or_category + ' ' + args.subcommand + '\n')
+        err_exit('Unrecognized command and subcommand combination: ' + args.command_or_category + ' ' + args.subcommand, 3)
     else:
         parser_map[args.command_or_category + ' ' + args.subcommand].print_help()
 
@@ -3319,10 +3358,63 @@ class PrintCategoryHelp(argparse.Action):
         print('  ' + '\n  '.join(sorted(APP_CATEGORIES)))
         parser.exit(0)
 
+
+# Callable "action" class used by the "dx new user" parser for org-related
+# arguments to allow us to distinguish between user-specified arguments and
+# default arguments. If an argument has a `default` that is a bool, then its
+# `nargs` will be 0.
+#
+# PRECONDITION: If an argument has a `default` that is a bool, then specifying
+# that argument on the command-line must imply the logical opposite of its
+# `default`.
+class DXNewUserOrgArgsAction(argparse.Action):
+    user_specified_opts = []
+
+    def __init__(self, option_strings, dest, required=False, default=None,
+                 nargs=None, **kwargs):
+        if isinstance(default, bool):
+            nargs = 0
+        super(DXNewUserOrgArgsAction, self).__init__(
+            option_strings=option_strings, dest=dest, required=required,
+            default=default, nargs=nargs, **kwargs
+        )
+
+    # __call__ is only invoked when the user specifies this `option_string` on
+    # the command-line.
+    def __call__(self, parser, namespace, values, option_string):
+        DXNewUserOrgArgsAction.user_specified_opts.append(option_string)
+        if isinstance(self.default, bool):
+            setattr(namespace, self.dest, not self.default)
+        else:
+            setattr(namespace, self.dest, values)
+
+
 class DXArgumentParser(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
         if message:
             pager(message, file=file)
+
+    def _check_value(self, action, value):
+        # Override argparse.ArgumentParser._check_value to eliminate "u'x'" strings in output that result from repr()
+        # calls in the original, and to line wrap the output
+
+        # converted value must be one of the choices (if specified)
+        if action.choices is not None and value not in action.choices:
+            choices = fill("(choose from {})".format(", ".join(action.choices)))
+            msg = "invalid choice: {choice}\n{choices}".format(choice=value, choices=choices)
+
+            if len(args_list) == 1:
+                from dxpy.utils import spelling_corrector
+                suggestion = spelling_corrector.correct(value, action.choices)
+                if suggestion in action.choices:
+                    msg += "\n\nDid you mean: " + BOLD("dx " + suggestion)
+
+            err = argparse.ArgumentError(action, msg)
+            if USING_PYTHON2:
+                err.message = err.message.encode(sys_encoding)
+                if err.argument_name is not None:
+                    err.argument_name = err.argument_name.encode(sys_encoding)
+            raise err
 
     def exit(self, status=0, message=None):
         if isinstance(status, basestring):
@@ -3333,24 +3425,34 @@ class DXArgumentParser(argparse.ArgumentParser):
         sys.exit(status)
 
     def error(self, message):
+        if USING_PYTHON2:
+            message = message.decode(sys_encoding)
         self.exit(2, '{help}\n{prog}: error: {msg}\n'.format(help=self.format_help(),
                                                              prog=self.prog,
                                                              msg=message))
 
-def register_subparser(subparser, subparsers_action=None, categories=('other', )):
+
+def register_parser(parser, subparsers_action=None, categories=('other', ), add_help=True):
+    """Attaches `parser` to the global ``parser_map``. If `add_help` is truthy,
+    then adds the helpstring of `parser` into the output of ``dx help...``, for
+    each category in `categories`.
+
+    :param subparsers_action: A special action object that is returned by
+    ``ArgumentParser.add_subparsers(...)``, or None.
+    :type subparsers_action: argparse._SubParsersAction, or None.
+    """
+    name = re.sub('^dx ', '', parser.prog)
     if subparsers_action is None:
         subparsers_action = subparsers
     if isinstance(categories, basestring):
         categories = (categories, )
-    if subparsers_action == subparsers:
-        name = subparsers_action._choices_actions[-1].dest
-    else:
-        name = subparsers._choices_actions[-1].dest + ' ' + subparsers_action._choices_actions[-1].dest
-    _help = subparsers_action._choices_actions[-1].help
-    parser_map[name] = subparser
-    parser_categories['all']['cmds'].append((name, _help))
-    for category in categories:
-        parser_categories[category]['cmds'].append((name, _help))
+
+    parser_map[name] = parser
+    if add_help:
+        _help = subparsers_action._choices_actions[-1].help
+        parser_categories['all']['cmds'].append((name, _help))
+        for category in categories:
+            parser_categories[category]['cmds'].append((name, _help))
 
 
 parser = DXArgumentParser(description=DNANEXUS_LOGO() + ' Command-Line Client, API v%s, client v%s' % (dxpy.API_VERSION, dxpy.TOOLKIT_VERSION) + '\n\n' + fill('dx is a command-line client for interacting with the DNAnexus platform.  You can log in, navigate, upload, organize and share your data, launch analyses, and more.  For a quick tour of what the tool can do, see') + '\n\n  https://wiki.dnanexus.com/Command-Line-Client/Quickstart\n\n' + fill('For a breakdown of dx commands by category, run "dx help".') + '\n\n' + fill('dx exits with exit code 3 if invalid input is provided or an invalid operation is requested, and exit code 1 if an internal error is encountered.  The latter usually indicate bugs in dx; please report them at') + "\n\n  https://github.com/dnanexus/dx-toolkit/issues",
@@ -3368,7 +3470,7 @@ parser_login = subparsers.add_parser('login', help='Log in (interactively or wit
 parser_login.add_argument('--token', help='Authentication token to use')
 host_action = parser_login.add_argument('--host', help='Log into the given auth server host (port must also be given)')
 port_action = parser_login.add_argument('--port', type=int, help='Log into the given auth server port (host must also be given)')
-protocol_action = parser_login.add_argument('--protocol', help='Use the given protocol to contact auth server (by default, the correct protocol is guessed based on --port)')
+protocol_action = parser_login.add_argument('--protocol', help='Used in conjunction with host and port arguments, gives the protocol to use when contacting auth server', default='https')
 host_action.help = port_action.help = protocol_action.help = argparse.SUPPRESS
 parser_login.add_argument('--noprojects', dest='projects', help='Do not print available projects', action='store_false')
 parser_login.add_argument('--save', help='Save token and other environment variables for future sessions',
@@ -3377,7 +3479,7 @@ parser_login.add_argument('--timeout', default='30d',
                           help='Timeout for this login token (in seconds, or use suffix s, m, h, d, w, M, y)')
 parser_login.add_argument('--staging', nargs=0, help=argparse.SUPPRESS, action=SetStagingEnv)
 parser_login.set_defaults(staging=False, func=login)
-register_subparser(parser_login, categories='session')
+register_parser(parser_login, categories='session')
 
 parser_logout = subparsers.add_parser('logout',
                                       help='Log out and remove credentials',
@@ -3386,8 +3488,9 @@ parser_logout = subparsers.add_parser('logout',
                                       parents=[env_args])
 parser_logout.add_argument('--host', help='Log out of the given auth server host (port must also be given)')
 parser_logout.add_argument('--port', type=int, help='Log out of the given auth server port (host must also be given)')
+parser_logout.add_argument('--protocol', help='Used in conjunction with host and port arguments, gives the protocol to use when contacting auth server', default='https')
 parser_logout.set_defaults(func=logout)
-register_subparser(parser_logout, categories='session')
+register_parser(parser_logout, categories='session')
 
 parser_shell = subparsers.add_parser('sh', help='dx shell interpreter',
                                      description='When run with no arguments, this command launches an interactive shell.  Otherwise, it will load the filename provided and interpret each nonempty line as a command to execute.  In both cases, the "dx" is expected to be omitted from the command or line.',
@@ -3395,20 +3498,21 @@ parser_shell = subparsers.add_parser('sh', help='dx shell interpreter',
                                      parents=[env_args])
 parser_shell.add_argument('filename', help='File of dx commands to execute', nargs='?', default=None)
 parser_shell.set_defaults(func=shell)
-register_subparser(parser_shell, categories='session')
+register_parser(parser_shell, categories='session')
 
 parser_exit = subparsers.add_parser('exit', help='Exit out of the interactive shell',
                                     description='Exit out of the interactive shell', prog='dx exit')
 parser_exit.set_defaults(func=exit_shell)
-register_subparser(parser_exit, categories='session')
+register_parser(parser_exit, categories='session')
 
 parser_whoami = subparsers.add_parser('whoami', help='Print the username of the current user',
-                                      description='Print the username of the current user, in the form "user-USERNAME"')
-parser_whoami.add_argument('--host', help='Query the specified auth server host (port must also be given)')
-parser_whoami.add_argument('--port', type=int, help='Query the specified auth server port (host must also be given)')
+                                      description='Print the username of the current user, ' +
+                                                  'in the form "user-USERNAME"',
+                                      prog='dx whoami',
+                                      parents=[env_args])
 parser_whoami.add_argument('--id', help='Print user ID instead of username', action='store_true', dest='user_id')
 parser_whoami.set_defaults(func=whoami)
-register_subparser(parser_whoami, categories='session')
+register_parser(parser_whoami, categories='session')
 
 parser_env = subparsers.add_parser('env', help='Print all environment variables in use',
                                    description=fill('Prints all environment variables in use as they have been resolved from environment variables and configuration files.  For more details, see') + '\n\nhttps://wiki.dnanexus.com/Command-Line-Client/Environment-Variables',
@@ -3419,48 +3523,50 @@ parser_env.add_argument('--bash', help=fill('Prints a list of bash commands to e
 parser_env.add_argument('--dx-flags', help=fill('Prints the dx options to override the environment variables', width_adjustment=-14),
                         action='store_true')
 parser_env.set_defaults(func=env)
-register_subparser(parser_env, categories='session')
+register_parser(parser_env, categories='session')
 
 parser_setenv = subparsers.add_parser('setenv',
                                       help='Sets environment variables for the session',
-                                      description='Sets environment variables for communication with the API server')
+                                      description='Sets environment variables for communication with the API server',
+                                      prog='dx setenv')
 parser_setenv.add_argument('--noprojects', dest='projects', help='Do not print available projects', action='store_false')
 parser_setenv.add_argument('--save', help='Save settings for future sessions.  Only one set of settings can be saved at a time.  Always set to true if login is run in a non-interactive session',
                            action='store_true')
 parser_setenv.add_argument('--current', help='Do not prompt for new values and just save current settings for future sessions.  Overrides --save to be true.',
                            action='store_true')
 parser_setenv.set_defaults(func=setenv)
-register_subparser(parser_setenv, categories='other')
+register_parser(parser_setenv, categories='other')
 
 parser_clearenv = subparsers.add_parser('clearenv', help='Clears all environment variables set by dx',
                                         description='Clears all environment variables set by dx.  More specifically, it removes local state stored in ~/.dnanexus_config/environment.  Does not affect the environment variables currently set in your shell.', prog='dx clearenv')
 parser_clearenv.add_argument('--reset', help='Reset dx environment variables to empty values. Use this to avoid interference between multiple dx sessions when using shell environment variables.',
                              action='store_true')
-parser_clearenv.set_defaults(func=clearenv, interactive=True)
-register_subparser(parser_clearenv, categories='session')
+parser_clearenv.set_defaults(func=clearenv, interactive=False)
+register_parser(parser_clearenv, categories='session')
 
 parser_invite = subparsers.add_parser('invite',
                                       help='Invite another user to a project or make it public',
-                                      description='Invite a DNAnexus entity to a project.  Use "PUBLIC" as the invitee and "VIEW" as the level to make the project public.  If the invitee is not recognized as a DNAnexus ID or is not "PUBLIC", it will be treated as a username, i.e. "dx invite alice : VIEW" is equivalent to inviting the user with user ID "user-alice" to view your current default project.',
+                                      description='Invite a DNAnexus entity to a project. If the invitee is not recognized as a DNAnexus ID, it will be treated as a username, i.e. "dx invite alice : VIEW" is equivalent to inviting the user with user ID "user-alice" to view your current default project.',
                                       prog='dx invite',
                                       parents=[env_args])
 parser_invite.add_argument('invitee', help='Entity to invite')
 parser_invite.add_argument('project', help='Project to invite the invitee to', default=':', nargs='?')
 parser_invite.add_argument('level', help='Permissions level the new member should have',
                            choices=['VIEW', 'UPLOAD', 'CONTRIBUTE', 'ADMINISTER'], default='VIEW', nargs='?')
+parser_invite.add_argument('--no-email', dest='send_email', action='store_false', help='Disable email notifications to invitee')
 parser_invite.set_defaults(func=invite)
 # parser_invite.completer = TODO
-register_subparser(parser_invite, categories='other')
+register_parser(parser_invite, categories='other')
 
 parser_uninvite = subparsers.add_parser('uninvite',
                                         help='Revoke others\' permissions on a project you administer',
-                                        description='Revoke others\' permissions on a project you administer.  Use "PUBLIC" as the entity to make the project no longer public.  If the entity is not recognized as a DNAnexus ID or is not "PUBLIC", it will be treated as a username, i.e. "dx uninvite alice :" is equivalent to revoking the permissions of the user with user ID "user-alice" to your current default project.',
+                                        description='Revoke others\' permissions on a project you administer. If the entity is not recognized as a DNAnexus ID, it will be treated as a username, i.e. "dx uninvite alice :" is equivalent to revoking the permissions of the user with user ID "user-alice" to your current default project.',
                                         prog='dx uninvite',
                                         parents=[env_args])
 parser_uninvite.add_argument('entity', help='Entity to uninvite')
 parser_uninvite.add_argument('project', help='Project to revoke permissions from', default=':', nargs='?')
 parser_uninvite.set_defaults(func=uninvite)
-register_subparser(parser_uninvite, categories='other')
+register_parser(parser_uninvite, categories='other')
 
 parser_ls = subparsers.add_parser('ls', help='List folders and/or objects in a folder',
                                   description='List folders and/or objects in a folder',
@@ -3476,7 +3582,7 @@ ls_path_action = parser_ls.add_argument('path', help='Folder (possibly in anothe
                                         nargs='?', default='.')
 ls_path_action.completer = DXPathCompleter()
 parser_ls.set_defaults(func=ls)
-register_subparser(parser_ls, categories='fs')
+register_parser(parser_ls, categories='fs')
 
 parser_tree = subparsers.add_parser('tree', help='List folders and objects in a tree',
                                     description='List folders and objects in a tree',
@@ -3488,14 +3594,14 @@ tree_path_action = parser_tree.add_argument('path', help='Folder (possibly in an
                                             nargs='?', default='.')
 tree_path_action.completer = DXPathCompleter(expected='folder')
 parser_tree.set_defaults(func=tree)
-register_subparser(parser_tree, categories='fs')
+register_parser(parser_tree, categories='fs')
 
 parser_pwd = subparsers.add_parser('pwd', help='Print current working directory',
                                    description='Print current working directory',
                                    prog='dx pwd',
                                    parents=[env_args])
 parser_pwd.set_defaults(func=pwd)
-register_subparser(parser_pwd, categories='fs')
+register_parser(parser_pwd, categories='fs')
 
 parser_select = subparsers.add_parser('select', help='List and select a project to switch to',
                                       description='Interactively list and select a project to switch to.  By default, only lists projects for which you have at least CONTRIBUTE permissions.  Use --public to see the list of public projects.',
@@ -3505,12 +3611,12 @@ select_project_action = parser_select.add_argument('project', help='Name or ID o
                                                    nargs='?', default=None)
 select_project_action.completer = DXPathCompleter(expected='project', include_current_proj=False)
 parser_select.add_argument('--name', help='Name of the project (wildcard patterns supported)')
-parser_select.add_argument('--level', choices=['LIST', 'VIEW', 'UPLOAD', 'CONTRIBUTE', 'ADMINISTER'],
+parser_select.add_argument('--level', choices=['VIEW', 'UPLOAD', 'CONTRIBUTE', 'ADMINISTER'],
                            help='Minimum level of permissions expected', default='CONTRIBUTE')
 parser_select.add_argument('--public', help='Include ONLY public projects (will automatically set --level to VIEW)',
                            action='store_true')
 parser_select.set_defaults(func=select, save=False)
-register_subparser(parser_select, categories='fs')
+register_parser(parser_select, categories='fs')
 
 parser_cd = subparsers.add_parser('cd', help='Change the current working directory',
                                   description='Change the current working directory', prog='dx cd',
@@ -3519,7 +3625,7 @@ cd_path_action = parser_cd.add_argument('path', nargs='?', default='/',
                                         help='Folder (possibly in another project) to which to change the current working directory, default is "/" in the current project')
 cd_path_action.completer = DXPathCompleter(expected='folder')
 parser_cd.set_defaults(func=cd)
-register_subparser(parser_cd, categories='fs')
+register_parser(parser_cd, categories='fs')
 
 parser_cp = subparsers.add_parser('cp', help='Copy objects and/or folders between different projects',
                                   formatter_class=argparse.RawTextHelpFormatter,
@@ -3527,10 +3633,10 @@ parser_cp = subparsers.add_parser('cp', help='Copy objects and/or folders betwee
 
 EXAMPLES
 
-  ''' + fill('The first example copies a gtable in a project called "FirstProj" to the current directory of the current project.  The second example copies the object named "reads" in the current directory to the folder /folder/path in the project with ID "project-B0VK6F6gpqG6z7JGkbqQ000Q", and finally renaming it to "newname".', width_adjustment=-2, subsequent_indent='  ') + '''
+  ''' + fill('The first example copies a file in a project called "FirstProj" to the current directory of the current project.  The second example copies the object named "reads.fq.gz" in the current directory to the folder /folder/path in the project with ID "project-B0VK6F6gpqG6z7JGkbqQ000Q", and finally renaming it to "newname.fq.gz".', width_adjustment=-2, subsequent_indent='  ') + '''
 
-  $ dx cp FirstProj:gtable-B0XBQFygpqGK8ZPjbk0Q000q .
-  $ dx cp reads project-B0VK6F6gpqG6z7JGkbqQ000Q:/folder/path/newname
+  $ dx cp FirstProj:file-B0XBQFygpqGK8ZPjbk0Q000q .
+  $ dx cp reads.fq.gz project-B0VK6F6gpqG6z7JGkbqQ000Q:/folder/path/newname.fq.gz
 ''',
                                   prog='dx cp',
                                   parents=[env_args, all_arg])
@@ -3539,7 +3645,7 @@ cp_sources_action = parser_cp.add_argument('sources', help='Objects and/or folde
 cp_sources_action.completer = DXPathCompleter()
 parser_cp.add_argument('destination', help=fill('Folder into which to copy the sources or new pathname (if only one source is provided).  Must be in a different project/container than all source paths.', width_adjustment=-15))
 parser_cp.set_defaults(func=cp)
-register_subparser(parser_cp, categories='fs')
+register_parser(parser_cp, categories='fs')
 
 parser_mv = subparsers.add_parser('mv', help='Move or rename objects and/or folders inside a project',
                                   formatter_class=argparse.RawTextHelpFormatter,
@@ -3551,7 +3657,7 @@ mv_sources_action = parser_mv.add_argument('sources', help='Objects and/or folde
 mv_sources_action.completer = DXPathCompleter()
 parser_mv.add_argument('destination', help=fill('Folder into which to move the sources or new pathname (if only one source is provided).  Must be in the same project/container as all source paths.', width_adjustment=-15))
 parser_mv.set_defaults(func=mv)
-register_subparser(parser_mv, categories='fs')
+register_parser(parser_mv, categories='fs')
 
 parser_mkdir = subparsers.add_parser('mkdir', help='Create a new folder',
                                      description='Create a new folder', prog='dx mkdir',
@@ -3561,7 +3667,7 @@ parser_mkdir.add_argument('-p', '--parents', help='no error if existing, create 
 mkdir_paths_action = parser_mkdir.add_argument('paths', help='Paths to folders to create', metavar='path', nargs='+')
 mkdir_paths_action.completer = DXPathCompleter(expected='folder')
 parser_mkdir.set_defaults(func=mkdir)
-register_subparser(parser_mkdir, categories='fs')
+register_parser(parser_mkdir, categories='fs')
 
 parser_rmdir = subparsers.add_parser('rmdir', help='Remove a folder',
                                      description='Remove a folder', prog='dx rmdir',
@@ -3569,7 +3675,7 @@ parser_rmdir = subparsers.add_parser('rmdir', help='Remove a folder',
 rmdir_paths_action = parser_rmdir.add_argument('paths', help='Paths to folders to remove', metavar='path', nargs='+')
 rmdir_paths_action.completer = DXPathCompleter(expected='folder')
 parser_rmdir.set_defaults(func=rmdir)
-register_subparser(parser_rmdir, categories='fs')
+register_parser(parser_rmdir, categories='fs')
 
 parser_rm = subparsers.add_parser('rm', help='Remove data objects and folders',
                                   description='Remove data objects and folders.', prog='dx rm',
@@ -3578,7 +3684,7 @@ rm_paths_action = parser_rm.add_argument('paths', help='Paths to remove', metava
 rm_paths_action.completer = DXPathCompleter()
 parser_rm.add_argument('-r', '--recursive', help='Recurse into a directory', action='store_true')
 parser_rm.set_defaults(func=rm)
-register_subparser(parser_rm, categories='fs')
+register_parser(parser_rm, categories='fs')
 
 # data
 
@@ -3595,7 +3701,7 @@ parser_describe.add_argument('--multi', help=fill('If the flag --json is also pr
 describe_path_action = parser_describe.add_argument('path', help=fill('Object ID or path to an object (possibly in another project) to describe.', width_adjustment=-24))
 describe_path_action.completer = DXPathCompleter()
 parser_describe.set_defaults(func=describe)
-register_subparser(parser_describe, categories=('data', 'metadata'))
+register_parser(parser_describe, categories=('data', 'metadata'))
 
 parser_upload = subparsers.add_parser('upload', help='Upload file(s) or directory',
                                       description='Upload local file(s) or directory.  If "-" is provided, stdin will be used instead.  By default, the filename will be used as its new name.  If --path/--destination is provided with a path ending in a slash, the filename will be used, and the folder path will be used as a destination.  If it does not end in a slash, then it will be used as the final name.',
@@ -3612,8 +3718,9 @@ parser_upload.add_argument('-r', '--recursive', help='Upload directories recursi
 parser_upload.add_argument('--wait', help='Wait until the file has finished closing', action='store_true')
 parser_upload.add_argument('--no-progress', help='Do not show a progress bar', dest='show_progress',
                            action='store_false', default=sys.stderr.isatty())
+parser_upload.add_argument('--buffer-size', help='Set the write buffer size (in bytes)', dest='write_buffer_size')
 parser_upload.set_defaults(func=upload, mute=False)
-register_subparser(parser_upload, categories='data')
+register_parser(parser_upload, categories='data')
 
 parser_download = subparsers.add_parser('download', help='Download file(s)',
                                         description='Download the contents of a file object or multiple objects.  Use "-o -" to direct the output to stdout.',
@@ -3623,66 +3730,58 @@ parser_download_paths_arg = parser_download.add_argument('paths', help='Data obj
                                                          nargs='+', metavar='path')
 parser_download_paths_arg.completer = DXPathCompleter(classes=['file'])
 parser_download.add_argument('-o', '--output', help='Local filename or directory to be used ("-" indicates stdout output); if not supplied or a directory is given, the object\'s name on the platform will be used, along with any applicable extensions')
-parser_download.add_argument('-f', '--overwrite', help='Overwrite the local file if necessary', action='store_true')
+parser_download.add_argument('-f', '--overwrite', help='Resume an interupted download if the local and remote file signatures match.  If the signatures do not match the local file will be overwritten.', action='store_true')
 parser_download.add_argument('-r', '--recursive', help='Download folders recursively', action='store_true')
 parser_download.add_argument('-a', '--all', help='If multiple objects match the input, download all of them',
                              action='store_true')
 parser_download.add_argument('--no-progress', help='Do not show a progress bar', dest='show_progress',
                              action='store_false', default=sys.stderr.isatty())
-parser_download.set_defaults(func=download)
-register_subparser(parser_download, categories='data')
+parser_download.set_defaults(func=download_or_cat)
+register_parser(parser_download, categories='data')
 
 parser_make_download_url = subparsers.add_parser('make_download_url', help='Create a file download link for sharing',
-                                                 description='Creates a pre-authenticated link that can be used to download a file without logging in.')
+                                                 description='Creates a pre-authenticated link that can be used to download a file without logging in.',
+                                                 prog='dx make_download_url')
 path_action = parser_make_download_url.add_argument('path', help='Data object ID or name to access')
 path_action.completer = DXPathCompleter(classes=['file'])
 parser_make_download_url.add_argument('--duration', help='Time for which the URL will remain valid (in seconds, or use suffix s, m, h, d, w, M, y). Default: 1 day')
 parser_make_download_url.add_argument('--filename', help='Name that the server will instruct the client to save the file as (default is the filename)')
 parser_make_download_url.set_defaults(func=make_download_url)
-register_subparser(parser_make_download_url, categories='data')
+register_parser(parser_make_download_url, categories='data')
 
 parser_cat = subparsers.add_parser('cat', help='Print file(s) to stdout', prog='dx cat',
                                    parents=[env_args])
 cat_path_action = parser_cat.add_argument('path', help='File ID or name(s) to print to stdout', nargs='+')
 cat_path_action.completer = DXPathCompleter(classes=['file'])
 parser_cat.set_defaults(func=cat)
-register_subparser(parser_cat, categories='data')
+register_parser(parser_cat, categories='data')
 
 parser_head = subparsers.add_parser('head',
-                                    help='Print part of a file or gtable',
-                                    description='Print the first part of a file or a gtable.  By default, prints the first 10 lines or rows, respectively.  Additional query parameters can be provided in the case of gtables.  The output for gtables is formatted for human-readability; to print rows in a machine-readable format, see "dx export tsv".',
+                                    help='Print part of a file',
+                                    description='Print the first part of a file.  By default, prints the first 10 lines.',
                                     parents=[no_color_arg, env_args],
                                     prog='dx head')
-parser_head.add_argument('-n', '--lines', type=int, metavar='N', help='Print the first N lines or rows (default 10)',
+parser_head.add_argument('-n', '--lines', type=int, metavar='N', help='Print the first N lines (default 10)',
                          default=10)
 head_gtable_args = parser_head.add_argument_group(title='GTable-specific options')
-head_gtable_args.add_argument('-w', '--max-col-width', type=int, help='Maximum width of each column to display',
+head_gtable_args.add_argument('-w', '--max-col-width', type=int, help=argparse.SUPPRESS,
+                              #help='Maximum width of each column to display',
                               default=32)
-head_gtable_args.add_argument('--starting', type=int, help='Specify starting row ID', default=0)
-head_gtable_args.add_argument('--gri', nargs=3, metavar=('CHR', 'LO', 'HI'), help='Specify chromosome name, low coordinate, and high coordinate for Genomic Range Index')
-head_gtable_args.add_argument('--gri-mode',
-                              help='Specify the mode of the GRI query (\'overlap\' or \'enclose\'; default \'overlap\')',
+head_gtable_args.add_argument('--starting', type=int, help=argparse.SUPPRESS,
+                              #help='Specify starting row ID',
+                              default=0)
+head_gtable_args.add_argument('--gri', nargs=3, metavar=('CHR', 'LO', 'HI'), help=argparse.SUPPRESS)
+                              #help='Specify chromosome name, low coordinate, and high coordinate for Genomic Range Index')
+head_gtable_args.add_argument('--gri-mode', help=argparse.SUPPRESS,
+                              #help='Specify the mode of the GRI query (\'overlap\' or \'enclose\'; default \'overlap\')',
                               default="overlap")
-head_gtable_args.add_argument('--gri-name',
-                              help='Override the default name of the Genomic Range Index (default: "gri"))',
+head_gtable_args.add_argument('--gri-name', help=argparse.SUPPRESS,
+                              #help='Override the default name of the Genomic Range Index (default: "gri"))',
                               default="gri")
-head_path_action = parser_head.add_argument('path', help='File or gtable ID or name to access')
-head_path_action.completer = DXPathCompleter(classes=['file', 'gtable'])
+head_path_action = parser_head.add_argument('path', help='File ID or name to access')
+head_path_action.completer = DXPathCompleter(classes=['file'])
 parser_head.set_defaults(func=head)
-register_subparser(parser_head, categories='data')
-
-parser_import = subparsers.add_parser('import',
-                                      help='Import (convert and upload) a local table or genomic file',
-                                      description=fill('Import a local file to the DNAnexus platform as a GenomicTable.') + '\n\n' + fill('For more details on how to import from a particular format, run ') + '\n  $ dx help import <format>' + '\n\nSupported formats:\n\n  ' + '\n  '.join(sorted(importers)),
-                                      formatter_class=argparse.RawTextHelpFormatter,
-                                      prog='dx import',
-                                      parents=[env_args])
-parser_import.add_argument('format', help='Format to import from')
-import_args_action = parser_import.add_argument('importer_args', help=fill('Arguments passed to the importer', width_adjustment=-24),
-                                                nargs=argparse.REMAINDER)
-import_args_action.completer = LocalCompleter()
-parser_import.set_defaults(func=dximport)
-register_subparser(parser_import, categories='data')
+register_parser(parser_head, categories='data')
 
 parser_export = subparsers.add_parser('export',
                                       help='Export (download and convert) a gtable into a local file',
@@ -3694,7 +3793,7 @@ parser_export.add_argument('format', help='Format to export to')
 parser_export.add_argument('exporter_args', help=fill('Arguments passed to the exporter', width_adjustment=-24),
                            nargs=argparse.REMAINDER)
 parser_export.set_defaults(func=export)
-register_subparser(parser_export, categories='data')
+register_parser(parser_export, categories='data')
 
 from dxpy.scripts.dx_build_app import parser as build_parser
 build_parser.prog = 'dx build'
@@ -3707,24 +3806,45 @@ parser_build = subparsers.add_parser('build', help='Upload and build a new apple
                                      parents=[build_parser, env_args]
 )
 parser_build.set_defaults(func=build)
-register_subparser(parser_build, categories='exec')
+register_parser(parser_build, categories='exec')
+
+from ..asset_builder import build_asset
+parser_build_asset = subparsers.add_parser(
+    "build_asset",
+    help='Build an asset bundle',
+    formatter_class=argparse.RawTextHelpFormatter,
+    description=fill('Build an asset from a local source directory. The directory must have a file called '
+         '"dxasset.json" containing valid JSON. For more details, see '
+         '\n\nhttps://wiki.dnanexus.com/Developer-Tutorials/Asset-Build-Process'),
+    prog="dx build_asset")
+parser_build_asset.add_argument("src_dir", help="Asset source directory (default: current directory)", nargs='?')
+parser_build_asset.add_argument("-d", "--destination",
+                                help=fill("Specifies the destination project and destination folder for the asset,"
+                                          " in the form [PROJECT_NAME_OR_ID:][/[FOLDER/][NAME]]"),
+                                default='.')
+parser_build_asset.add_argument("--json", help=fill("Show ID of resulting asset bundle in JSON format"),
+                                action="store_true", dest="json")
+parser_build_asset.add_argument("--no-watch", help=fill("Don't watch the real-time logs of the asset-builder job."),
+                                action="store_false", dest="watch")
+parser_build_asset.set_defaults(func=build_asset)
+register_parser(parser_build_asset)
 
 parser_add = subparsers.add_parser('add', help='Add one or more items to a list',
                                    description='Use this command with one of the availabile subcommands to perform various actions such as adding other users to the list of developers or authorized users of an app',
                                    prog='dx add')
 subparsers_add = parser_add.add_subparsers(parser_class=DXArgumentParser)
 subparsers_add.metavar = 'list_type'
-register_subparser(parser_add, categories=())
+register_parser(parser_add, categories=())
 
 parser_add_users = subparsers_add.add_parser('users', help='Add authorized users for an app',
                                              description='Add users or orgs to the list of authorized users of an app.  Published versions of the app will only be accessible to users represented by this list and to developers of the app.  Unpublished versions are restricted to the developers.',
                                              prog='dx add users', parents=[env_args])
 parser_add_users.add_argument('app', help='Name or ID of an app').completer = DXAppCompleter(installed=True)
 parser_add_users.add_argument('users', metavar='authorizedUser',
-                              help='One or more users or orgs to add; use "PUBLIC" to allow all access',
+                              help='One or more users or orgs to add',
                               nargs='+')
 parser_add_users.set_defaults(func=add_users)
-register_subparser(parser_add_users, subparsers_action=subparsers_add, categories='exec')
+register_parser(parser_add_users, subparsers_action=subparsers_add, categories='exec')
 
 parser_add_developers = subparsers_add.add_parser('developers', help='Add developers for an app',
                                                   description='Add users to the list of developers for an app.  Developers are able to build and publish new versions of the app, and add or remove others from the list of developers and authorized users.',
@@ -3733,7 +3853,7 @@ parser_add_developers.add_argument('app', help='Name or ID of an app').completer
 parser_add_developers.add_argument('developers', metavar='developer', help='One or more users to add',
                               nargs='+')
 parser_add_developers.set_defaults(func=add_developers)
-register_subparser(parser_add_developers, subparsers_action=subparsers_add, categories='exec')
+register_parser(parser_add_developers, subparsers_action=subparsers_add, categories='exec')
 
 parser_add_stage = subparsers_add.add_parser('stage', help='Add a stage to a workflow',
                                              description='Add a stage to a workflow.  Default inputs for the stage can also be set at the same time.',
@@ -3750,28 +3870,39 @@ add_stage_folder_args = parser_add_stage.add_mutually_exclusive_group()
 add_stage_folder_args.add_argument('--output-folder', help='Path to the output folder for the stage (interpreted as an absolute path)')
 add_stage_folder_args.add_argument('--relative-output-folder', help='A relative folder path for the stage (interpreted as relative to the workflow\'s output folder)')
 parser_add_stage.set_defaults(func=workflow_cli.add_stage)
-register_subparser(parser_add_stage, subparsers_action=subparsers_add, categories='workflow')
+register_parser(parser_add_stage, subparsers_action=subparsers_add, categories='workflow')
+
+parser_add_member = subparsers_add.add_parser("member", help="Grant a user membership to an org", description="Grant a user membership to an org", prog="dx add member", parents=[stdout_args, env_args])
+parser_add_member.add_argument("org_id", help="ID of the org")
+parser_add_member.add_argument("username_or_user_id", help="Username or ID of user")
+parser_add_member.add_argument("--level", required=True, choices=["ADMIN", "MEMBER"], help="Org membership level that will be granted to the specified user")
+parser_add_member.add_argument("--allow-billable-activities", default=False, action="store_true", help='Grant the specified user "allowBillableActivities" in the org')
+parser_add_member.add_argument("--no-app-access", default=True, action="store_false", dest="app_access", help='Disable "appAccess" for the specified user in the org')
+parser_add_member.add_argument("--project-access", choices=["ADMINISTER", "CONTRIBUTE", "UPLOAD", "VIEW", "NONE"], default="CONTRIBUTE", help='The default implicit maximum permission the specified user will receive to projects explicitly shared with the org; default CONTRIBUTE')
+parser_add_member.add_argument("--no-email", default=False, action="store_true", help="Disable org invitation email notification to the specified user")
+parser_add_member.set_defaults(func=add_membership)
+register_parser(parser_add_member, subparsers_action=subparsers_add, categories="org")
 
 parser_list = subparsers.add_parser('list', help='Print the members of a list',
                                    description='Use this command with one of the availabile subcommands to perform various actions such as printing the list of developers or authorized users of an app.',
                                    prog='dx list')
 subparsers_list = parser_list.add_subparsers(parser_class=DXArgumentParser)
 subparsers_list.metavar = 'list_type'
-register_subparser(parser_list, categories=())
+register_parser(parser_list, categories=())
 
 parser_list_users = subparsers_list.add_parser('users', help='List authorized users for an app',
                                                description='List the authorized users of an app.  Published versions of the app will only be accessible to users represented by this list and to developers of the app.  Unpublished versions are restricted to the developers',
                                                prog='dx list users', parents=[env_args])
 parser_list_users.add_argument('app', help='Name or ID of an app').completer = DXAppCompleter(installed=True)
 parser_list_users.set_defaults(func=list_users)
-register_subparser(parser_list_users, subparsers_action=subparsers_list, categories='exec')
+register_parser(parser_list_users, subparsers_action=subparsers_list, categories='exec')
 
 parser_list_developers = subparsers_list.add_parser('developers', help='List developers for an app',
                                                     description='List the developers for an app.  Developers are able to build and publish new versions of the app, and add or remove others from the list of developers and authorized users.',
                                                     prog='dx list developers', parents=[env_args])
 parser_list_developers.add_argument('app', help='Name or ID of an app').completer = DXAppCompleter(installed=True)
 parser_list_developers.set_defaults(func=list_developers)
-register_subparser(parser_list_developers, subparsers_action=subparsers_list, categories='exec')
+register_parser(parser_list_developers, subparsers_action=subparsers_list, categories='exec')
 
 parser_list_stages = subparsers_list.add_parser('stages', help='List the stages in a workflow',
                                                 description='List the stages in a workflow.',
@@ -3779,24 +3910,24 @@ parser_list_stages = subparsers_list.add_parser('stages', help='List the stages 
                                                 prog='dx list stages')
 parser_list_stages.add_argument('workflow', help='Name or ID of a workflow').completer = DXPathCompleter(classes=['workflow'])
 parser_list_stages.set_defaults(func=workflow_cli.list_stages)
-register_subparser(parser_list_stages, subparsers_action=subparsers_list, categories='workflow')
+register_parser(parser_list_stages, subparsers_action=subparsers_list, categories='workflow')
 
 parser_remove = subparsers.add_parser('remove', help='Remove one or more items to a list',
                                       description='Use this command with one of the available subcommands to perform various actions such as removing other users from the list of developers or authorized users of an app.',
                                       prog='dx remove')
 subparsers_remove = parser_remove.add_subparsers(parser_class=DXArgumentParser)
 subparsers_remove.metavar = 'list_type'
-register_subparser(parser_remove, categories=())
+register_parser(parser_remove, categories=())
 
 parser_remove_users = subparsers_remove.add_parser('users', help='Remove authorized users for an app',
                                                    description='Remove users or orgs from the list of authorized users of an app.  Published versions of the app will only be accessible to users represented by this list and to developers of the app.  Unpublished versions are restricted to the developers',
                                                    prog='dx remove users', parents=[env_args])
 parser_remove_users.add_argument('app', help='Name or ID of an app').completer = DXAppCompleter(installed=True)
 parser_remove_users.add_argument('users', metavar='authorizedUser',
-                                 help='One or more users or orgs to remove; use "PUBLIC" to remove public access',
+                                 help='One or more users or orgs to remove',
                                  nargs='+')
 parser_remove_users.set_defaults(func=remove_users)
-register_subparser(parser_remove_users, subparsers_action=subparsers_remove, categories='exec')
+register_parser(parser_remove_users, subparsers_action=subparsers_remove, categories='exec')
 
 parser_remove_developers = subparsers_remove.add_parser('developers', help='Remove developers for an app',
                                                         description='Remove users from the list of developers for an app.  Developers are able to build and publish new versions of the app, and add or remove others from the list of developers and authorized users.',
@@ -3805,7 +3936,7 @@ parser_remove_developers.add_argument('app', help='Name or ID of an app').comple
 parser_remove_developers.add_argument('developers', metavar='developer', help='One or more users to remove',
                                       nargs='+')
 parser_remove_developers.set_defaults(func=remove_developers)
-register_subparser(parser_remove_developers, subparsers_action=subparsers_remove, categories='exec')
+register_parser(parser_remove_developers, subparsers_action=subparsers_remove, categories='exec')
 
 parser_remove_stage = subparsers_remove.add_parser('stage', help='Remove a stage from a workflow',
                                                    description='Remove a stage from a workflow.  The stage should be indicated either by an integer (0-indexed, i.e. "0" for the first stage), or a stage ID.',
@@ -3814,7 +3945,16 @@ parser_remove_stage = subparsers_remove.add_parser('stage', help='Remove a stage
 parser_remove_stage.add_argument('workflow', help='Name or ID of a workflow').completer = DXPathCompleter(classes=['workflow'])
 parser_remove_stage.add_argument('stage', help='Stage (index or ID) of the workflow to remove')
 parser_remove_stage.set_defaults(func=workflow_cli.remove_stage)
-register_subparser(parser_remove_stage, subparsers_action=subparsers_remove, categories='workflow')
+register_parser(parser_remove_stage, subparsers_action=subparsers_remove, categories='workflow')
+
+parser_remove_member = subparsers_remove.add_parser("member", help="Revoke the org membership of a user", description="Revoke the org membership of a user", prog="dx remove member", parents=[stdout_args, env_args])
+parser_remove_member.add_argument("org_id", help="ID of the org")
+parser_remove_member.add_argument("username_or_user_id", help="Username or ID of user")
+parser_remove_member.add_argument("--keep-explicit-project-permissions", default=True, action="store_false", dest="revoke_project_permissions", help="Disable revocation of explicit project permissions of the specified user to projects billed to the org; implicit project permissions (i.e. those granted to the specified user via his membership in this org) will always be revoked")
+parser_remove_member.add_argument("--keep-explicit-app-permissions", default=True, action="store_false", dest="revoke_app_permissions", help="Disable revocation of explicit app developer and user permissions of the specified user to apps billed to the org; implicit app permissions (i.e. those granted to the specified user via his membership in this org) will always be revoked")
+parser_remove_member.add_argument("-y", "--yes", action="store_false", dest="confirm", help="Do not ask for confirmation")
+parser_remove_member.set_defaults(func=remove_membership)
+register_parser(parser_remove_member, subparsers_action=subparsers_remove, categories="org")
 
 parser_update = subparsers.add_parser('update', help='Update certain types of metadata',
                                       description='''
@@ -3824,7 +3964,20 @@ subcommands.''',
                                       prog='dx update')
 subparsers_update = parser_update.add_subparsers(parser_class=DXArgumentParser)
 subparsers_update.metavar = 'target'
-register_subparser(parser_update, categories=())
+register_parser(parser_update, categories=())
+
+parser_update_org = subparsers_update.add_parser('org',
+                                                 help='Update information about an org',
+                                                 description='Update information about an org',
+                                                 parents=[stdout_args, env_args],
+                                                 prog='dx update org')
+parser_update_org.add_argument('org_id', help='ID of the org')
+parser_update_org.add_argument('--name', help='New name of the org')
+parser_update_org.add_argument('--member-list-visibility', help='New org membership level that is required to be able to view the membership level and/or permissions of any other member in the specified org (corresponds to the memberListVisibility org policy)', choices=['ADMIN', 'MEMBER', 'PUBLIC'])
+parser_update_org.add_argument('--project-transfer-ability', help='New org membership level that is required to be able to change the billing account of a project that is billed to the specified org, to some other entity (corresponds to the restrictProjectTransfer org policy)', choices=['ADMIN', 'MEMBER'])
+parser_update_org.set_defaults(func=update_org)
+register_parser(parser_update_org, subparsers_action=subparsers_update, categories='org')
+
 
 parser_update_workflow = subparsers_update.add_parser('workflow', help='Update the metadata for a workflow',
                                                       description='Update the metadata for an existing workflow',
@@ -3840,7 +3993,7 @@ update_workflow_output_folder_args = parser_update_workflow.add_mutually_exclusi
 update_workflow_output_folder_args.add_argument('--output-folder', help='Default output folder for the workflow')
 update_workflow_output_folder_args.add_argument('--no-output-folder', help='Unset the default output folder for the workflow', action='store_true')
 parser_update_workflow.set_defaults(func=workflow_cli.update_workflow)
-register_subparser(parser_update_workflow, subparsers_action=subparsers_update, categories='workflow')
+register_parser(parser_update_workflow, subparsers_action=subparsers_update, categories='workflow')
 
 parser_update_stage = subparsers_update.add_parser('stage', help='Update the metadata for a stage in a workflow',
                                                    description='Update the metadata for a stage in a workflow',
@@ -3863,15 +4016,43 @@ update_stage_folder_args = parser_update_stage.add_mutually_exclusive_group()
 update_stage_folder_args.add_argument('--output-folder', help='Path to the output folder for the stage (interpreted as an absolute path)')
 update_stage_folder_args.add_argument('--relative-output-folder', help='A relative folder path for the stage (interpreted as relative to the workflow\'s output folder)')
 parser_update_stage.set_defaults(func=workflow_cli.update_stage)
-register_subparser(parser_update_stage, subparsers_action=subparsers_update, categories='workflow')
+register_parser(parser_update_stage, subparsers_action=subparsers_update, categories='workflow')
+
+parser_update_member = subparsers_update.add_parser("member", help="Update the membership of a user in an org", description="Update the membership of a user in an org", prog="dx update member", parents=[stdout_args, env_args])
+parser_update_member.add_argument("org_id", help="ID of the org")
+parser_update_member.add_argument("username_or_user_id", help="Username or ID of user")
+parser_update_member.add_argument("--level", choices=["ADMIN", "MEMBER"], help="The new org membership level of the specified user")
+parser_update_member.add_argument("--allow-billable-activities", choices=["true", "false"], help='The new "allowBillableActivities" membership permission of the specified user in the org; default false if demoting the specified user from ADMIN to MEMBER')
+parser_update_member.add_argument("--app-access", choices=["true", "false"], help='The new "appAccess" membership permission of the specified user in the org; default true if demoting the specified user from ADMIN to MEMBER')
+parser_update_member.add_argument("--project-access", choices=["ADMINISTER", "CONTRIBUTE", "UPLOAD", "VIEW", "NONE"], help='The new default implicit maximum permission the specified user will receive to projects explicitly shared with the org; default CONTRIBUTE if demoting the specified user from ADMIN to MEMBER')
+parser_update_member.set_defaults(func=update_membership)
+register_parser(parser_update_member, subparsers_action=subparsers_update, categories="org")
+
+parser_update_project = subparsers_update.add_parser("project",
+                                                     help="Updates a specified project with the specified options",
+                                                     description="", prog="dx update project",
+                                                     parents=[stdout_args, env_args])
+parser_update_project.add_argument('project_id', help="Project ID or project name")
+parser_update_project.add_argument('--name', help="New project name")
+parser_update_project.add_argument('--summary', help="Project summary")
+parser_update_project.add_argument('--description', help="Project description")
+parser_update_project.add_argument('--protected', choices=["true", "false"],
+                                   help="Whether the project should be PROTECTED")
+parser_update_project.add_argument('--restricted', choices=["true", "false"],
+                                   help="Whether the project should be RESTRICTED")
+parser_update_project.add_argument('--containsPHI', choices=["true"],
+                                   help="Flag to tell if project contains PHI")
+parser_update_project.add_argument('--bill-to', help="Update the user or org ID of the billing account", type=str)
+parser_update_project.set_defaults(func=update_project)
+register_parser(parser_update_project, subparsers_action=subparsers_update, categories="metadata")
 
 parser_install = subparsers.add_parser('install', help='Install an app',
-                                       description='Install an app by name.  To see a list of apps you can install, hit <TAB> twice after "dx install" or run "' + BOLD() + 'dx find apps' + ENDC() + '" to see a list of available apps.', prog='dx install',
+                                       description='Install an app by name.  To see a list of apps you can install, hit <TAB> twice after "dx install" or run "' + BOLD('dx find apps') + '" to see a list of available apps.', prog='dx install',
                                        parents=[env_args])
 install_app_action = parser_install.add_argument('app', help='ID or name of app to install')
 install_app_action.completer = DXAppCompleter(installed=False)
 parser_install.set_defaults(func=install)
-register_subparser(parser_install, categories='exec')
+register_parser(parser_install, categories='exec')
 
 parser_uninstall = subparsers.add_parser('uninstall', help='Uninstall an app',
                                          description='Uninstall an app by name.', prog='dx uninstall',
@@ -3879,21 +4060,30 @@ parser_uninstall = subparsers.add_parser('uninstall', help='Uninstall an app',
 uninstall_app_action = parser_uninstall.add_argument('app', help='ID or name of app to uninstall')
 uninstall_app_action.completer = DXAppCompleter(installed=True)
 parser_uninstall.set_defaults(func=uninstall)
-register_subparser(parser_uninstall, categories='exec')
+register_parser(parser_uninstall, categories='exec')
 
 parser_run = subparsers.add_parser('run', help='Run an applet, app, or workflow', add_help=False,
-                                   description=(fill('Run an applet, app, or workflow.  To see a list of executables you can run, hit <TAB> twice after "dx run" or run "' + BOLD() + 'dx find apps' + ENDC() + '" to see a list of available apps.') + '\n\n' + fill('If any inputs are required but not specified, an interactive mode for selecting inputs will be launched.  Inputs can be set in multiple ways.  Run "dx run --input-help" for more details.')),
+                                   description=(fill('Run an applet, app, or workflow.  To see a list of executables you can run, hit <TAB> twice after "dx run" or run "' + BOLD('dx find apps') + '" to see a list of available apps.') + '\n\n' + fill('If any inputs are required but not specified, an interactive mode for selecting inputs will be launched.  Inputs can be set in multiple ways.  Run "' + BOLD('dx run --input-help') + '" for more details.') + '\n\n' + fill('Run "' + BOLD('dx run --instance-type-help') + '" to see a list of specifications for computers available to run executables.')),
                                    prog='dx run',
                                    formatter_class=argparse.RawTextHelpFormatter,
                                    parents=[exec_input_args, stdout_args, env_args, extra_args,
-                                            instance_type_arg])
+                                            instance_type_arg, property_args, tag_args])
 run_executable_action = parser_run.add_argument('executable',
                                                 help=fill('Name or ID of an applet, app, or workflow to run; must be provided if --clone is not set', width_adjustment=-24),
                                                 nargs="?", default="")
 run_executable_action.completer = MultiCompleter([DXAppCompleter(),
                                                   DXPathCompleter(classes=['applet', 'workflow'], visibility="visible")])
+
+parser_run.add_argument('-d', '--depends-on',
+                        help=fill('ID of job, analysis, or data object that must be in the "done" or ' +
+                                  '"closed" state, as appropriate, before this executable can be run; ' +
+                                  'repeat as necessary (e.g. "--depends-on id1 ... --depends-on idN"). ' +
+                                  'Cannot be supplied when running workflows',
+                                  width_adjustment=-24),
+                        action='append', type=str)
+
 parser_run.add_argument('-h', '--help', help='show this help message and exit', nargs=0, action=runHelp)
-parser_run.add_argument('--clone', help=fill('Job ID or name from which to use as default options (will use the exact same executable ID, destination project and folder, job input, instance type requests, and a similar name unless explicitly overridden by command-line arguments)', width_adjustment=-24))
+parser_run.add_argument('--clone', help=fill('Job or analysis ID or name from which to use as default options (will use the exact same executable ID, destination project and folder, job input, instance type requests, and a similar name unless explicitly overridden by command-line arguments)', width_adjustment=-24))
 parser_run.add_argument('--alias', '--version', dest='alias',
                         help=fill('Alias (tag) or version of the app to run (default: "default" if an app)', width_adjustment=-24))
 parser_run.add_argument('--destination', '--folder', metavar='PATH', dest='folder', help=fill('The full project:folder path in which to output the results.  By default, the current working directory will be used.', width_adjustment=-24))
@@ -3921,14 +4111,6 @@ parser_run.add_argument('--rerun-stage', metavar='STAGE_ID', dest='rerun_stages'
                                   width_adjustment=-24),
                         action='append')
 parser_run.add_argument('--name', help=fill('Name for the job (default is the app or applet name)', width_adjustment=-24))
-parser_run.add_argument('--property', dest='properties', metavar='KEY=VALUE',
-                        help=(fill('Key-value pair to add as a property; repeat as necessary,',
-                                   width_adjustment=-24) + '\n' +
-                              fill('e.g. "--property key1=val1 --property key2=val2"',
-                                   width_adjustment=-24, initial_indent=' ', subsequent_indent=' ',
-                                   break_on_hyphens=False)),
-                        action='append')
-parser_run.add_argument('--tag', metavar='TAG', dest='tags', help=fill('Tag for the resulting execution; repeat as necessary,', width_adjustment=-24) + '\n' + fill('e.g. "--tag tag1 --tag tag2"', width_adjustment=-24, break_on_hyphens=False, initial_indent=' ', subsequent_indent=' '), action='append')
 parser_run.add_argument('--delay-workspace-destruction',
                         help=fill('Whether to keep the job\'s temporary workspace around for debugging purposes for 3 days after it succeeds or fails', width_adjustment=-24),
                         action='store_true')
@@ -3941,17 +4123,26 @@ parser_run.add_argument('--watch', help="Watch the job after launching it; sets 
 parser_run.add_argument('--allow-ssh', action='append', nargs='?', metavar='ADDRESS',
                         help=fill('Configure the job to allow SSH access; sets --priority high. If an argument is ' +
                                   'supplied, it is interpreted as an IP or hostname mask to allow connections from, ' +
-                                  'e.g. "--allow-ssh 1.2.3.4 --allow-ssh berkeley.edu"'))
-parser_run.add_argument('--ssh', help="Configure the job to allow SSH access and connect to it after launching; sets --priority high", action='store_true')
-parser_run.add_argument('--debug-on', action='append', choices=['AppError', 'AppInternalError', 'ExecutionError'],
-                        help="Configure the job to hold for debugging when any of the listed errors occur")
+                                  'e.g. "--allow-ssh 1.2.3.4 --allow-ssh berkeley.edu"',
+                                  width_adjustment=-24))
+parser_run.add_argument('--ssh',
+                        help=fill("Configure the job to allow SSH access and connect to it after launching; " +
+                                  "sets --priority high",
+                                  width_adjustment=-24),
+                        action='store_true')
+parser_run.add_argument('--ssh-proxy', metavar=('<address>:<port>'),
+                        help=fill('SSH connect via proxy, argument supplied is used as the proxy address and port',
+                                  width_adjustment=-24))
+parser_run.add_argument('--debug-on', action='append', choices=['AppError', 'AppInternalError', 'ExecutionError', 'All'],
+                        help=fill("Configure the job to hold for debugging when any of the listed errors occur",
+                                  width_adjustment=-24))
 parser_run.add_argument('--input-help',
                         help=fill('Print help and examples for how to specify inputs',
                                   width_adjustment=-24),
                         action=runInputHelp, nargs=0)
 parser_run.set_defaults(func=run, verbose=False, help=False, details=None,
                         stage_instance_types=None, stage_folders=None)
-register_subparser(parser_run, categories='exec')
+register_parser(parser_run, categories='exec')
 
 parser_watch = subparsers.add_parser('watch', help='Watch logs of a job and its subjobs', prog='dx watch',
                                      description='Monitors logging output from a running job',
@@ -3976,7 +4167,7 @@ parser_watch.add_argument('-f', '--format', help='Message format. Available fiel
 parser_watch.add_argument('--no-wait', '--no-follow', action='store_false', dest='tail',
                           help='Exit after the first new message is received, instead of waiting for all logs')
 parser_watch.set_defaults(func=watch)
-register_subparser(parser_watch, categories='exec')
+register_parser(parser_watch, categories='exec')
 
 parser_ssh_config = subparsers.add_parser('ssh_config', help='Configure SSH keys for your DNAnexus account',
                                    description='Configure SSH access credentials for your DNAnexus account',
@@ -3984,8 +4175,9 @@ parser_ssh_config = subparsers.add_parser('ssh_config', help='Configure SSH keys
                                    parents=[env_args])
 parser_ssh_config.add_argument('ssh_keygen_args', help='Command-line arguments to pass to ssh-keygen',
                                nargs=argparse.REMAINDER)
+parser_ssh_config.add_argument('--revoke', help='Revoke SSH public key associated with your DNAnexus account; you will no longer be able to SSH into any jobs.', action='store_true')
 parser_ssh_config.set_defaults(func=ssh_config)
-register_subparser(parser_ssh_config, categories='exec')
+register_parser(parser_ssh_config, categories='exec')
 
 parser_ssh = subparsers.add_parser('ssh', help='Connect to a running job via SSH',
                                    description='Use an SSH client to connect to a job being executed on the DNAnexus ' +
@@ -3996,14 +4188,16 @@ parser_ssh = subparsers.add_parser('ssh', help='Connect to a running job via SSH
                                    parents=[env_args])
 parser_ssh.add_argument('job_id', help='Name of job to connect to')
 parser_ssh.add_argument('ssh_args', help='Command-line arguments to pass to the SSH client', nargs=argparse.REMAINDER)
+parser_ssh.add_argument('--ssh-proxy', metavar=('<address>:<port>'),
+                        help='SSH connect via proxy, argument supplied is used as the proxy address and port')
 parser_ssh.set_defaults(func=ssh)
-register_subparser(parser_ssh, categories='exec')
+register_parser(parser_ssh, categories='exec')
 
-parser_terminate = subparsers.add_parser('terminate', help='Terminate job(s)',
-                                         description='Terminate a job or jobs that have not yet finished',
+parser_terminate = subparsers.add_parser('terminate', help='Terminate jobs or analyses',
+                                         description='Terminate one or more jobs or analyses',
                                          prog='dx terminate',
                                          parents=[env_args])
-parser_terminate.add_argument('jobid', help='ID of the job to terminate', nargs='+')
+parser_terminate.add_argument('jobid', help='ID of a job or analysis to terminate', nargs='+')
 parser_terminate.set_defaults(func=terminate)
 parser_map['terminate'] = parser_terminate
 parser_categories['all']['cmds'].append((subparsers._choices_actions[-1].dest, subparsers._choices_actions[-1].help))
@@ -4018,24 +4212,58 @@ projects_action.completer = DXPathCompleter(expected='project', include_current_
 parser_rmproject.add_argument('-y', '--yes', dest='confirm', help='Do not ask for confirmation', action='store_false')
 parser_rmproject.add_argument('-q', '--quiet', help='Do not print purely informational messages', action='store_true')
 parser_rmproject.set_defaults(func=rmproject)
-register_subparser(parser_rmproject, categories='fs')
+register_parser(parser_rmproject, categories='fs')
 
 parser_new = subparsers.add_parser('new', help='Create a new project or data object',
-                                   description='Use this command with one of the available subcommands (classes) to create a new project or data object from scratch.  Not all data types are supported.  See \'dx upload\' for files, \'dx build\' for applets, and \'dx import\' for importing special file formats (e.g. csv, fastq) into GenomicTables.',
+                                   description='Use this command with one of the available subcommands (classes) to create a new project or data object from scratch.  Not all data types are supported.  See \'dx upload\' for files and \'dx build\' for applets.',
                                    prog="dx new")
 subparsers_new = parser_new.add_subparsers(parser_class=DXArgumentParser)
 subparsers_new.metavar = 'class'
-register_subparser(parser_new, categories='data')
+register_parser(parser_new, categories='data')
+
+parser_new_user = subparsers_new.add_parser("user", help="Create a new user account", description="Create a new user account", parents=[stdout_args, env_args], prog="dx new user")
+parser_new_user_user_opts = parser_new_user.add_argument_group("User options")
+parser_new_user_user_opts.add_argument("-u", "--username", required=True, help="Username")
+parser_new_user_user_opts.add_argument("--email", required=True, help="Email address")
+parser_new_user_user_opts.add_argument("--first", help="First name")
+parser_new_user_user_opts.add_argument("--middle", help="Middle name")
+parser_new_user_user_opts.add_argument("--last", help="Last name")
+parser_new_user_user_opts.add_argument("--token-duration", help='Time duration for which the newly generated auth token for the new user will be valid (default 30 days; max 30 days). An integer will be interpreted as seconds; you can append a suffix (s, m, h, d) to indicate different units (e.g. "--token-duration 10m" to indicate 10 minutes).')
+parser_new_user_user_opts.add_argument("--occupation", help="Occupation")
+parser_new_user_org_opts = parser_new_user.add_argument_group("Org options", "Optionally invite the new user to an org with the specified parameters")
+parser_new_user_org_opts.add_argument("--org", help="ID of the org")
+parser_new_user_org_opts.add_argument("--level", choices=["ADMIN", "MEMBER"], default="MEMBER", action=DXNewUserOrgArgsAction, help="Org membership level that will be granted to the new user; default MEMBER")
+parser_new_user_org_opts.add_argument("--set-bill-to", default=False, action=DXNewUserOrgArgsAction, help='Set the default "billTo" field of the new user to the org; implies --allow-billable-activities')
+parser_new_user_org_opts.add_argument("--allow-billable-activities", default=False, action=DXNewUserOrgArgsAction, help='Grant the new user "allowBillableActivities" in the org')
+parser_new_user_org_opts.add_argument("--no-app-access", default=True, action=DXNewUserOrgArgsAction, dest="app_access", help='Disable "appAccess" for the new user in the org')
+parser_new_user_org_opts.add_argument("--project-access", choices=["ADMINISTER", "CONTRIBUTE", "UPLOAD", "VIEW", "NONE"], default="CONTRIBUTE", action=DXNewUserOrgArgsAction, help='The "projectAccess" to grant the new user in the org; default CONTRIBUTE')
+parser_new_user_org_opts.add_argument("--no-email", default=False, action=DXNewUserOrgArgsAction, help="Disable org invitation email notification to the new user")
+parser_new_user.set_defaults(func=new_user)
+register_parser(parser_new_user, subparsers_action=subparsers_new,
+                   categories="other")
+
+parser_new_org = subparsers_new.add_parser('org', help='Create new org',
+                                           description='Create a new org',
+                                           parents=[stdout_args, env_args],
+                                           prog='dx new org')
+parser_new_org.add_argument('name', help='Descriptive name of the org', nargs='?')
+parser_new_org.add_argument('--handle', required=True, help='Unique handle for the org. The specified handle will be converted to lowercase and appended to "org-" to form the org ID')
+parser_new_org.add_argument('--member-list-visibility', default="ADMIN", help='Org membership level required to be able to list the members of the org, or to view the membership level or permissions of any other member of the org; default ADMIN', choices=["ADMIN", "MEMBER", "PUBLIC"])
+parser_new_org.add_argument('--project-transfer-ability', default="ADMIN", help='Org membership level required to be able to change the billing account of an org-billed project to any other entity; default ADMIN', choices=["ADMIN", "MEMBER"])
+parser_new_org.set_defaults(func=new_org)
+register_parser(parser_new_org, subparsers_action=subparsers_new, categories='org')
 
 parser_new_project = subparsers_new.add_parser('project', help='Create a new project',
                                                description='Create a new project',
                                                parents=[stdout_args, env_args],
                                                prog='dx new project')
 parser_new_project.add_argument('name', help='Name of the new project', nargs='?')
+parser_new_project.add_argument('--region', help='Region affinity of the new project')
 parser_new_project.add_argument('-s', '--select', help='Select the new project as current after creating',
                                 action='store_true')
+parser_new_project.add_argument('--bill-to', help='ID of the user or org to which the project will be billed. The default value is the billTo of the requesting user.')
 parser_new_project.set_defaults(func=new_project)
-register_subparser(parser_new_project, subparsers_action=subparsers_new, categories='fs')
+register_parser(parser_new_project, subparsers_action=subparsers_new, categories='fs')
 
 parser_new_record = subparsers_new.add_parser('record', help='Create a new record',
                                               description='Create a new record',
@@ -4044,9 +4272,10 @@ parser_new_record = subparsers_new.add_parser('record', help='Create a new recor
                                               formatter_class=argparse.RawTextHelpFormatter,
                                               prog='dx new record')
 init_action = parser_new_record.add_argument('--init', help='Path to record from which to initialize all metadata')
+parser_new_record.add_argument('--close', help='Close the record immediately after creating it', action='store_true')
 init_action.completer = DXPathCompleter(classes=['record'])
 parser_new_record.set_defaults(func=new_record)
-register_subparser(parser_new_record, subparsers_action=subparsers_new, categories='fs')
+register_parser(parser_new_record, subparsers_action=subparsers_new, categories='fs')
 
 parser_new_workflow = subparsers_new.add_parser('workflow', help='Create a new workflow',
                                                 description='Create a new workflow',
@@ -4061,10 +4290,10 @@ parser_new_workflow.add_argument('--output-folder', help='Default output folder 
 init_action = parser_new_workflow.add_argument('--init', help=fill('Path to workflow or an analysis ID from which to initialize all metadata', width_adjustment=-24))
 init_action.completer = DXPathCompleter(classes=['workflow'])
 parser_new_workflow.set_defaults(func=workflow_cli.new_workflow)
-register_subparser(parser_new_workflow, subparsers_action=subparsers_new, categories='workflow')
+register_parser(parser_new_workflow, subparsers_action=subparsers_new, categories='workflow')
 
-parser_new_gtable = subparsers_new.add_parser('gtable', help='Create a new gtable',
-                                              description='Create a new gtable from scratch.  See \'dx import\' for importing special file formats (e.g. csv, fastq) into GenomicTables.',
+parser_new_gtable = subparsers_new.add_parser('gtable', add_help=False, #help='Create a new gtable',
+                                              description='Create a new gtable from scratch.',
                                               parents=[parser_dataobject_args, parser_single_dataobject_output_args,
                                                        stdout_args, env_args],
                                               formatter_class=argparse.RawTextHelpFormatter,
@@ -4078,22 +4307,23 @@ new_gtable_indices_args.add_argument('--gri', nargs=3, metavar=('CHR', 'LO', 'HI
 new_gtable_indices_args.add_argument('--indices', help='JSON for specifying any other indices')
 parser_new_gtable.set_defaults(func=new_gtable)
 #parser_new_gtable.completer = DXPathCompleter(classes=['gtable'])
-register_subparser(parser_new_gtable, subparsers_action=subparsers_new, categories='fs')
+register_parser(parser_new_gtable, subparsers_action=subparsers_new, categories='fs', add_help=False)
 
 parser_get_details = subparsers.add_parser('get_details', help='Get details of a data object',
                                            description='Get the JSON details of a data object.', prog="dx get_details",
                                            parents=[env_args])
 parser_get_details.add_argument('path', help='ID or path to data object to get details for').completer = DXPathCompleter()
 parser_get_details.set_defaults(func=get_details)
-register_subparser(parser_get_details, categories='metadata')
+register_parser(parser_get_details, categories='metadata')
 
 parser_set_details = subparsers.add_parser('set_details', help='Set details on a data object',
                                            description='Set the JSON details of a data object.', prog="dx set_details",
                                            parents=[env_args, all_arg])
 parser_set_details.add_argument('path', help='ID or path to data object to modify').completer = DXPathCompleter()
-parser_set_details.add_argument('details', help='JSON to store as details')
+parser_set_details.add_argument('details', help='JSON to store as details', nargs='?')
+parser_set_details.add_argument('-f', '--details-file', help='Path to local file containing JSON to store as details')
 parser_set_details.set_defaults(func=set_details)
-register_subparser(parser_set_details, categories='metadata')
+register_parser(parser_set_details, categories='metadata')
 
 parser_set_visibility = subparsers.add_parser('set_visibility', help='Set visibility on a data object',
                                               description='Set visibility on a data object.', prog='dx set_visibility',
@@ -4102,7 +4332,7 @@ parser_set_visibility.add_argument('path', help='ID or path to data object to mo
 parser_set_visibility.add_argument('visibility', choices=['hidden', 'visible'],
                                    help='Visibility that the object should have')
 parser_set_visibility.set_defaults(func=set_visibility)
-register_subparser(parser_set_visibility, categories='metadata')
+register_parser(parser_set_visibility, categories='metadata')
 
 parser_add_types = subparsers.add_parser('add_types', help='Add types to a data object',
                                          description='Add types to a data object.  See https://wiki.dnanexus.com/pages/Types/ for a list of DNAnexus types.',
@@ -4111,7 +4341,7 @@ parser_add_types = subparsers.add_parser('add_types', help='Add types to a data 
 parser_add_types.add_argument('path', help='ID or path to data object to modify').completer = DXPathCompleter()
 parser_add_types.add_argument('types', nargs='+', metavar='type', help='Types to add')
 parser_add_types.set_defaults(func=add_types)
-register_subparser(parser_add_types, categories='metadata')
+register_parser(parser_add_types, categories='metadata')
 
 parser_remove_types = subparsers.add_parser('remove_types', help='Remove types from a data object',
                                             description='Remove types from a data object.  See https://wiki.dnanexus.com/pages/Types/ for a list of DNAnexus types.',
@@ -4120,7 +4350,7 @@ parser_remove_types = subparsers.add_parser('remove_types', help='Remove types f
 parser_remove_types.add_argument('path', help='ID or path to data object to modify').completer = DXPathCompleter()
 parser_remove_types.add_argument('types', nargs='+', metavar='type', help='Types to remove')
 parser_remove_types.set_defaults(func=remove_types)
-register_subparser(parser_remove_types, categories='metadata')
+register_parser(parser_remove_types, categories='metadata')
 
 parser_tag = subparsers.add_parser('tag', help='Tag a project, data object, or execution', prog='dx tag',
                                    description='Tag a project, data object, or execution.  Note that a project context must be either set or specified for data object IDs or paths.',
@@ -4128,7 +4358,7 @@ parser_tag = subparsers.add_parser('tag', help='Tag a project, data object, or e
 parser_tag.add_argument('path', help='ID or path to project, data object, or execution to modify').completer = DXPathCompleter()
 parser_tag.add_argument('tags', nargs='+', metavar='tag', help='Tags to add')
 parser_tag.set_defaults(func=add_tags)
-register_subparser(parser_tag, categories='metadata')
+register_parser(parser_tag, categories='metadata')
 
 parser_untag = subparsers.add_parser('untag', help='Untag a project, data object, or execution', prog='dx untag',
                                      description='Untag a project, data object, or execution.  Note that a project context must be either set or specified for data object IDs or paths.',
@@ -4136,7 +4366,7 @@ parser_untag = subparsers.add_parser('untag', help='Untag a project, data object
 parser_untag.add_argument('path', help='ID or path to project, data object, or execution to modify').completer = DXPathCompleter()
 parser_untag.add_argument('tags', nargs='+', metavar='tag', help='Tags to remove')
 parser_untag.set_defaults(func=remove_tags)
-register_subparser(parser_untag, categories='metadata')
+register_parser(parser_untag, categories='metadata')
 
 parser_rename = subparsers.add_parser('rename',
                                       help='Rename a project or data object',
@@ -4147,7 +4377,7 @@ path_action = parser_rename.add_argument('path', help='Path to project or data o
 path_action.completer = DXPathCompleter(include_current_proj=True)
 parser_rename.add_argument('name', help='New name')
 parser_rename.set_defaults(func=rename)
-register_subparser(parser_rename, categories='metadata')
+register_parser(parser_rename, categories='metadata')
 
 parser_set_properties = subparsers.add_parser('set_properties', help='Set properties of a project, data object, or execution',
                                               description='Set properties of a project, data object, or execution.  Note that a project context must be either set or specified for data object IDs or paths.', prog='dx set_properties',
@@ -4156,7 +4386,7 @@ parser_set_properties.add_argument('path', help='ID or path to project, data obj
 parser_set_properties.add_argument('properties', nargs='+', metavar='propertyname=value',
                                    help='Key-value pairs of property names and their new values')
 parser_set_properties.set_defaults(func=set_properties)
-register_subparser(parser_set_properties, categories='metadata')
+register_parser(parser_set_properties, categories='metadata')
 
 parser_unset_properties = subparsers.add_parser('unset_properties', help='Unset properties of a project, data object, or execution',
                                                 description='Unset properties of a project, data object, or execution.  Note that a project context must be either set or specified for data object IDs or paths.',
@@ -4166,7 +4396,7 @@ path_action = parser_unset_properties.add_argument('path', help='ID or path to p
 path_action.completer = DXPathCompleter()
 parser_unset_properties.add_argument('properties', nargs='+', metavar='propertyname', help='Property names to unset')
 parser_unset_properties.set_defaults(func=unset_properties)
-register_subparser(parser_unset_properties, categories='metadata')
+register_parser(parser_unset_properties, categories='metadata')
 
 parser_close = subparsers.add_parser('close', help='Close data object(s)',
                                      description='Close a remote data object or set of objects.',
@@ -4175,7 +4405,7 @@ parser_close = subparsers.add_parser('close', help='Close data object(s)',
 parser_close.add_argument('path', help='Path to a data object to close', nargs='+').completer = DXPathCompleter()
 parser_close.add_argument('--wait', help='Wait for the object(s) to close', action='store_true')
 parser_close.set_defaults(func=close)
-register_subparser(parser_close, categories=('data', 'metadata'))
+register_parser(parser_close, categories=('data', 'metadata'))
 
 parser_wait = subparsers.add_parser('wait', help='Wait for data object(s) to close or job(s) to finish',
                                     description='Polls the state of specified data object(s) or job(s) until they are all in the desired state.  Waits until the "closed" state for a data object, and for any terminal state for a job ("terminated", "failed", or "done").  Exits with a non-zero code if a job reaches a terminal state that is not "done".',
@@ -4184,39 +4414,45 @@ parser_wait = subparsers.add_parser('wait', help='Wait for data object(s) to clo
 path_action = parser_wait.add_argument('path', help='Path to a data object or job ID to wait for', nargs='+')
 path_action.completer = DXPathCompleter()
 parser_wait.set_defaults(func=wait)
-register_subparser(parser_wait, categories=('data', 'metadata', 'exec'))
+register_parser(parser_wait, categories=('data', 'metadata', 'exec'))
 
 parser_get = subparsers.add_parser('get', help='Download records, applets, and files',
-                                   description='Download the contents of some types of data (records, applets, and files).  For gtables, see "dx export".  Downloading an applet will attempt to reconstruct a source directory that can be used to rebuild the app with "dx build".  Use "-o -" to direct the output to stdout.',
+                                   description='Download the contents of some types of data (records, applets, and files).  Downloading an applet will attempt to reconstruct a source directory that can be used to rebuild the app with "dx build".  Use "-o -" to direct the output to stdout.',
                                    prog='dx get',
                                    parents=[env_args])
 parser_get.add_argument('path', help='Data object ID or name to access').completer = DXPathCompleter(classes=['file', 'record', 'applet'])
 parser_get.add_argument('-o', '--output', help='local file path where the data is to be saved ("-" indicates stdout output for objects of class file and record). If not supplied, the object\'s name on the platform will be used, along with any applicable extensions. For applets, if OUTPUT does not exist, an applet source directory will be created there; if OUTPUT is an existing directory, a new directory with the applet\'s name will be created inside it.')
 parser_get.add_argument('--no-ext', help='If -o is not provided, do not add an extension to the filename', action='store_true')
+parser_get.add_argument('--omit-resources', help='When downloading an applet, omit fetching the resources associated with the applet.', action='store_true')
 parser_get.add_argument('-f', '--overwrite', help='Overwrite the local file if necessary', action='store_true')
 parser_get.set_defaults(func=get)
-register_subparser(parser_get, categories='data')
+register_parser(parser_get, categories='data')
 
 parser_find = subparsers.add_parser('find', help='Search functionality over various DNAnexus entities',
                                     description='Search functionality over various DNAnexus entities.',
+                                    formatter_class=argparse.RawTextHelpFormatter,
                                     prog='dx find')
 subparsers_find = parser_find.add_subparsers(parser_class=DXArgumentParser)
 subparsers_find.metavar = 'category'
-register_subparser(parser_find, categories=())
+register_parser(parser_find, categories=())
 
-parser_find_apps = subparsers_find.add_parser('apps', help='List available apps',
-                                              description='Finds apps with the given search parameters.  Use --category to restrict by a category; common categories are available as tab completions and can be listed with --category-help.',
-                                              parents=[stdout_args, json_arg, delim_arg, env_args],
-                                              prog='dx find apps')
+parser_find_apps = subparsers_find.add_parser(
+    'apps',
+    help=fill('List available apps'),
+    description=fill('Finds apps subject to the given search parameters. Use --category to restrict by a category; '
+                     'common categories are available as tab completions and can be listed with --category-help.'),
+    parents=[stdout_args, json_arg, delim_arg, env_args],
+    prog='dx find apps'
+)
 parser_find_apps.add_argument('--name', help='Name of the app')
 parser_find_apps.add_argument('--category', help='Category of the app').completer = ListCompleter(APP_CATEGORIES)
 parser_find_apps.add_argument('--category-help',
                               help='Print a list of common app categories',
                               nargs=0,
                               action=PrintCategoryHelp)
-parser_find_apps.add_argument('-a', '--all', help='Whether to return all versions of the app', action='store_true')
-parser_find_apps.add_argument('--unpublished', help='Whether to return unpublished apps as well', action='store_true')
-parser_find_apps.add_argument('--installed', help='Whether to restrict the list to installed apps only', action='store_true')
+parser_find_apps.add_argument('-a', '--all', help='Return all versions of each app', action='store_true')
+parser_find_apps.add_argument('--unpublished', help='Return only unpublished apps (if omitted, returns only published apps)', action='store_true')
+parser_find_apps.add_argument('--installed', help='Return only installed apps', action='store_true')
 parser_find_apps.add_argument('--billed-to', help='User or organization responsible for the app')
 parser_find_apps.add_argument('--creator', help='Creator of the app version')
 parser_find_apps.add_argument('--developer', help='Developer of the app')
@@ -4225,87 +4461,196 @@ parser_find_apps.add_argument('--created-before', help='Date (e.g. 2012-01-01) o
 parser_find_apps.add_argument('--mod-after', help='Date (e.g. 2012-01-01) or integer timestamp after which the app was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_apps.add_argument('--mod-before', help='Date (e.g. 2012-01-01) or integer timestamp before which the app was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_apps.set_defaults(func=find_apps)
-register_subparser(parser_find_apps, subparsers_action=subparsers_find, categories='exec')
+register_parser(parser_find_apps, subparsers_action=subparsers_find, categories='exec')
 
-parser_find_jobs = subparsers_find.add_parser('jobs', help='List jobs in your project',
-                                              description=fill('Finds jobs with the given search parameters.  By default, output is formatted to show the last several job trees that you\'ve run in the current project.') + '''
-
-EXAMPLES
-
-  ''' + fill('The following will show the full job tree containing the job ID given (it does not have to be the origin job).', subsequent_indent='  ') + '''
-
-  $ dx find jobs --id job-B13f83KgpqG0PB8P0xkQ000X
-
-  ''' + fill('The following will find all jobs that start with the string "bwa"', subsequent_indent='  ') + '''
-
-  $ dx find jobs --name bwa*
-''',
-                                              parents=[find_executions_args, stdout_args, json_arg, no_color_arg,
-                                                       delim_arg, env_args, find_by_properties_and_tags_args],
-                                              formatter_class=argparse.RawTextHelpFormatter,
-                                              conflict_handler='resolve',
-                                              prog='dx find jobs')
+parser_find_jobs = subparsers_find.add_parser(
+    'jobs',
+    help=fill('List jobs in the current project'),
+    description=fill('Finds jobs subject to the given search parameters. By default, output is formatted to show the '
+                     'last several job trees that you\'ve run in the current project.'),
+    parents=[find_executions_args, stdout_args, json_arg, no_color_arg, delim_arg, env_args,
+             find_by_properties_and_tags_args],
+    formatter_class=argparse.RawTextHelpFormatter,
+    conflict_handler='resolve',
+    prog='dx find jobs'
+)
 add_find_executions_search_gp(parser_find_jobs)
 parser_find_jobs.set_defaults(func=find_executions, classname='job')
 parser_find_jobs.completer = DXPathCompleter(expected='project')
-register_subparser(parser_find_jobs, subparsers_action=subparsers_find, categories='exec')
+register_parser(parser_find_jobs, subparsers_action=subparsers_find, categories='exec')
 
-parser_find_analyses = subparsers_find.add_parser('analyses', help='List analyses in your project',
-                                                  description=fill('Finds analyses with the given search parameters.  By default, output is formatted to show the last several job trees that you\'ve run in the current project.'),
-                                                  parents=[find_executions_args, stdout_args, json_arg, no_color_arg,
-                                                           delim_arg, env_args, find_by_properties_and_tags_args],
-                                                  formatter_class=argparse.RawTextHelpFormatter,
-                                                  conflict_handler='resolve',
-                                                  prog='dx find analyses')
+parser_find_analyses = subparsers_find.add_parser(
+    'analyses',
+    help=fill('List analyses in the current project'),
+    description=fill('Finds analyses subject to the given search parameters. By default, output is formatted to show '
+                     'the last several job trees that you\'ve run in the current project.'),
+    parents=[find_executions_args, stdout_args, json_arg, no_color_arg, delim_arg, env_args,
+             find_by_properties_and_tags_args],
+    formatter_class=argparse.RawTextHelpFormatter,
+    conflict_handler='resolve',
+    prog='dx find analyses'
+)
 add_find_executions_search_gp(parser_find_analyses)
 parser_find_analyses.set_defaults(func=find_executions, classname='analysis')
 parser_find_analyses.completer = DXPathCompleter(expected='project')
-register_subparser(parser_find_analyses, subparsers_action=subparsers_find, categories='exec')
+register_parser(parser_find_analyses, subparsers_action=subparsers_find, categories='exec')
 
-parser_find_executions = subparsers_find.add_parser('executions', help='List executions (jobs and analyses) in your project',
-                                                    description=fill('Finds executions (jobs and analyses) with the given search parameters.  By default, output is formatted to show the last several job trees that you\'ve run in the current project.'),
-                                                    parents=[find_executions_args, stdout_args, json_arg, no_color_arg,
-                                                             delim_arg, env_args, find_by_properties_and_tags_args],
-                                                    formatter_class=argparse.RawTextHelpFormatter,
-                                                    conflict_handler='resolve',
-                                                    prog='dx find executions')
+parser_find_executions = subparsers_find.add_parser(
+    'executions',
+    help=fill('List executions (jobs and analyses) in the current project'),
+    description=fill('Finds executions (jobs and analyses) subject to the given search parameters. By default, output '
+                     'is formatted to show the last several job trees that you\'ve run in the current project.'),
+    parents=[find_executions_args, stdout_args, json_arg, no_color_arg, delim_arg, env_args,
+             find_by_properties_and_tags_args],
+    formatter_class=argparse.RawTextHelpFormatter,
+    conflict_handler='resolve',
+    prog='dx find executions'
+)
 add_find_executions_search_gp(parser_find_executions)
 parser_find_executions.set_defaults(func=find_executions, classname=None)
 parser_find_executions.completer = DXPathCompleter(expected='project')
-register_subparser(parser_find_executions, subparsers_action=subparsers_find, categories='exec')
+register_parser(parser_find_executions, subparsers_action=subparsers_find, categories='exec')
 
-parser_find_data = subparsers_find.add_parser('data', help='Find data objects',
-                                              description='Finds data objects with the given search parameters.  By default, restricts the search to the current project if set.  To search over all projects (excludes public projects), use --all-projects (overrides --project, --folder, --norecurse).',
-                                              parents=[stdout_args, json_arg, no_color_arg, delim_arg, env_args, find_by_properties_and_tags_args], prog='dx find data')
-parser_find_data.add_argument('--class', dest='classname', choices=['record', 'file', 'gtable', 'applet', 'workflow'], help='Data object class')
+parser_find_data = subparsers_find.add_parser(
+    'data',
+    help=fill('List data objects in the current project'),
+    description=fill('Finds data objects subject to the given search parameters. By default, restricts the search to '
+                     'the current project if set. To search over all projects (excluding public projects), use '
+                     '--all-projects (overrides --path and --norecurse).'),
+    parents=[stdout_args, json_arg, no_color_arg, delim_arg, env_args, find_by_properties_and_tags_args],
+    prog='dx find data'
+)
+parser_find_data.add_argument('--class', dest='classname', choices=['record', 'file', 'gtable', 'applet', 'workflow'], help='Data object class', metavar='{record,file,applet,workflow}')
 parser_find_data.add_argument('--state', choices=['open', 'closing', 'closed', 'any'], help='State of the object')
 parser_find_data.add_argument('--visibility', choices=['hidden', 'visible', 'either'], default='visible', help='Whether the object is hidden or not')
 parser_find_data.add_argument('--name', help='Name of the object')
 parser_find_data.add_argument('--type', help='Type of the data object')
 parser_find_data.add_argument('--link', help='Object ID that the data object links to')
 parser_find_data.add_argument('--all-projects', '--allprojects', help='Extend search to all projects (excluding public projects)', action='store_true')
-parser_find_data.add_argument('--project', help='Project with which to restrict the results')
-parser_find_data.add_argument('--folder', help='Folder path with which to restrict the results (\'--project\' must be used in this case)').completer = DXPathCompleter(expected='folder')
+parser_find_data.add_argument('--project', help=argparse.SUPPRESS)
+parser_find_data.add_argument('--folder', help=argparse.SUPPRESS).completer = DXPathCompleter(expected='folder')
+parser_find_data.add_argument('--path', help='Project and/or folder in which to restrict the results',
+                              metavar='PROJECT:FOLDER').completer = DXPathCompleter(expected='folder')
 parser_find_data.add_argument('--norecurse', dest='recurse', help='Do not recurse into subfolders', action='store_false')
 parser_find_data.add_argument('--mod-after', help='Date (e.g. 2012-01-01) or integer timestamp after which the object was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_data.add_argument('--mod-before', help='Date (e.g. 2012-01-01) or integer timestamp before which the object was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_data.add_argument('--created-after', help='Date (e.g. 2012-01-01) or integer timestamp after which the object was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_data.add_argument('--created-before', help='Date (e.g. 2012-01-01) or integer timestamp before which the object was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_data.set_defaults(func=find_data)
-register_subparser(parser_find_data, subparsers_action=subparsers_find, categories=('data', 'metadata'))
+register_parser(parser_find_data, subparsers_action=subparsers_find, categories=('data', 'metadata'))
 
-parser_find_projects = subparsers_find.add_parser('projects', help='Find projects',
-                                                  description='Finds projects with the given search parameters.  Use the --public flag to list all public projects.',
-                                                  parents=[stdout_args, json_arg, delim_arg, env_args, find_by_properties_and_tags_args],
-                                                  prog='dx find projects')
+parser_find_projects = subparsers_find.add_parser(
+    'projects',
+    help=fill('List projects'),
+    description=fill('Finds projects subject to the given search parameters. Use the --public flag to list all public '
+                     'projects.'),
+    parents=[stdout_args, json_arg, delim_arg, env_args, find_by_properties_and_tags_args, contains_phi],
+    prog='dx find projects'
+)
 parser_find_projects.add_argument('--name', help='Name of the project')
-parser_find_projects.add_argument('--level', choices=['LIST', 'VIEW', 'UPLOAD', 'CONTRIBUTE', 'ADMINISTER'],
+parser_find_projects.add_argument('--level', choices=['VIEW', 'UPLOAD', 'CONTRIBUTE', 'ADMINISTER'],
                                   help='Minimum level of permissions expected')
 parser_find_projects.add_argument('--public',
                                   help='Include ONLY public projects (will automatically set --level to VIEW)',
                                   action='store_true')
+parser_find_projects.add_argument('--created-after',
+                                  help='Date (e.g. 2012-01-01) or integer timestamp after which the project was ' +
+                                  'created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
+parser_find_projects.add_argument('--created-before',
+                                  help='Date (e.g. 2012-01-01) or integer timestamp after which the project was ' +
+                                  'created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
 parser_find_projects.set_defaults(func=find_projects)
-register_subparser(parser_find_projects, subparsers_action=subparsers_find, categories='data')
+register_parser(parser_find_projects, subparsers_action=subparsers_find, categories='data')
+
+parser_find_org = subparsers_find.add_parser(
+    "org",
+    help=fill("List entities within a specific org.") + "\n\n\t" +
+         fill('"dx find org members" lists members in the specified org') + "\n\n\t" +
+         fill('"dx find org projects" lists projects billed to the specified org') + "\n\n\t" +
+         fill('"dx find org apps" lists apps billed to the specified org') + "\n\n" +
+         fill('Please execute "dx find org -h" for more information.'),
+    description=fill("List entities within a specific org."),
+    prog="dx find org",
+)
+register_parser(parser_find_org, subparsers_action=subparsers_find)
+
+subparsers_find_org = parser_find_org.add_subparsers(parser_class=DXArgumentParser)
+subparsers_find_org.metavar = "entities"
+
+parser_find_org_members = subparsers_find_org.add_parser(
+    'members',
+    help='List members in the specified org',
+    description=fill('Finds members in the specified org subject to the given search parameters'),
+    parents=[stdout_args, json_arg, delim_arg, env_args],
+    prog='dx find org members'
+)
+parser_find_org_members.add_argument('org_id', help='Org ID')
+parser_find_org_members.add_argument('--level', choices=["ADMIN", "MEMBER"], help='Restrict the result set to contain only members at the specified membership level.')
+parser_find_org_members.set_defaults(func=org_find_members)
+register_parser(parser_find_org_members, subparsers_action=subparsers_find_org, categories='org')
+
+parser_find_org_projects = subparsers_find_org.add_parser(
+    'projects',
+    help='List projects billed to the specified org',
+    description=fill('Finds projects billed to the specified org subject to the given search parameters. You must '
+                     'be an ADMIN of the specified org to use this command. It allows you to identify projects billed '
+                     'to the org that have not been shared with you explicitly.'),
+    parents=[stdout_args, json_arg, delim_arg, env_args, find_by_properties_and_tags_args, contains_phi],
+    prog='dx find org projects'
+)
+parser_find_org_projects.add_argument('org_id', help='Org ID')
+parser_find_org_projects.add_argument('--name', help='Name of the projects')
+parser_find_org_projects.add_argument('--ids', nargs='+', help='Possible project IDs. May be specified like "--ids project-1 project-2"')
+find_org_projects_public = parser_find_org_projects.add_mutually_exclusive_group()
+find_org_projects_public.add_argument('--public-only', dest='public', help='Include only public projects', action='store_true', default=None)
+find_org_projects_public.add_argument('--private-only', dest='public', help='Include only private projects', action='store_false', default=None)
+parser_find_org_projects.add_argument('--created-after', help='Date (e.g. 2012-01-31) or integer timestamp after which the project was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y). Integer timestamps will be parsed as milliseconds since epoch.')
+parser_find_org_projects.add_argument('--created-before', help='Date (e.g. 2012-01-31) or integer timestamp before which the project was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y). Integer timestamps will be parsed as milliseconds since epoch.')
+parser_find_org_projects.set_defaults(func=org_find_projects)
+register_parser(parser_find_org_projects, subparsers_action=subparsers_find_org, categories=('data', 'org'))
+
+parser_find_org_apps = subparsers_find_org.add_parser(
+    'apps',
+    help='List apps billed to the specified org',
+    description=fill('Finds apps billed to the specified org subject to the given search parameters. You must '
+                     'be an ADMIN of the specified org to use this command. It allows you to identify apps billed '
+                     'to the org that have not been shared with you explicitly.'),
+    parents=[stdout_args, json_arg, delim_arg, env_args],
+    prog='dx find org apps'
+)
+parser_find_org_apps.add_argument('org_id', help='Org ID')
+parser_find_org_apps.add_argument('--name', help='Name of the apps')
+parser_find_org_apps.add_argument('--category', help='Category of the app').completer = ListCompleter(APP_CATEGORIES)
+parser_find_org_apps.add_argument('--category-help',
+                                  help='Print a list of common app categories',
+                                  nargs=0,
+                                  action=PrintCategoryHelp)
+
+parser_find_org_apps.add_argument('-a', '--all', help='Return all versions of each app', action='store_true')
+parser_find_org_apps.add_argument('--unpublished', help='Return only unpublished apps (if omitted, returns all apps)', action='store_true')
+parser_find_org_apps.add_argument('--installed', help='Return only installed apps', action='store_true')
+parser_find_org_apps.add_argument('--creator', help='Creator of the app version')
+parser_find_org_apps.add_argument('--developer', help='Developer of the app')
+parser_find_org_apps.add_argument('--created-after', help='Date (e.g. 2012-01-31) or integer timestamp after which the project was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y). Integer timestamps will be parsed as milliseconds since epoch.')
+parser_find_org_apps.add_argument('--created-before', help='Date (e.g. 2012-01-31) or integer timestamp before which the project was created (negative number means ms in the past, or use suffix s, m, h, d, w, M, y). Integer timestamps will be parsed as milliseconds since epoch.')
+parser_find_org_apps.add_argument('--mod-after', help='Date (e.g. 2012-01-01) or integer timestamp after which the app was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
+parser_find_org_apps.add_argument('--mod-before', help='Date (e.g. 2012-01-01) or integer timestamp before which the app was last modified (negative number means ms in the past, or use suffix s, m, h, d, w, M, y)')
+parser_find_org_apps.set_defaults(func=org_find_apps)
+register_parser(parser_find_org_apps, subparsers_action=subparsers_find_org, categories=('exec', 'org'))
+
+parser_find_orgs = subparsers_find.add_parser(
+    "orgs",
+    help=fill("List orgs"),
+    description="Finds orgs subject to the given search parameters.",
+    parents=[stdout_args, env_args, delim_arg, json_arg],
+    prog="dx find orgs"
+)
+parser_find_orgs.add_argument("--level", choices=["ADMIN", "MEMBER"], required=True, help="Restrict the result set to contain only orgs in which the requesting user has at least the specified membership level")
+parser_find_orgs_with_billable_activities = parser_find_orgs.add_mutually_exclusive_group()
+parser_find_orgs_with_billable_activities.add_argument("--with-billable-activities", action="store_true", help="Restrict the result set to contain only orgs in which the requesting user can perform billable activities; mutually exclusive with --without-billable-activities")
+parser_find_orgs_with_billable_activities.add_argument("--without-billable-activities", dest="with_billable_activities", action="store_false", help="Restrict the result set to contain only orgs in which the requesting user **cannot** perform billable activities; mutually exclusive with --with-billable-activities")
+parser_find_orgs.set_defaults(func=find_orgs, with_billable_activities=None)
+register_parser(parser_find_orgs, subparsers_action=subparsers_find, categories="org")
 
 parser_api = subparsers.add_parser('api', help='Call an API method',
                                    formatter_class=argparse.RawTextHelpFormatter,
@@ -4331,13 +4676,14 @@ parser_api.add_argument('input_json', nargs='?', default="{}", help='JSON input 
 parser_api.add_argument('--input', help=fill('Load JSON input from FILENAME ("-" to use stdin)', width_adjustment=-17))
 parser_api.set_defaults(func=api)
 # parser_api.completer = TODO
-register_subparser(parser_api)
+register_parser(parser_api)
 
 parser_upgrade = subparsers.add_parser('upgrade', help='Upgrade dx-toolkit (the DNAnexus SDK and this program)',
-                                       description='Upgrades dx-toolkit (the DNAnexus SDK and this program) to the latest recommended version, or to a specified version and platform.')
+                                       description='Upgrades dx-toolkit (the DNAnexus SDK and this program) to the latest recommended version, or to a specified version and platform.',
+                                       prog='dx upgrade')
 parser_upgrade.add_argument('args', nargs='*')
 parser_upgrade.set_defaults(func=upgrade)
-register_subparser(parser_upgrade)
+register_parser(parser_upgrade)
 
 category_list = '\n  '.join([category + parser_categories[category]['desc'] for category in parser_categories_sorted])
 parser_help = subparsers.add_parser('help', help='Display help messages and dx commands by category',
@@ -4364,12 +4710,14 @@ for category in parser_categories:
     parser_categories[category]['cmds'].append(('help', subparsers._choices_actions[-1].help))
 parser_categories['all']['cmds'].sort()
 
+
 def main():
     # Bash argument completer hook
     if '_ARGCOMPLETE' in os.environ:
-        import argcomplete
+        from ..packages import argcomplete
         argcomplete.autocomplete(parser,
                                  always_complete_options=False,
+                                 exclude=['gtable', 'export'],
                                  output_stream=sys.stdout if '_DX_ARC_DEBUG' in os.environ else None)
 
     if len(args_list) > 0:
@@ -4382,12 +4730,8 @@ def main():
             args.func(args)
             # Flush buffered data in stdout before interpreter shutdown to ignore broken pipes
             sys.stdout.flush()
-        except IOError as e:
-            if e.errno == errno.EPIPE:
-                if dxpy._DEBUG:
-                    print("Broken pipe", file=sys.stderr)
-            else:
-                raise
+        except:
+            err_exit()
     else:
         parser.print_help()
         sys.exit(1)

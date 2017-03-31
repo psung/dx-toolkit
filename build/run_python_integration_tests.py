@@ -2,33 +2,52 @@
 
 '''
 Runs Python integration tests and merges the resulting test coverage files.
+
+If no arguments are given, all tests in src/python/test/ are run.
+
+To run a single test method, e.g. test_basic in class TestDXBashHelpers,
+in file src/python/test/test_dx_bash_helpers.py:
+
+    $ build/run_python_integration_tests.py --tests test_dx_bash_helpers.TestDXBashHelpers.test_basic
+
+To run an entire test class:
+
+    $ build/run_python_integration_tests.py --tests test_dx_bash_helpers.TestDXBashHelpers
+
+To run all tests in a file:
+
+    $ build/run_python_integration_tests.py --tests test_dx_bash_helpers
 '''
 
 from __future__ import print_function, unicode_literals
 
 import argparse
 import os
+import platform
 import subprocess
+import sys
 
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(usage=__doc__)
 parser.add_argument(
     '--tests',
     help='Specify a specific test to run.',
-    metavar='test.test_module.TestCase.test_method',
+    metavar='test_module.TestCase.test_method',
     nargs='*'
 )
 
 TOOLKIT_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 PYTHON_DIR = os.path.join(TOOLKIT_ROOT_DIR, 'src', 'python')
-
+PYTHON_TEST_DIR = os.path.join(PYTHON_DIR, 'test')
 os.environ['DNANEXUS_INSTALL_PYTHON_TEST_DEPS'] = 'yes'
 
-env = os.environ.copy()
-env['COVERAGE_PROCESS_START'] = os.path.join(PYTHON_DIR, '.coveragerc')
-env['COVERAGE_FILE'] = os.path.join(PYTHON_DIR, '.coverage')
-
 def run():
-    subprocess.check_call(["make", "python"], cwd=TOOLKIT_ROOT_DIR)
+    # src_libs is to ensure that dx-unpack is runnable. If we had "bash unit
+    # tests" that were broken out separately, that would obviate this though.
+    #
+    # Note that Macs must run the make command before running this script,
+    # as of b9d8487 (when virtualenv was added to the Mac dx-toolkit release).
+    if sys.platform != "darwin":
+        subprocess.check_call(["make", "python", "src_libs"], cwd=TOOLKIT_ROOT_DIR)
 
     # Somewhat hacky-- ensures that all subprocess calls to dx-* tools
     # load the coverage instrumentation so that their use of dxpy is
@@ -42,10 +61,37 @@ def run():
         if args.tests:
             cmd += ['-v'] + args.tests
         else:
-            cmd += ['discover', '--start-directory', 'test', '--verbose']
+            cmd += ['discover', '--start-directory', '.', '--verbose']
 
-        subprocess.check_call(cmd, cwd=PYTHON_DIR)
-        subprocess.check_call(["coverage", "combine"], cwd=PYTHON_DIR)
+        if platform.system() == 'Windows':
+            # Grab existing env vars with nt.environ, so that the SystemRoot var
+            # isn't uppercased - because that can cause _urandom() errors. See:
+            #   http://bugs.python.org/issue1384175#msg248951
+            import nt
+            subproc_env = dict(nt.environ)
+        else:
+            subproc_env = dict(os.environ)
+
+        # Setting COVERAGE_PROCESS_START is required to collect coverage for
+        # subprocess calls to dx.py and friends. Also, wrap values in str()
+        # to avoid "environment can only contain strings" error on Windows:
+        subproc_env[str('COVERAGE_PROCESS_START')] = str(os.path.join(PYTHON_DIR, '.coveragerc'))
+        subproc_env[str('COVERAGE_FILE')] = str(os.path.join(PYTHON_DIR, '.coverage'))
+
+        try:
+            subprocess.check_call(cmd, cwd=PYTHON_TEST_DIR, env=subproc_env)
+        except subprocess.CalledProcessError as e:
+            print('*** unittest invocation failed with code %d' % (e.returncode,), file=sys.stderr)
+            sys.exit(1)
+
+        try:
+            subprocess.check_call(["coverage", "combine"], cwd=PYTHON_DIR)
+        except subprocess.CalledProcessError as e:
+            print('*** coverage invocation failed with code %d' % (e.returncode,), file=sys.stderr)
+            sys.exit(1)
+        except OSError:
+            print("*** coverage invocation failed: no coverage file found; please install coverage v3.7.1",
+                  file=sys.stderr)
     finally:
         os.unlink(site_customize_filename)
 

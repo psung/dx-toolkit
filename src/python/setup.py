@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -42,10 +42,11 @@ dependencies = [line.rstrip() for line in open(os.path.join(os.path.dirname(__fi
 test_dependencies = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements_test.txt"))]
 dxfs_dependencies = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements_dxfs.txt"))]
 readline_dependencies = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements_readline.txt"))]
+backports_dependencies = [line.rstrip() for line in open(os.path.join(os.path.dirname(__file__), "requirements_backports.txt"))]
 
 # If on Windows, also depend on colorama, which translates ANSI terminal color control sequences into whatever cmd.exe uses.
 if platform.system() == 'Windows':
-    dependencies = [d for d in dependencies if not (d.startswith('distribute') or d.startswith('psutil'))]
+    dependencies = [d for d in dependencies if not (d.startswith('distribute'))]
     dependencies.append("colorama==0.2.4")
 
 # If this is an OS X system where GNU readline is imitated by libedit, add the readline module from pypi to dependencies.
@@ -59,9 +60,14 @@ if platform.system() == 'Darwin':
     except ImportError:
         dependencies.extend(readline_dependencies)
 
-# dxfs is not compatible with Windows, and is currently disabled on Python 3
-if platform.system() != 'Windows' and sys.version_info[0] < 3:
-    dependencies.extend(dxfs_dependencies)
+if sys.version_info[0] < 3:
+    dependencies.extend(backports_dependencies)
+    # dxfs is not compatible with Windows, and is currently disabled on Python 3
+    if platform.system() != 'Windows':
+        dependencies.extend(dxfs_dependencies)
+
+if 'DNANEXUS_INSTALL_PYTHON_TEST_DEPS' in os.environ:
+    dependencies.extend(test_dependencies)
 
 template_files = []
 
@@ -79,8 +85,7 @@ setup(
     zip_safe=False,
     license='Apache Software License',
     packages = find_packages(exclude=['test']),
-    package_data={'dxpy.packages.requests': ['*.pem'],
-                  'dxpy.templating': template_files},
+    package_data={'dxpy.templating': template_files},
     scripts = glob.glob(os.path.join(os.path.dirname(__file__), 'scripts', 'dx*')),
     entry_points = {
         "console_scripts": scripts,

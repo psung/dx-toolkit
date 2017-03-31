@@ -187,11 +187,11 @@ namespace dx {
   JSON containerNewFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON containerNewFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
 
-  JSON containerRemoveFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
-  JSON containerRemoveFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+  JSON containerRemoveFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=false);
+  JSON containerRemoveFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=false);
 
-  JSON containerRemoveObjects(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
-  JSON containerRemoveObjects(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+  JSON containerRemoveObjects(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=false);
+  JSON containerRemoveObjects(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=false);
 
   JSON containerRenameFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=false);
   JSON containerRenameFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=false);
@@ -316,6 +316,33 @@ namespace dx {
   JSON notificationsMarkRead(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON notificationsMarkRead(const dx::JSON &input_params, const bool safe_to_retry=true);
 
+  JSON orgDescribe(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgDescribe(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgFindMembers(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgFindMembers(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgFindProjects(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgFindProjects(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgFindApps(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgFindApps(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgInvite(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgInvite(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgRemoveMember(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgRemoveMember(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgSetMemberAccess(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgSetMemberAccess(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgUpdate(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON orgUpdate(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON orgNew(const std::string &input_params="{}", const bool safe_to_retry=false);
+  JSON orgNew(const dx::JSON &input_params, const bool safe_to_retry=false);
+
   JSON projectAddTags(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON projectAddTags(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
 
@@ -346,11 +373,11 @@ namespace dx {
   JSON projectNewFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON projectNewFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
 
-  JSON projectRemoveFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
-  JSON projectRemoveFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+  JSON projectRemoveFolder(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=false);
+  JSON projectRemoveFolder(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=false);
 
-  JSON projectRemoveObjects(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
-  JSON projectRemoveObjects(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+  JSON projectRemoveObjects(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=false);
+  JSON projectRemoveObjects(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=false);
 
   JSON projectRemoveTags(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON projectRemoveTags(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
@@ -366,6 +393,9 @@ namespace dx {
 
   JSON projectUpdate(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON projectUpdate(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON projectUpdateSponsorship(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON projectUpdateSponsorship(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);
 
   JSON projectNew(const std::string &input_params="{}", const bool safe_to_retry=false);
   JSON projectNew(const dx::JSON &input_params, const bool safe_to_retry=false);
@@ -409,6 +439,15 @@ namespace dx {
   JSON recordNew(const std::string &input_params="{}", const bool safe_to_retry=false);
   JSON recordNew(const dx::JSON &input_params, const bool safe_to_retry=false);
 
+  JSON systemDescribeDataObjects(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemDescribeDataObjects(const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON systemDescribeExecutions(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemDescribeExecutions(const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON systemDescribeProjects(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemDescribeProjects(const dx::JSON &input_params, const bool safe_to_retry=true);
+
   JSON systemFindAffiliates(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemFindAffiliates(const dx::JSON &input_params, const bool safe_to_retry=true);
 
@@ -417,6 +456,9 @@ namespace dx {
 
   JSON systemFindDataObjects(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemFindDataObjects(const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON systemResolveDataObjects(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemResolveDataObjects(const dx::JSON &input_params, const bool safe_to_retry=true);
 
   JSON systemFindExecutions(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemFindExecutions(const dx::JSON &input_params, const bool safe_to_retry=true);
@@ -436,11 +478,23 @@ namespace dx {
   JSON systemFindProjectMembers(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemFindProjectMembers(const dx::JSON &input_params, const bool safe_to_retry=true);
 
+  JSON systemFindOrgs(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemFindOrgs(const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON systemGlobalSearch(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemGlobalSearch(const dx::JSON &input_params, const bool safe_to_retry=true);
+
   JSON systemGreet(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemGreet(const dx::JSON &input_params, const bool safe_to_retry=true);
 
+  JSON systemHeaders(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemHeaders(const dx::JSON &input_params, const bool safe_to_retry=true);
+
   JSON systemShortenURL(const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON systemShortenURL(const dx::JSON &input_params, const bool safe_to_retry=true);
+
+  JSON systemWhoami(const std::string &input_params="{}", const bool safe_to_retry=true);
+  JSON systemWhoami(const dx::JSON &input_params, const bool safe_to_retry=true);
 
   JSON userDescribe(const std::string &object_id, const std::string &input_params="{}", const bool safe_to_retry=true);
   JSON userDescribe(const std::string &object_id, const dx::JSON &input_params, const bool safe_to_retry=true);

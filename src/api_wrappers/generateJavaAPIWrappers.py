@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -99,8 +99,9 @@ class_method_template = '''
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T {method_name}(Object inputObject, Class<T> outputClass) {{
+        {input_code}
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest().request("{route}", mapper.valueToTree(inputObject), {retry_strategy}),
+                new DXHTTPRequest().request("{route}", input, {retry_strategy_with_nonce}),
                 outputClass);
     }}
     /**
@@ -120,8 +121,9 @@ class_method_template = '''
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T {method_name}(Object inputObject, Class<T> outputClass, DXEnvironment env) {{
+        {input_code}
         return DXJSON.safeTreeToValue(
-                new DXHTTPRequest(env).request("{route}", mapper.valueToTree(inputObject), {retry_strategy}),
+                new DXHTTPRequest(env).request("{route}", input, {retry_strategy_with_nonce}),
                 outputClass);
     }}
 
@@ -241,9 +243,10 @@ object_method_template = '''
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T {method_name}(String objectId, Object inputObject, Class<T> outputClass) {{
+        {input_code}
         return DXJSON.safeTreeToValue(
                 new DXHTTPRequest().request("/" + objectId + "/" + "{method_route}",
-                        mapper.valueToTree(inputObject), {retry_strategy}), outputClass);
+                        input, {retry_strategy_with_nonce}), outputClass);
     }}
     /**
      * Invokes the {method_name} method with an empty input using the given environment, deserializing to an object of the specified class.{wiki_link}
@@ -282,9 +285,10 @@ object_method_template = '''
      *             the response (includes HTTP protocol errors).
      */
     public static <T> T {method_name}(String objectId, Object inputObject, Class<T> outputClass, DXEnvironment env) {{
+        {input_code}
         return DXJSON.safeTreeToValue(
             new DXHTTPRequest(env).request("/" + objectId + "/" + "{method_route}",
-                    mapper.valueToTree(inputObject), {retry_strategy}), outputClass);
+                    input, {retry_strategy_with_nonce}), outputClass);
     }}
 
     /**
@@ -381,6 +385,16 @@ object_method_template = '''
 #'''
 app_object_method_template = object_method_template
 
+
+def make_input_code(accept_nonce):
+    if accept_nonce:
+        return "JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));"
+    return "JsonNode input = mapper.valueToTree(inputObject);"
+
+def make_retry_param(retryable):
+    return "RetryStrategy.SAFE_TO_RETRY" if retryable else "RetryStrategy.UNSAFE_TO_RETRY"
+
+
 print preamble
 
 for method in json.loads(sys.stdin.read()):
@@ -389,14 +403,56 @@ for method in json.loads(sys.stdin.read()):
     wiki_link = ''
     if opts.get('wikiLink', None):
         wiki_link = '\n     *\n     * <p>For more information about this method, see the <a href="%s">API specification</a>.' % (opts['wikiLink'],)
-    retry_param = "RetryStrategy.SAFE_TO_RETRY" if opts['retryable'] else "RetryStrategy.UNSAFE_TO_RETRY"
+    retryable = opts['retryable']
+    accept_nonce = opts.get('acceptNonce', False)
+
+    # retry_strategy_with_nonce and retry_strategy track whether retry
+    # is permitted for overloads that supply, or don't supply, a nonce,
+    # respectively. The older and deprecated overloads for each method
+    # don't provide the nonce, so shouldn't be marked as retryable for
+    # nonce'd routes, even if the newer overloads for the same routes
+    # are marked as retryable. Compare these two overloads of the same
+    # nonce'd route...
+    #
+    # // Supplies a nonce... is therefore retryable
+    #
+    # public static <T> T appRun(String objectId, Object inputObject, Class<T> outputClass) {
+    #     JsonNode input = Nonce.updateNonce(mapper.valueToTree(inputObject));
+    #     return DXJSON.safeTreeToValue(
+    #             new DXHTTPRequest().request("/" + objectId + "/" + "run",
+    #                     input, RetryStrategy.SAFE_TO_RETRY), outputClass);
+    # }
+    #
+    # // Doesn't supply a nonce... is therefore not retryable
+    #
+    # @Deprecated
+    # public static JsonNode appRun(String objectId, JsonNode inputParams) {
+    #     return new DXHTTPRequest().request("/" + objectId + "/" + "run", inputParams,
+    #             RetryStrategy.UNSAFE_TO_RETRY);
+    # }
+
     if (opts['objectMethod']):
         root, oid_route, method_route = route.split("/")
         if oid_route == 'app-xxxx':
-            print app_object_method_template.format(method_name=method_name, method_route=method_route, wiki_link=wiki_link, retry_strategy=retry_param)
+            print app_object_method_template.format(method_name=method_name,
+                                                    method_route=method_route,
+                                                    wiki_link=wiki_link,
+                                                    retry_strategy_with_nonce=make_retry_param(retryable or accept_nonce),
+                                                    retry_strategy=make_retry_param(retryable),
+                                                    input_code=make_input_code(accept_nonce))
         else:
-            print object_method_template.format(method_name=method_name, method_route=method_route, wiki_link=wiki_link, retry_strategy=retry_param)
+            print object_method_template.format(method_name=method_name,
+                                                method_route=method_route,
+                                                wiki_link=wiki_link,
+                                                retry_strategy_with_nonce=make_retry_param(retryable or accept_nonce),
+                                                retry_strategy=make_retry_param(retryable),
+                                                input_code=make_input_code(accept_nonce))
     else:
-        print class_method_template.format(method_name=method_name, route=route, wiki_link=wiki_link, retry_strategy=retry_param)
+        print class_method_template.format(method_name=method_name,
+                                           route=route,
+                                           wiki_link=wiki_link,
+                                           retry_strategy_with_nonce=make_retry_param(retryable or accept_nonce),
+                                           retry_strategy=make_retry_param(retryable),
+                                           input_code=make_input_code(accept_nonce))
 
 print postscript

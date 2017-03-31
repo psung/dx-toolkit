@@ -1,3 +1,1146 @@
+dx-toolkit (0.216.0) precise; urgency=low
+
+  * No significant changes.
+
+ -- Nicolas Bock <nbock@dnanexus.com>  Fri, 31 Mar 2017 01:57:33 +0000
+
+dx-toolkit (0.215.0) precise; urgency=low
+
+  * Added: dx-docker test suite to toolkit
+  * Added: Retry download of Docker image if there is transient network failure
+  * Added: Allow image ID as a parameter for dx-docker; see wiki documentation for more details
+
+ -- Geet Duggal <gduggal@dnanexus.com>  Thu, 23 Mar 2017 18:07:53 +0000
+
+dx-toolkit (0.214.0) precise; urgency=low
+
+  * Added: Alternative export for dx-docker when docker image is improperly exported by docker engine
+  * Fixed: Issue where calls to `dx run -i` in an interactive terminal does not display options for multiple files
+  * Fixed: `dx-docker create-asset` now supports output path
+  * Fixed: `dx-download` failure when run within project that user has lost access to
+  * Fixed: `dx build -f` now removes all applets with matching name/directory
+
+ -- Kurt Jensen <kjensen@dnanexus.com>  Thu, 16 Mar 2017 16:49:05 +0000
+
+dx-toolkit (0.213.0) precise; urgency=low
+
+  * Fixed: Recursive file upload on Windows for the Upload Agent
+  * Fixed: Show download progress for calls to `dx download -r`
+  * Fixed: Issue where calls to `dxpy.download_all_inputs(parallel=True)` hang
+
+ -- Kurt Jensen <kjensen@dnanexus.com>  Thu, 02 Mar 2017 18:35:14 +0000
+
+dx-toolkit (0.212.0) precise; urgency=low
+
+  * Fixed: Upload agent now does not gzip compress .gz files on Ubuntu 14.04
+  * Fixed: Minor log message fix if file is already uploaded
+  * Added: Mark routes as retryable for those that support idempotent calls (e.g. creating a new file)
+
+ -- Hamed Haddadian <HAMEDH@DNANEXUS.COM>  Thu, 23 Feb 2017 18:46:24 +0000
+
+dx-toolkit (0.211.0) precise; urgency=low
+
+  * No significant changes.
+
+ -- Hamed Haddadian <HAMEDH@DNANEXUS.COM>  Thu, 16 Feb 2017 19:46:23 +0000
+
+dx-toolkit (0.210.0) precise; urgency=low
+
+  * Fixed: Fix dx-get untar issue with leading /
+
+ -- Hamed Haddadian <hamedh@home.vdev.dnanexus.com>  Thu, 09 Feb 2017 21:29:00 +0000
+
+dx-toolkit (0.209.0) precise; urgency=low
+
+  * Added: Support to build of upload agent on RHEL7
+  * Added: Ability to build and get multi-region apps with custom system requirements
+  * Fixed: Environment file so that source environment works properly on RHEL7
+  * Fixed: Modified dx-docker so that --rm passes through gracefully
+
+ -- Kurt Jensen <kjensen@dnanexus.com>  Thu, 02 Feb 2017 19:56:24 +0000
+
+dx-toolkit (0.208.0) precise; urgency=low
+
+  * No significant changes
+
+ -- Nicolas Bock <nbock@dnanexus.com>  Thu, 26 Jan 2017 21:31:52 +0000
+
+dx-toolkit (0.207.0) precise; urgency=low
+
+  * Added: Workflow handler to the Java bindings
+  * Added: Checksum verification for file downloads in Java
+  * Fixed: Bug resulting in transient errors on large downloads
+  * Fixed: `dx-app-wizard` now correctly specifies `timeoutPolicy`
+  * Fixed: `dx-docker` now handles default working directory and override properly
+
+ -- Geet Duggal <gduggal@dnanexus.com>  Thu, 19 Jan 2017 21:58:48 +0000
+
+dx-toolkit (0.206.0) precise; urgency=low
+
+  * Fix Python 2-3 unicode bug for user agent strings
+  * Fix for dx failing to import psutil on windows introduced in 90902a1
+  * PTFM-18903 Raise exception if OpenSSL out of date
+  * Fixups for "dx describe JOBID"
+  * dx-docker: Handle workdir properly when overriding image metadata (#192)
+  * Improve SSL packaging on Mac OS
+  * Align "ls -l" output correctly for files
+  * Desupport perl, ruby bindings-- move them to /contrib
+  * PTFM-17112: 14.04 is default for 'dx-app-wizard' (#191)
+  * PTFM-17112 - Allow remote builds on 14.04 workers (#190)
+
+ -- Geet Duggal <gduggal@dnanexus.com>  Thu, 05 Jan 2017 21:16:06 +0000
+
+dx-toolkit (0.205.0) precise; urgency=low
+
+  * More detailed logging of URL for downloads
+  * PTFM-14074 truncated exponential backoff with randomness (dxpy)
+  * PTFM-18767 Limit number of threads in dx-download-all-inputs
+  * Don't show object count in describe output
+  * dxpy.describe can accept a sequence and do bulk describe
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 20 Dec 2016 06:19:33 +0000
+
+dx-toolkit (0.204.0) precise; urgency=low
+
+  * Fix failing tests from fb8c269
+  * "dx build --dry-run" does not clone app assets
+  * AZURE-82 SSH to worker support
+  * Fix "dx build" for applets; it was broken by fb8c269
+  * Allow "dx build" to exercise the dry run flows
+  * PTFM-18860 Update "dx build" and "dx get" to manipulate multi-region apps
+  * Remove test invocation of importer scripts too
+  * Followup to previous commit: remove "dx import"
+  * Remove some deprecated GTable tools
+  * STACK-197: Adding logging of dx-docker subcommands (#187)
+  * Clean up temporary projects after tests
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 01 Dec 2016 18:43:29 +0000
+
+dx-toolkit (0.203.0) precise; urgency=low
+
+  * PTFM-18692: Do not merge headers. In some cases a bug is introduced
+  * PTFM-18962 dxpy not supplying user agent since 384e8ef
+  * STACK-163: Minor dx-docker improvements with more informative error messages (#186)
+  * Allow disabling "watch" on remote builds
+  * Remove GTable example apps
+  * PTFM-18961 Remove installer dependency on pypi
+  * Comment out broken test for now
+  * First pass at removing some GTable tests
+  * STACK-171: 'dx-docker upload' => 'create-asset'
+  * STACK-165: Mac OS support for dx-docker
+  * PTFM-18850 Remove "resources" field from app optional fields in "dx get"
+  * AZURE-314 Support for uploading empty files in Azure
+  * PTFM-18920 Check response code for uploaded parts before returning
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 10 Nov 2016 17:12:53 +0000
+
+dx-toolkit (0.202.0) precise; urgency=low
+
+  * Revert PTFM-17432 Checksum verification for file downloads in Java
+  * PTFM-13920 Upload Agent: Read data from stdin.
+  * Fix dxpy app bindings: keyword arg is "return_handler", not "get_handler".
+  * PTFM-18776, PTFM-18858 dx-docker enhancements
+  * Add list of of apt packages needed for Ubuntu 16.04
+  * PTFM-15867 ua --test flag
+  * Fixed failing dxpy test, need a unique project name
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 20 Oct 2016 22:36:54 +0000
+
+dx-toolkit (0.201.0) precise; urgency=low
+
+  * PTFM-18459 Applet decompilation preserves 'assetDepends' in dxapp.json
+  * PTFM-17432 Checksum verification for file downloads in Java
+  * PTFM-18471 Use python's tarfile to extract applet's resources
+  * Export upload file buffer size to cli (#178)
+  * PTFM-18686 Java: added timestamp and request id to logs
+  * PTFM-18686 Added timestamps and req-id to api error logs in dxpy.
+  * PTFM-18747 "dx download" code path issues first req sequentially
+  * PTFM-18587 Use newest version of proot for rpath support in dx-docker
+  * PTFM-17975 Update C++ SDK to support nonces
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 22 Sep 2016 18:54:36 +0000
+
+dx-toolkit (0.200.0) precise; urgency=low
+
+  * PTFM-18587 Initial dx-docker script for dx-toolkit
+  * PTFM-18629 Enable boost locale hack during ua execution
+  * PTFM-18637 UA - Override file limit
+  * PTFM-18636 Fix for ua --recursive
+  * PTFM-18556 dx-toolkit-* prefix for .exe installer (#175)
+  * Remove the archive file from the system after unpack
+
+ -- Phil Sung <psung@dnanexus.com>  Sat, 03 Sep 2016 00:24:35 +0000
+
+dx-toolkit (0.199.0) precise; urgency=low
+
+  * PTFM-17974 Update Java SDK with support for idempotent object creation
+  * API wrappers for /system/describeExecutions
+  * PTFM-18370 Update dx-app-wizard prompts
+  * Update Prebuilt-Readme.md
+  * Don't run test_get_app_by_name on stg since it relies on app state
+  * PTFM-18143 dx find analyses errors out when it reaches a job which launched a workflow
+  * Fix file size labels to use binary prefixes
+  * PTFM-18583 Don't run test that would run a job
+  * bash helper test fix part 2
+  * PTFM-18583 Run 'dx build_asset' within an applet
+  * Remove ancient TEST_ONLY_MASTER annotations
+  * Fix dx-download-all-inputs tests
+  * Fix printing of ssh-proxy helpstring for terminal width <= 80
+  * Dedent indentation accidentally added in d6932641
+  * Make download_all_inputs available from within dxpy
+  * Add documentation for DXExecDependencyInstaller
+  * JobState enum matches the API specification
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 25 Aug 2016 20:40:10 +0000
+
+dx-toolkit (0.198.0) precise; urgency=low
+
+  * Improvements to formatting of _DX_DEBUG output
+  * dx-app-wizard code generation for array outputs
+  * Remove Python deprecated wrappers
+  * dx-toolkit Windows installer
+  * Skip dx build bash syn check on Windows
+  * dx ssh respects dx user conf dir env var
+  * Update DXExecDependencyInstaller init method
+  * Add a default timeout policy to dx-app-wizard
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 28 Jul 2016 17:23:53 +0000
+
+dx-toolkit (0.197.0) precise; urgency=low
+
+  * Fixed failing tests on staging
+  * Fixed nonce tests failing on staging
+  * PTFM-18164 Explicit cmd string encoding on Windows
+  * PTFM-18344 Download local bundled dependencies onto worker
+  * PTFM-17466 Python method download_folder
+  * Something isn't playing right with pypy3; disable it in Travis
+  * Remove repeated import
+  * Update Python SDK with support for nonces
+  * PTFM-13821 Clean up dx error handling
+  * PTFM-18402 Download chunk size too small
+  * Updating link to XCode
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 21 Jul 2016 19:21:12 +0000
+
+dx-toolkit (0.196.0) precise; urgency=low
+
+  * [PTFM-18415] Do not print "Upload throttling is disabled" message
+  * Smoke test fix for 0f1f63a
+  * Fix bug from ee205d1
+  * Filter out "bundledDependsByRegion" from run specification in "dx get"
+  * PTFM-7513, dx-build-app[let] should check validity of IDs that appear… (#158)
+  * PTFM-18414 Add wait() call to ensure dx has exited
+  * PTFM-15653 Allow client to explicitly decide when to request new page
+  * Handle ClosedPoolError during DXHTTPRequest
+  * PTFM-18420 Make subprocess string Windows-friendly
+  * PTFM-18414 Move to pexpect 4.2 for Windows testing
+  * PTFM-17914 Fix test_download_url_helper on Windows
+  * Don't complain about names not defined in Python 3
+  * Pin json gem dependency to prevent dependency on Ruby 2.0
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 14 Jul 2016 18:07:56 +0000
+
+dx-toolkit (0.195.0) precise; urgency=low
+
+  * Fixed Travis build
+  * Verify that 'less' works on Windows
+  * Remove legacy dx-toolkit-{beta,unstable} packages
+  * Check whether user has write permissions to destination directory when upgrading dx-toolkit
+  * fix failing test from d238d2e471ab55c0ea1138aca8c5245f51b52382
+  * PTFM-17351 Proxy support in dx ssh / dx run --ssh
+  * PTFM-17451 Use project context from DXFile object in get_download_url
+  * PTFM-16098 dx download floors percentage
+  * Removed gtable option from dx find data
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 07 Jul 2016 16:49:24 +0000
+
+dx-toolkit (0.194.0) precise; urgency=low
+
+  * PTFM-17632 dx update project returns valid JSON
+  * PTFM-5291 Recursive directory uploads in ua
+  * Adding F405 to flake8 ignored list
+  * Fixed E211 whitespace before '('
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 23 Jun 2016 22:57:07 +0000
+
+dx-toolkit (0.193.0) precise; urgency=low
+
+  * Fixed chmod issue on win dx-appwizard
+  * PTFM-17276 Improve dx build help message when app name is taken
+  * PTFM-5485 Don't allow "description" field to shadow Readme.md
+  * PTFM-18239 Reappearance of dx download AttributeError:'NoneType' object has no attribute 'read'
+  * PTFM-18184 "dx find org -h" shows find org apps command but "dx find -h" doesn't
+  * PTFM-17957 Allow users to "dx uninstall" apps by ID to which they no longer have access
+  * PTFM-14108 Fixed race condition in the UA logging
+  * PTFM 18220 Implement Python binding for project new call
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 16 Jun 2016 18:23:28 +0000
+
+dx-toolkit (0.192.0) precise; urgency=low
+
+  * Updated to skip for both TEST_ONLY_MASTER and TEST_RUN_JOBS. Commit# e69257
+  * Updated test to skip unless TEST_ONLY_MASTER #ae66239
+  * PTFM-17831 Move dx-app-wizard src to dxpy/scripts
+  * Fix for 'dxpy-master-integration-tests-on-staging' failure, with respect to commit 99b1f80
+  * Fix related to commit e4c7380, skipping test that would run jobs
+  * dx-toolkit "Python tests" now test dx-unpack too
+  * Updated the 'dx-unpack' script to honor embeded quotes and special characters in its arguments
+  * Fix for Nucleus_Integration_Tests#7224 related to commit 1ab04e8
+  * Added 'instanceType' field to the 'dxasset.json'
+  * PTFM-17774 Document retry policy for apiserver and S3 errors
+  * Fix version in deprecated method from d5d19db
+  * Small fix for a test in dx uninstall
+  * Allow users to "dx uninstall" apps by ID to which they no longer have access (#146)
+  * Follow up 50196b6 use machine readable deprecation
+  * Replace set_http_threadpool_size from 09e70d1 with deprecated method
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 02 Jun 2016 16:53:59 +0000
+
+dx-toolkit (0.191.0) precise; urgency=low
+
+  * dx build_asset
+
+  * Java: FindDataObjects didn't observe pagination parameters
+
+  * Remove C++ from dx-app-wizard
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 19 May 2016 21:45:37 +0000
+
+dx-toolkit (0.190.0) precise; urgency=low
+
+  * Added ability to dereference symlinks; fix problematic umask
+  * get_download_url issue: Reverting 439dc3f 3425184 59401a8
+  * Propagate custom kwargs through to describe call for fileUploadParams
+  * Do not delete argcomplete executables from 32a19e5
+  * Fixed a comment on the test_dx_make_download_url_project_affinity test
+  * Fix argcomplete failures due to 67896ca
+  * int/long boundary is system-dependent
+  * All environment variables should be string only and case sensitive
+  * PTFM-13142 Various improvements to "dx get"
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 05 May 2016 20:07:40 +0000
+
+dx-toolkit (0.189.0) precise; urgency=low
+
+  * Fix dx_app_wizard test
+  * Updated dxapp.json created by dx-app-wizard
+  * dx get take an app name
+  * Fix OS X 'make python' issue introduced by 37407a5
+  * PTFM-17955 Windows support in Python test wrapper
+  * PTFM-17722 Windows support for 'make python'
+  * Fixed the help string for the visibility option
+  * PTFM-17513 dx environment setup script for Windows
+  * PTFM-17812 Windows 'make toolkit_version' support
+  * Retry HTTP 400 errors during file upload
+  * Updating download help message
+  * PTFM-17813 Build dx-verify-file and dxcpp w/ MinGW
+  * Recovery from partial reads by reducing buffer size
+  * Comment out flaky test
+  * Fix OOM condition on partial reads
+  * Better debug printing: print URL even if it's generated by a callable
+  * Write random data so as to catch errors in assembly of file
+  * Fixing use of StringIO, and dealing with a case where a response is empty of data
+  * Actually fix Python 3 incompatibility in 67896ca
+  * AZURE-57 dxpy respects per-region part sizes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 28 Apr 2016 18:34:41 +0000
+
+dx-toolkit (0.188.0) precise; urgency=low
+
+  * Better recovery from partial reads
+
+  * Use project context in get_download_url
+
+  * Add retry logic to Java uploads and downloads
+
+ -- Phil Sung <psung@dnanexus.com>  Fri, 15 Apr 2016 19:55:04 +0000
+
+dx-toolkit (0.187.0) precise; urgency=low
+
+  * dxfile.read: handling incomplete read error
+  * Renaming error injection function to be more informative
+  * Handling Idle connection timeouts from S3
+  * UA: fixing the mac build
+  * PTFM-16676 Allow upload agent to set file metadata
+  * Fixing a naming error for an exception
+  * '.sh' suffix has been added to the dx environment autoload file
+  * adjust tests with TEST_ONLY_MASTER flag
+  * fixing archivalState description error
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 07 Apr 2016 17:05:44 +0000
+
+dx-toolkit (0.186.0) precise; urgency=low
+
+  * Rename downloadStream to getDownloadStream
+  * Adding multi-threading documentation
+  * Retry slow requests closed by s3
+  * Merge pull request #134 from dnanexus/adas-assetbundle-name-fix
+  * runSpec.assetDepends translation to bundledDepends is updated to include archive file name
+  * Updated bundled depends name with the archive file name rather than record name
+  * PTFM-17250-generalize-dx-get-app
+  * Handle IncompleteReads error
+  * For test
+  * PTFM-17297 Restoring the gnureadline package
+  * Support for proxy configuration
+  * Clarifying help string for "dx terminate"
+  * UA: Fixing the mac build
+  * Upload Agent: another attempt to fix failing test
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 31 Mar 2016 21:49:09 +0000
+
+dx-toolkit (0.185.0) precise; urgency=low
+
+  * Upload Agent: Added a mutex to prevent simultaneous mem checks
+  * PTFM-17511 Java bindings for single-threaded streaming uploads
+  * Making the ProtocolError exception retryable
+  * PTFM-17684 Print entirety of error response so we can see S3 errors
+  * PTFM-16700 + PTFM-16705 Upload Agent memory management
+  * Another Python 3 fixup for preivous commit
+  * Python 3 fixup for preivous commit
+  * Add a sanity check on headers: ensure they're all strings
+  * PTFM-17512 Java bindings for single-threaded streaming downloads
+  * Fixed broken test - find phi projects
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 24 Mar 2016 20:03:59 +0000
+
+dx-toolkit (0.184.0) precise; urgency=low
+
+  * PTFM-17496 Add dx toolkit option to filter PHI projects
+  * Updated helpstring for dx invite/uninvite
+  * Ouput more information when a request is retried
+  * Update copyright year
+  * dx-upload-all-outputs: flush log messages before starting upload
+  * dx-download-all-inputs: flush log message before starting download
+  * Followup to 36feeae: create app only conditionally
+  * Re-adding --omit-resources flag
+  * PTFM-17308 Hide GTable high-level classes from bindings documentation
+  * PTFM-16572 Adding request ID to verbose debug output
+  * output HTTP error for spot scale
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 17 Mar 2016 20:06:24 +0000
+
+dx-toolkit (0.183.0) precise; urgency=low
+
+  * SCI-424 "assetDepends" metadata to the dxapp.json
+  * Remove Ubuntu 10.04 instructions from Prebuilt readme too
+  * Use timestamp instead of time.strptime
+  * Fix broken link in dxcpp bindings comments
+  * Improve dxclient tests to use a second user account
+  * update Readme
+  * Document DX_RUN_NEXT_TESTS env var
+  * Skip dxpy tests that fail would fail on stg
+  * Refactoring 'dx download'
+  * PTFM-17353 Add options to dx-jobutil-new-job
+  * PTFM-17201 Remove default download duration
+  * Java: DXFile.downloadStream returns InputStream, not OutputStream
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 02 Mar 2016 19:54:53 +0000
+
+dx-toolkit (0.182.0) precise; urgency=low
+
+  * Add more informative error message for `dx add member`
+  * Remove Ubuntu 10.04 support
+  * Adding the microseconds to the temporary directory used by dx-run-app-locally. This helps avoids race conditions
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 25 Feb 2016 00:16:26 +0000
+
+dx-toolkit (0.181.0) precise; urgency=low
+
+ * Unadvertised GTable features and updated helpstrings
+
+ * Allow disabling Retry Logic for all 5xx errors
+
+ * Generate source jar during the verify phase for easy publishing
+
+ * Thread safety improvements for dx
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 18 Feb 2016 19:30:03 +0000
+
+dx-toolkit (0.180.0) precise; urgency=low
+
+  * Removing a whitespace character causing flake8 to fail
+  * Fixing data egress test
+  * PTFM-16222 CLI support for updating project info
+  * Dead code removal, and multi-threading documentation
+  * Fix print_progress bug
+  * Making dxpy thread safe
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 11 Feb 2016 21:19:34 +0000
+
+dx-toolkit (0.179.0) precise; urgency=low
+
+  * Add a TODO to remove backwards compatibility code
+  * PTFM-15347 Native java bindings for uploading and downloading small files
+  * Travis: Enable basic tests with mock API server
+  * Travis: enable email and flowdock notifications
+  * Re-enable Travis CI in offline mode with flake8
+  * Fix fcea1ff
+  * Ensure dxpy version looks like v0.0.0 or v0.0.0+x
+  * Error about getting non-openSource apps should end in a newline
+  * dxpy: Eliminate possibility of header sharing among requests
+  * Fix test_get_applet error
+  * Remove all virtualenvs after build
+  * Move Readme content for language bindings to individual subdirectories
+  * PTFM-17064 make 'dx get' work with open source apps
+  * Java project configuration fixes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 04 Feb 2016 22:59:37 +0000
+
+dx-toolkit (0.178.0) precise; urgency=low
+
+  * Install dxpy via wheel to avoid using pkg_resources (fixup for 87d6040)
+  * PTFM-17116 Add `help` of `dx find org *` in `dx find -h`
+  * PTFM-17118 Add new category for org-related commands
+  * PTFM-17115 Create new subparser to encapsulate org CLI commands
+  * Refactor parser registration
+  * PTFM-17228 Download curl source from github
+  * Fix hardcoded installation path in test suite (fixup for 87d6040)
+  * flake8 lint fixes
+  * Only monkey-patch easy_install wrapper scripts (fixup for 87d6040)
+  * Declare encoding in source file (fixup for 87d6040)
+  * Don't crash if old build products are absent (fixup for 87d6040)
+  * Bump futures dependency from v3.0.3 to v3.0.4
+  * Install test deps from setup.py (fixup for 87d6040)
+  * PyPy compatibility fixup for 87d6040
+  * Don't install futures backport on Python 3
+  * Fix Python 3 regression introduced in fb3a8d6
+  * PTFM-17184 refactor make python
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 27 Jan 2016 22:53:14 +0000
+
+dx-toolkit (0.177.0) precise; urgency=low
+
+  * make python: don't instruct pip on how to use wheels
+  * dxpy: clean up and normalize exception descriptions
+  * Cleanup of exception handling for http errors
+  * Add missing subcommands to `dx sh` completer class
+  * Allow insecure download of Python on CentOS
+  * Fix changelog
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 21 Jan 2016 20:20:22 +0000
+
+dx-toolkit (0.176.0) precise; urgency=low
+
+  * PTFM-17107 Modify I/Os of "dx {add,remove,update} member"
+  * Fake errors generation and testing
+  * PTFM-17058 Be paranoid about closure variable scope
+  * dxpy: remove unneeded PyPI directive; indicate universal wheel
+  * Bump beautifulsoup4 dependency from v4.3.2 to v4.4.1
+  * Remove heading for empty section
+  * PTFM-17092 Demoting org member does not require membership permission flags
+  * Don't make any apps default to 14.04 yet
+  * Update test for a8d1911
+  * PTFM-16817 dx-app-wizard instance type selector
+  * PTFM-16894 Increment libcurl version to 7.45.0
+  * Update Readme.md
+  * Add omit-resources feature
+  * Fix tests for 571ce5c
+  * dxpy: Memoize CA certs location
+  * PTFM-16917 dxpy: Fix handling of SSL certificate options
+  * PTFM-16667 Remove /org-xxxx/getMemberAccess invocations from client
+  * Fix `dx new user` printing
+  * Update __future__ imports in Python API wrappers generator
+  * Use integer division in describe.py (fixup for 84f2346)
+  * PTFM-16905 dx update member optional level argument
+  * Increase entropy of random org handle generator used in unit tests
+  * Fix bug in `dx new user` with uppercase username args
+  * Fix copyright date in Sphinx docs
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 14 Jan 2016 23:58:53 +0000
+
+dx-toolkit (0.175.0) precise; urgency=low
+
+  * Bug fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 16 Dec 2015 21:21:26 +0000
+
+dx-toolkit (0.174.0) precise; urgency=low
+
+  * Temporarily disable failing test after server-side changes
+  * Fix DXHTTPRequest error handling and add regression test
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 09 Dec 2015 23:26:55 +0000
+
+dx-toolkit (0.173.0) precise; urgency=low
+
+  * Fixes for dxpy concurrency and for data egress
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 02 Dec 2015 18:29:29 +0000
+
+dx-toolkit (0.172.0) precise; urgency=low
+
+  * Org administration commands
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 25 Nov 2015 18:55:19 +0000
+
+dx-toolkit (0.171.0) precise; urgency=low
+
+  * PTFM-16643 "dx build --app" takes a --region arg
+  * PTFM-15570 dxpy supplies "project" to file download API calls
+  * Code review fix for 26ffeb2
+  * Change setUp in test from 26ffeb2
+  * PTFM-16144 Find org members DX command
+  * I/O params gracefully handle unknown fields during deserialization
+  * PTFM-16656 Use flock to make dx-jobutil-add-output concurrency safe
+  * Add code review fix for 18c26a3
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 18 Nov 2015 19:35:34 +0000
+
+dx-toolkit (0.170.0) precise; urgency=low
+
+  * Force noninteractive frontend in apt-get
+
+ -- Phil Sung <psung@dnanexus.com>  Fri, 13 Nov 2015 01:24:32 +0000
+
+dx-toolkit (0.169.0) precise; urgency=low
+
+  * Consistent help strings for all "dx find" commands
+  * PTFM-16470 Add test for `dx find org_projects`
+  * Add API wrappers for orgFindMembers
+  * PTFM-16213 Find all projects billed to an org
+  * dxpy: Add test for case-insensitive response header lookup
+  * Project describe pretty-prints all the default fields
+  * Add API bindings to /system/describe{DataObjects,Projects}
+  * Document the reason for the DXTEST_ENV flag
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 04 Nov 2015 18:32:39 +0000
+
+dx-toolkit (0.168.0) precise; urgency=low
+
+  * Code review fix for bb04657e1f
+  * Fix typos and misleading test
+  * Update docstring and error message from bb04657.
+  * TestDXFileFunctions doesn't generate temporary projs
+  * Document current behavior related to projects for file downloads
+  * PTFM-16403 --created integer time stamp bug
+  * PTFM-16498 Rename createProjectsAndApps to allowBillableActivities
+  * Propagate DXContainer's env into all folder operations
+  * Fail faster when user supplies path without project context
+  * _DX_DEBUG modes: don't barf when input or output data is not UTF-8
+  * New option for projects: dx new project --region
+  * Throw HTTPError if error type cannot be extracted from DXAPIError.
+  * Add/reorganize unit and integration tests for path resolution
+  * PTFM-16295 Support confirmation flow in `dx remove member`.
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 28 Oct 2015 22:17:05 +0000
+
+dx-toolkit (0.167.0) precise; urgency=low
+
+  * Close connection to prevent running out of file handles in Java code
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 22 Oct 2015 22:04:46 +0000
+
+dx-toolkit (0.166.0) precise; urgency=low
+
+  * PTFM-16383 disable flaky test until it can be fixed
+  * Disable test that depends on PTFM-16342
+  * Rename tests from fe761bd
+  * Simplify rate-limited concurrent executor; use it in dx download
+  * Add code review fix for 2f38a94
+  * PTFM-16219 Allow alternative billTo selection upon project creation
+  * Remove "default" from docstring (code review fix for fe761bd)
+  * dx download: warn when unable to checksum part with missing MD5
+  * PTFM-16218 Add `dx find orgs`
+  * dxpy.download_dxfile: handle files with no part md5 metadata
+  * PTFM-15334 Add --no-email tag to dx invite {user} {project}
+  * dxpy.download_dxfile(): avoid memory leak in chunk iterator
+  * dxpy.DXFile: fix request config logic error in read()
+  * dxpy.download_dxfile: restore positional args compatibility
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 15 Oct 2015 00:01:02 +0000
+
+dx-toolkit (0.165.0) precise; urgency=low
+
+  * Bug fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 08 Oct 2015 18:14:18 +0000
+
+dx-toolkit (0.164.0) precise; urgency=low
+
+  * Fix connection state issue introduced by 384e8ef
+  * Fix typo in error message in 384e8ef
+  * Fix handling of DXHTTPRequest(verify=...) and DX_CA_CERT in 384e8ef
+  * Fix exception handling artifacts in 384e8ef
+  * PTFM-13671 dx download improvements
+  * PTFM-16136 - Run make steps before checking for dxapp.json
+  * Fix broken tests that depended on TEST_ENV
+  * PTFM-16270 dx-run-app-locally: exit on unknown interpreter
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 01 Oct 2015 18:29:39 +0000
+
+dx-toolkit (0.163.0) precise; urgency=low
+
+  * Minor test fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 23 Sep 2015 21:14:11 +0000
+
+dx-toolkit (0.162.0) precise; urgency=low
+
+  * Be more descriptive in the output of "dx remove member"
+  * Remove download threadpool bypass conditional on 14.04 PV
+  * PTFM-16030 Support proxy S3 API endpoints in UA
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 16 Sep 2015 20:11:24 +0000
+
+dx-toolkit (0.161.0) precise; urgency=low
+
+  * Remove snappy compression support
+  * PTFM-15388 fixing failing upload test
+  * PTFM-15281 Revert "Temporarily disable test relying on debug hold"
+  * dxlog: Don't crash on exit if socket path was not found
+  * PTFM-15986 Add CLI commands for managing org memberships
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Thu, 10 Sep 2015 20:56:19 +0000
+
+dx-toolkit (0.160.0) precise; urgency=low
+
+  * PTFM-16094 Avoid infinite recursion in DXObject.__getattr__
+  * Auth API: use new route name /system/getUserInfo
+  * PTFM-15060 Add ability to remove the SSH key from DNAnexus user
+  * Remove unused imports from cli module
+  * Add more resolve_path tests
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 02 Sep 2015 20:08:20 +0000
+
+dx-toolkit (0.159.0) precise; urgency=low
+
+  * Bug fixes and cleanups
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 27 Aug 2015 01:07:26 +0000
+
+dx-toolkit (0.158.0) precise; urgency=low
+
+  * PTFM-15233 Implement created option for dx find projects
+  * Add unit tests for dx-jobutil-new-job (using the new --test flag)
+  * Make stronger assertions in TestDXClientRun tests
+  * Fill all "dx run" argument descriptions to a consistent width
+  * Refactor: move override_environment to dxpy_testutil
+  * Refactor: move dx-jobutil-add-output tests to the appropriate file
+  * Add dx test config flag `DXTEST_WITH_AUTHSERVER`
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 19 Aug 2015 23:22:59 +0000
+
+dx-toolkit (0.157.0) precise; urgency=low
+
+  * dx: Make dx run sub-page help more prominent; omit ENDC
+  * PTFM-15375 LIST has been deprecated therefore removing it
+  * PTFM-15765 Create "dx new user" CLI binding
+  * Add code review fix and refactoring for b6df4a9d
+  * Add code review fix for e0706ac
+  * Add code review fixes for 18ed505
+  * Add more tests for "dx run"
+  * Add --test option to dx-jobutil-new-job
+  * Ingest inputs to "dx run" when executable does not have input spec
+  * PTFM-15273 Integrate /system/resolveDataObjects into "dx run"
+  * PTFM-15920 Fix bad links/unencoded spaces in docs
+  * Revert "PTFM-15273 Integrate /system/resolveDataObjects into "dx run""
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 12 Aug 2015 20:40:20 +0000
+
+dx-toolkit (0.156.0) precise; urgency=low
+
+  * Remove unused import
+  * PTFM-15822 dxpy ul tunnel support
+  * PTFM-15712 Apply consistent URL encoding to links
+  * Document classname parameter to find_executions
+  * Fix flaky test: obtain analysis via API instead of "dx find"
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 05 Aug 2015 19:56:23 +0000
+
+dx-toolkit (0.155.0) precise; urgency=low
+
+  * Integrate resolveDataObjects into "dx run"
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 30 Jul 2015 03:47:23 +0000
+
+dx-toolkit (0.154.0) precise; urgency=low
+
+  * Documentation and test fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Thu, 23 Jul 2015 04:54:51 +0000
+
+dx-toolkit (0.153.0) precise; urgency=low
+
+  * Require Java 7 for Java bindings
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 15 Jul 2015 21:27:30 +0000
+
+dx-toolkit (0.152.0) precise; urgency=low
+
+  * Java bindings support for dataobj describe "fields" API
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 01 Jul 2015 20:37:53 +0000
+
+dx-toolkit (0.151.0) precise; urgency=low
+
+  * updated readme
+
+  * d10b98e broke callers that supply args positionally
+
+  * verify file expects files to be closed
+
+  * PTFM-15103 Add Python bindings for dataobject describe fields API
+
+  * wait_on_done methods only request the field they need ('state')
+
+  * PTFM-14807 Add org API wrappers
+
+  * Do not display "Default bill to" when user describing other
+
+  * Use upload API V2
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 24 Jun 2015 20:03:02 +0000
+
+dx-toolkit (0.150.0) precise; urgency=low
+
+  * Bug fix for dxfs
+
+  * dxpy.is_dxlink returns true on JBOR dxlink
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 17 Jun 2015 17:10:47 +0000
+
+dx-toolkit (0.149.0) precise; urgency=low
+
+  * Adding several configuration options which should prevent uploads from getting stuck
+
+  * PTFM-15394 Resource upload does not follow symlinks, can specify to upload without checksumming
+
+  * PTFM-14794 Optional file arguments
+
+  * don't redownload boost
+
+  * PTFM-15358 Adding dxfs to user-agent
+
+  * Remove dxpy timeout test
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 10 Jun 2015 21:59:43 +0000
+
+dx-toolkit (0.148.0) precise; urgency=low
+
+  * Improve dxpy socket timeout logic
+
+  * Add "dx run --depends-on"
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 03 Jun 2015 21:18:22 +0000
+
+dx-toolkit (0.147.0) precise; urgency=low
+
+  * Fix corruption of small DXFile reads within a job
+
+  * Revert "Fix corruption of small DXFile reads within a job"
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 26 May 2015 21:20:44 +0000
+
+dx-toolkit (0.146.0) precise; urgency=low
+
+  * Improved reliability for "dx rm"
+
+  * Lower default timeout value for file requests
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 20 May 2015 22:26:42 +0000
+
+dx-toolkit (0.145.0) precise; urgency=low
+
+  * PTFM-14962 Use devtools to install versioned CRAN execDepends
+
+  * PTFM-14493 Fixing integration tests for restrictions on adding PUBLIC to auth users
+
+  * PTFM-14493 Remove support for PUBLIC apps
+
+  * Check that all chunks are marked as complete before closing an uploaded file
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 13 May 2015 17:27:42 +0000
+
+dx-toolkit (0.144.0) precise; urgency=low
+
+  * Bug fix for session configuration loading due to Mac metadata files
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 06 May 2015 20:32:58 +0000
+
+dx-toolkit (0.143.0) precise; urgency=low
+
+  * Bug fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 29 Apr 2015 19:24:16 +0000
+
+dx-toolkit (0.142.0) precise; urgency=low
+
+  * Minor fixes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 22 Apr 2015 20:05:04 +0000
+
+dx-toolkit (0.141.0) precise; urgency=low
+
+  * Support for mem1_ssd2_* instances
+
+  * Allow fifos in dx-upload-all-outputs
+
+  * Prevent expiry of download URLs in "dx cat"
+
+  * Reuse bundled depends if contents have not changed
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 15 Apr 2015 18:38:34 +0000
+
+dx-toolkit (0.140.0) precise; urgency=low
+
+  * Minor fixes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 08 Apr 2015 17:05:49 +0000
+
+dx-toolkit (0.139.0) precise; urgency=low
+
+  * Minor fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 31 Mar 2015 23:24:28 +0000
+
+dx-toolkit (0.138.0) precise; urgency=low
+
+  * minor fixes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 25 Mar 2015 20:00:40 +0000
+
+dx-toolkit (0.137.0) precise; urgency=low
+
+  * Bug fixes
+
+ -- Kaveh Nafissi <knafissi@dnanexus.com>  Wed, 18 Mar 2015 20:31:08 +0000
+
+dx-toolkit (0.136.0) precise; urgency=low
+
+  * Bug fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 10 Mar 2015 21:48:40 +0000
+
+dx-toolkit (0.135.0) precise; urgency=low
+
+  * Fix regression in DXFile buffer size selection
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 04 Mar 2015 23:38:09 +0000
+
+dx-toolkit (0.134.0) precise; urgency=low
+
+  *  Minor optimizations
+
+ -- Ric Medlinger <ric@dnanexus.com>  Tue, 24 Feb 2015 23:47:09 +0000
+
+dx-toolkit (0.133.0) precise; urgency=low
+
+  * Improved config management in dxpy
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 18 Feb 2015 22:27:23 +0000
+
+dx-toolkit (0.132.0) precise; urgency=low
+
+  * dx-upload-all-outputs waits for files to close
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 11 Feb 2015 15:43:51 +0000
+
+dx-toolkit (0.131.0) precise; urgency=low
+
+  * Ensure ua uses bundled libc++ dylibs
+
+  * Various bug fixes
+
+ -- Ric Medlinger <ric@dnanexus.com>  Thu, 05 Feb 2015 15:57:23 +0000
+
+dx-toolkit (0.130.0) precise; urgency=low
+
+  * dx new record --close
+
+  * Fix possible boost issue on clang builds
+
+ -- Ric Medlinger <ric@dnanexus.com>  Tue, 13 Jan 2015 22:06:19 +0000
+
+dx-toolkit (0.129.0) precise; urgency=low
+
+  * Support building SDK and UA with clang
+
+  * Bump setuptools and friends to fix installation issues
+
+  * Retry ConnectionErrors even for non-idempotent requests
+
+  * Various bug fixes
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 07 Jan 2015 15:58:16 +0000
+
+dx-toolkit (0.128.0) precise; urgency=low
+
+  * Improvements to session cleanup
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 16 Dec 2014 23:14:55 +0000
+
+dx-toolkit (0.127.0) precise; urgency=low
+
+  * Remove import-time side effects from describing job
+
+  * Cease building R packages for Debian
+
+  * Various bug fixes
+
+ -- Ric Medlinger <ric@dnanexus.com>  Tue, 09 Dec 2014 22:01:46 +0000
+
+dx-toolkit (0.126.0) precise; urgency=low
+
+  * General improvements to error and keyboard interrupt handling
+
+  * Mac build fixes
+
+  * Move execution dependency installation code into client distribution
+
+  * Java: compound type queries for finding data objects
+
+  * Various bug fixes
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 03 Dec 2014 21:10:59 +0000
+
+dx-toolkit (0.125.0) precise; urgency=low
+
+  * Upgrade dependencies
+
+  * Expand bash path variables
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 19 Nov 2014 17:50:37 +0000
+
+dx-toolkit (0.124.0) precise; urgency=low
+
+  * Improvements to bash prefix variables
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 12 Nov 2014 18:43:07 +0000
+
+dx-toolkit (0.123.0) precise; urgency=low
+
+  * adding bash helper variables
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 05 Nov 2014 20:22:15 +0000
+
+dx-toolkit (0.122.0) precise; urgency=low
+
+  * minor bug fixes and clean up
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 29 Oct 2014 19:10:51 +0000
+
+dx-toolkit (0.121.0) precise; urgency=low
+
+  * "dx download JOB:FIELD"
+
+  * New --path flag to "dx find data" replaces --project and --folder
+
+  * dx-upload-all copies subdirectory structure into output
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 22 Oct 2014 22:38:17 +0000
+
+dx-toolkit (0.120.0) precise; urgency=low
+
+  * New flag dx set_details -f
+
+ -- Ric Medlinger <ric@dnanexus.com>  Tue, 14 Oct 2014 18:09:19 +0000
+
+dx-toolkit (0.119.0) precise; urgency=low
+
+  * First file download request blocks all subsequent request
+
+ -- Ric Medlinger <ric@dnanexus.com>  Tue, 07 Oct 2014 21:44:06 +0000
+
+dx-toolkit (0.118.0) precise; urgency=low
+
+  * Build and packaging improvements
+
+  * Add bindings to project-xxxx/updateSponsorship method
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 30 Sep 2014 20:10:49 +0000
+
+dx-toolkit (0.117.0) precise; urgency=low
+
+  * Various improvements to "dx download" semantics
+
+  * Support Ubuntu build against openjdk 7
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 23 Sep 2014 23:24:14 +0000
+
+dx-toolkit (0.116.0) precise; urgency=low
+
+  * Fixes for packaging on CentOS
+
+  * Misc Bugs Fixes
+
+ -- Ric Medlinger <ric@dnanexus.com>  Wed, 17 Sep 2014 20:33:20 +0000
+
+dx-toolkit (0.115.0) precise; urgency=low
+
+  * Add spelling suggestions for first-level dx subcommands
+
+  * Make dx upgrade resilient to absence of curl
+
+  * Various bug fixes and improvements
+
+ -- Katherine Lai <klai@dnanexus.com>  Tue, 09 Sep 2014 19:06:54 +0000
+
+dx-toolkit (0.114.0) precise; urgency=low
+
+  * Fix password prompting on Windows
+
+  * New --except option for dx-{upload,download}-* scripts
+
+  * Various bug fixes
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 02 Sep 2014 20:46:02 +0000
+
+dx-toolkit (0.113.0) precise; urgency=low
+
+  * Usability improvements for dx run --debug-on
+
+ -- Katherine Lai <klai@dnanexus.com>  Tue, 26 Aug 2014 19:58:40 +0000
+
+dx-toolkit (0.112.0) precise; urgency=low
+
+  * Stability improvements for "dx ssh"
+
+  * Debug features are compatible with latest apiserver
+
+  * Various bug fixes and stability improvements
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 19 Aug 2014 18:35:06 +0000
+
+dx-toolkit (0.111.0) precise; urgency=low
+
+  * Bug fix for dxpy file upload.
+
+ -- Katherine Lai <klai@dnanexus.com>  Tue, 12 Aug 2014 18:54:36 +0000
+
+dx-toolkit (0.110.0) precise; urgency=low
+
+  * Improvements to HTTP retry logic.
+
+ -- Phil Sung <psung@dnanexus.com>  Wed, 06 Aug 2014 08:10:06 +0000
+
+dx-toolkit (0.109.0) precise; urgency=low
+
+  * dx login usability improvements.
+
+  * Fixes for 503 behavior in Python and Java clients.
+
+  * dx whoami now relies on API server instead of authserver.
+
+  * Various other improvements.
+
+ -- Katherine Lai <klai@dnanexus.com>  Tue, 29 Jul 2014 21:10:39 +0000
+
+dx-toolkit (0.108.0) precise; urgency=low
+
+  * Minor improvements and bug fixes.
+
+ -- Phil Sung <psung@dnanexus.com>  Tue, 22 Jul 2014 19:58:55 +0000
+
+dx-toolkit (0.107.0) precise; urgency=low
+
+  * New experimental tools added: dx-download-all-inputs, dx-upload-all-outputs for bash apps.
+
+  * Adjustment to Retry-After logic in dxpy.
+
+  * Build and test fixes and improvements.
+
+ -- Katherine Lai <klai@dnanexus.com>  Tue, 15 Jul 2014 21:53:56 +0000
+
 dx-toolkit (0.106.0) precise; urgency=low
 
   * Improvements to clang/OSX builds and documentation.
@@ -222,7 +1365,7 @@ dx-toolkit (0.82.0) precise; urgency=low
 dx-toolkit (0.81.0) precise; urgency=low
 
   * DXWorkflow supports stage_instance_types parameter; other workflow
-	improvements.
+    improvements.
 
   * Various bug fixes.
 

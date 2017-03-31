@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -45,15 +45,29 @@ becomes the sole developer of the app.
 
 """
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import dxpy
 from . import DXObject, DXExecutable, DXJob, verify_string_dxid
 from ..exceptions import DXError
+from ..compat import basestring
 
 #########
 # DXApp #
 #########
+
+_app_required_keys = ['name', 'title', 'summary', 'dxapi', 'openSource',
+                      'version', 'inputSpec', 'outputSpec', 'runSpec',
+                      'developers', 'authorizedUsers', 'regionalOptions']
+
+# These are optional keys for apps, not sure what to do with them
+_app_optional_keys = ['description', 'developerNotes', 'details',
+                      'categories', 'access']
+
+_app_describe_output_keys = []
+
+_app_cleanup_keys = ['name', 'title', 'summary', 'dxapi', 'openSource',
+                     'version', 'runSpec', 'developers', 'authorizedUsers']
 
 class DXApp(DXObject, DXExecutable):
     '''
@@ -351,6 +365,18 @@ class DXApp(DXObject, DXExecutable):
     def _get_run_input(self, executable_input, **kwargs):
         # May need to be changed when workflow apps are enabled
         return DXExecutable._get_run_input_fields_for_applet(executable_input, **kwargs)
+
+    def _get_required_keys(self):
+        return _app_required_keys
+
+    def _get_optional_keys(self):
+        return _app_optional_keys
+
+    def _get_describe_output_keys(self):
+        return _app_describe_output_keys
+
+    def _get_cleanup_keys(self):
+        return _app_cleanup_keys
 
     def run(self, app_input, *args, **kwargs):
         """

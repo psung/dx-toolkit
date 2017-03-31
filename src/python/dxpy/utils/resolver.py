@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -23,16 +23,15 @@ names in the syntax of
 For more details, see external documentation [TODO: Put link here].
 '''
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import os, sys, json, re
 
 import dxpy
 from .describe import get_ls_l_desc
 from ..exceptions import DXError
-from ..compat import str, input
-from ..utils.env import get_env_var
-from ..cli import INTERACTIVE_CLI
+from ..compat import str, input, basestring
+from ..cli import try_call, INTERACTIVE_CLI
 
 def pick(choices, default=None, str_choices=None, prompt=None, allow_mult=False, more_choices=False):
     '''
@@ -143,9 +142,10 @@ class ResolutionError(DXError):
     def __str__(self):
         return self.msg
 
-data_obj_pattern = re.compile('^(record|table|gtable|applet|file|workflow)-[0-9A-Za-z]{24}$')
-hash_pattern = re.compile('^(record|table|gtable|app|applet|workflow|job|analysis|project|container|file)-[0-9A-Za-z]{24}$')
+data_obj_pattern = re.compile('^(record|gtable|applet|file|workflow)-[0-9A-Za-z]{24}$')
+hash_pattern = re.compile('^(record|gtable|app|applet|workflow|job|analysis|project|container|file)-[0-9A-Za-z]{24}$')
 nohash_pattern = re.compile('^(user|org|app|team)-')
+jbor_pattern = re.compile('^(job|analysis)-[0-9A-Za-z]{24}:[a-zA-Z_][0-9a-zA-Z_]*$')
 
 def is_hashid(string):
     return hash_pattern.match(string) is not None
@@ -170,6 +170,47 @@ def is_nohash_id(string):
 
 def is_glob_pattern(string):
     return (get_last_pos_of_char('*', string) >= 0) or (get_last_pos_of_char('?', string) >= 0)
+
+
+def is_jbor_str(string):
+    return jbor_pattern.match(string) is not None
+
+
+def is_project_explicit(path):
+    """
+    Returns True if the specified path explicitly specifies a project.
+    """
+    # This method encodes our rules for deciding when a path shows an explicit
+    # affinity to a particular project. This is a stronger notion than just
+    # saying that the path resolves to an object in that project.
+    #
+    # For an explanation of the rules, see the unit tests
+    # (test_dxpy.TestResolver.test_is_project_explicit).
+    #
+    # Note, this method need not validate that the path can otherwise be
+    # resolved; it can assume this as a precondition.
+    path = _maybe_convert_stringified_dxlink(path)
+    return not is_hashid(path)
+
+
+def object_exists_in_project(obj_id, proj_id):
+    '''
+    :param obj_id: object ID
+    :type obj_id: str
+    :param proj_id: project ID
+    :type proj_id: str
+
+    Returns True if the specified data object can be found in the specified
+    project.
+    '''
+    if obj_id is None:
+        raise ValueError("Expected obj_id to be a string")
+    if proj_id is None:
+        raise ValueError("Expected proj_id to be a string")
+    if not is_container_id(proj_id):
+        raise ValueError('Expected %r to be a container ID' % (proj_id,))
+    return try_call(dxpy.DXHTTPRequest, '/' + obj_id + '/describe', {'project': proj_id})['project'] == proj_id
+
 
 # Special characters in bash to be escaped: #?*: ;&`"'/!$({[<>|~
 def escaper(match):
@@ -273,6 +314,7 @@ def split_unescaped(char, string, include_empty_strings=False):
     words.reverse()
     return words
 
+
 def clean_folder_path(path, expected=None):
     '''
     :param path: A folder path to sanitize and parse
@@ -297,8 +339,7 @@ def clean_folder_path(path, expected=None):
     if expected == 'folder' or folders[-1] == '.' or folders[-1] == '..' or get_last_pos_of_char('/', path) == len(path) - 1:
         entity_name = None
     else:
-        entity_name = unescape_name_str(folders[-1])
-        folders = folders[:-1]
+        entity_name = unescape_name_str(folders.pop())
 
     sanitized_folders = []
 
@@ -311,32 +352,26 @@ def clean_folder_path(path, expected=None):
         else:
             sanitized_folders.append(unescape_folder_str(folder))
 
-    if len(sanitized_folders) == 0:
-        newpath = '/'
-    else:
-        newpath = ""
-        for folder in sanitized_folders:
-            newpath += '/' + folder
+    return ('/' + '/'.join(sanitized_folders)), entity_name
 
-    return newpath, entity_name
 
-def resolve_container_id_or_name(raw_string, is_error=False, unescape=True, multi=False):
+def resolve_container_id_or_name(raw_string, is_error=False, multi=False):
     '''
     :param raw_string: A potential project or container ID or name
     :type raw_string: string
-    :param is_error: Whether to raise an exception if the project or container ID cannot be resolved
+    :param is_error: Whether to raise an exception if the project or
+            container ID cannot be resolved
     :type is_error: boolean
-    :param unescape: Whether to unescaping the string is required (TODO: External link to section on escaping characters.)
-    :type unescape: boolean
     :returns: Project or container ID if found or else None
     :rtype: string or None
-    :raises: :exc:`ResolutionError` if *is_error* is True and the project or container could not be resolved
+    :raises: :exc:`ResolutionError` if *is_error* is True and the
+            project or container could not be resolved
 
-    Attempt to resolve *raw_string* to a project or container ID.
+    Unescapes and attempts to resolve *raw_string* to a project or
+    container ID.
 
     '''
-    if unescape:
-        string = unescape_name_str(raw_string)
+    string = unescape_name_str(raw_string)
     if is_container_id(string):
         return ([string] if multi else string)
 
@@ -367,18 +402,37 @@ def resolve_container_id_or_name(raw_string, is_error=False, unescape=True, mult
         # len(results) > 1 and multi
         return [result['id'] for result in results]
 
-def resolve_path(path, expected=None, expected_classes=None, multi_projects=False, allow_empty_string=True):
+
+def _maybe_convert_stringified_dxlink(path):
+    try:
+        possible_hash = json.loads(path)
+        if isinstance(possible_hash, dict) and '$dnanexus_link' in possible_hash:
+            if isinstance(possible_hash['$dnanexus_link'], basestring):
+                return possible_hash['$dnanexus_link']
+            elif (isinstance(possible_hash['$dnanexus_link'], dict) and
+                  isinstance(possible_hash['$dnanexus_link'].get('project', None), basestring) and
+                  isinstance(possible_hash['$dnanexus_link'].get('id', None), basestring)):
+                return possible_hash['$dnanexus_link']['project'] + ':' + possible_hash['$dnanexus_link']['id']
+    except:
+        pass
+    return path
+
+
+def resolve_path(path, expected=None, multi_projects=False, allow_empty_string=True):
     '''
     :param path: A path to a data object to attempt to resolve
     :type path: string
-    :param expected: one of the following: "folder", "entity", or None to indicate whether the expected path is a folder, a data object, or either
+    :param expected: one of the following: "folder", "entity", or None
+            to indicate whether the expected path is a folder, a data
+            object, or either
     :type expected: string or None
-    :param expected_classes: a list of DNAnexus data object classes (if any) by which the search can be filtered
-    :type expected_classes: list of strings or None
     :returns: A tuple of 3 values: container_ID, folderpath, entity_name
     :rtype: string, string, string
-    :raises: exc:`ResolutionError` if 1) a colon is provided but no project can be resolved, or 2) *expected* was set to "folder" but no project can be resolved from which to establish context
-    :param allow_empty_string: If false, a ResolutionError will be raised if *path* is an empty string. Use this when resolving the empty string could result in unexpected behavior.
+    :raises: exc:`ResolutionError` if the project cannot be resolved by
+            name or the path is malformed
+    :param allow_empty_string: If false, a ResolutionError will be
+            raised if *path* is an empty string. Use this when resolving
+            the empty string could result in unexpected behavior.
     :type allow_empty_string: boolean
 
     Attempts to resolve *path* to a project or container ID, a folder
@@ -386,7 +440,37 @@ def resolve_path(path, expected=None, expected_classes=None, multi_projects=Fals
     raise an exception if the specified folder or object does not
     exist.  This method is primarily for parsing purposes.
 
+    Returns one of the following:
+
+      (project, folder, maybe_name)
+      where
+        project is a container ID (non-null)
+        folder is a folder path
+        maybe_name is a string if the path could represent a folder or an object, or
+        maybe_name is None if the path could only represent a folder
+
+    OR
+
+      (maybe_project, None, object_id)
+      where
+        maybe_project is a container ID or None
+        object_id is a dataobject, app, or execution (specified by ID, not name)
+
+    OR
+
+      (job_id, None, output_name)
+      where
+        job_id and output_name are both non-null
+
     '''
+    # TODO: callers that intend to obtain a data object probably won't be happy
+    # with an app or execution ID. Callers should probably have to specify
+    # whether they are okay with getting an execution ID or not.
+
+    # TODO: callers that are looking for a place to write data, rather than
+    # read it, probably won't be happy with receiving an object ID, or a
+    # JBOR. Callers should probably specify whether they are looking for an
+    # "LHS" expression or not.
 
     if '_DX_FUSE' in os.environ:
         from xattr import xattr
@@ -394,26 +478,20 @@ def resolve_path(path, expected=None, expected_classes=None, multi_projects=Fals
 
     if path == '' and not allow_empty_string:
         raise ResolutionError('Cannot parse ""; expected the path to be a non-empty string')
-    try:
-        possible_hash = json.loads(path)
-        if isinstance(possible_hash, dict) and '$dnanexus_link' in possible_hash:
-            if isinstance(possible_hash['$dnanexus_link'], basestring):
-                path = possible_hash['$dnanexus_link']
-            elif isinstance(possible_hash['$dnanexus_link'], dict) and isinstance(possible_hash['$dnanexus_link'].get('project', None), basestring) and isinstance(possible_hash['$dnanexus_link'].get('id', None), basestring):
-                path = possible_hash['$dnanexus_link']['project'] + ':' + possible_hash['$dnanexus_link']['id']
-    except:
-        pass
+    path = _maybe_convert_stringified_dxlink(path)
 
     # Easy case: ":"
     if path == ':':
         if dxpy.WORKSPACE_ID is None:
-            raise ResolutionError('Cannot parse ":"; expected a project name or ID to the left of a colon or for a current project to be set')
+            raise ResolutionError("Cannot resolve \":\": expected a project name or ID "
+                                  "to the left of the colon, or for a current project to be set")
         return ([dxpy.WORKSPACE_ID] if multi_projects else dxpy.WORKSPACE_ID), '/', None
     # Second easy case: empty string
     if path == '':
         if dxpy.WORKSPACE_ID is None:
-            raise ResolutionError('Expected a project name or ID to the left of a colon or for a current project to be set')
-        return ([dxpy.WORKSPACE_ID] if multi_projects else dxpy.WORKSPACE_ID), os.environ.get('DX_CLI_WD', '/'), None
+            raise ResolutionError('Expected a project name or ID to the left of a colon, '
+                                  'or for a current project to be set')
+        return ([dxpy.WORKSPACE_ID] if multi_projects else dxpy.WORKSPACE_ID), dxpy.config.get('DX_CLI_WD', '/'), None
     # Third easy case: hash ID
     if is_container_id(path):
         return ([path] if multi_projects else path), '/', None
@@ -425,7 +503,7 @@ def resolve_path(path, expected=None, expected_classes=None, multi_projects=Fals
     project = 0
     folderpath = None
     entity_name = None
-    wd = None
+    wd = dxpy.config.get('DX_CLI_WD', u'/')
 
     # Test for multiple colons
     last_colon = get_last_pos_of_char(':', path)
@@ -454,7 +532,8 @@ def resolve_path(path, expected=None, expected_classes=None, multi_projects=Fals
         wd = '/'
         if path.startswith(':'):
             if dxpy.WORKSPACE_ID is None:
-                raise ResolutionError('Cannot parse "' + path + '" as a path; expected a project name or ID to the left of a colon or for a current project to be set')
+                raise ResolutionError('Cannot resolve "%s": expected a project name or ID to the left of the '
+                                      'colon, or for a current project to be set' % (path,))
             project = dxpy.WORKSPACE_ID
         else:
             # One nonempty string to the left of a colon
@@ -464,9 +543,9 @@ def resolve_path(path, expected=None, expected_classes=None, multi_projects=Fals
         # One nonempty string, no colon present, do NOT interpret as
         # project
         project = dxpy.WORKSPACE_ID
-        if expected == 'folder' and project is None:
-            raise ResolutionError('a project context was expected for a path, but a current project is not set, nor was one provided in the path (preceding a colon) in "' + path + '"')
-        wd = get_env_var('DX_CLI_WD', u'/')
+        if project is None:
+            raise ResolutionError('Cannot resolve "%s": expected the path to be qualified with a project name or ID, '
+                                  'and a colon; or for a current project to be set' % (path,))
 
     # Determine folderpath and entity_name if necessary
     if folderpath is None:
@@ -533,15 +612,412 @@ def resolve_job_ref(job_id, name, describe={}):
 
     return results
 
-def resolve_existing_path(path, expected=None, ask_to_resolve=True, expected_classes=None, allow_mult=False, describe={}, all_mult=False, allow_empty_string=True,
-                          visibility="either"):
+
+def _check_resolution_needed(path, project, folderpath, entity_name, expected_classes=None, describe=True,
+                             enclose_in_list=False):
+    """
+    :param path: Path to the object that required resolution; propagated from
+                 command-line
+    :type path: string
+    :param project: The potential project the entity belongs to
+    :type project: string
+    :param folderpath: Path to the entity
+    :type folderpath: string
+    :param entity_name: The name of the entity
+    :type entity_name: string
+    :param expected_classes: A list of expected classes the entity is allowed
+                             to belong to if it is an ID (e.g. "record",
+                             "file", "job"); if None, then entity_name may be
+                             any data object class
+    :type expected_classes: list or None
+    :param describe: Dictionary of inputs to the describe API call; if
+                     no describe input is provided (default value True), then
+                     an empty mapping is passed to the describe API method
+    :type describe: dict or True
+    :param enclose_in_list: Whether the describe output is to be in the form
+                            of a list (if False, the last return value is a
+                            dictionary; if True, the last return value is a
+                            list of one dictionary); it will only have an
+                            effect if entity_name is a DX ID and is described
+    :type enclose_in_list: boolean
+    :returns: Whether or not the entity needs to be resolved with a more
+              general resolution method, the project, the folderpath, and the
+              entity name
+    :rtype: tuple of 4 elements
+    :raises: ResolutionError if the entity fails to be described
+
+    Attempts to resolve the entity to a folder or an object, and describes
+    the entity iff it is a DX ID of an expected class in the list
+    expected_classes.
+    Otherwise, determines whether or not more general resolution may be able
+    to resolve the entity.
+
+    If a more general resolution method is needed, then the return values will
+    look like:
+    (True, <project>, <folderpath>, <entity_name>)
+
+    If the entity is a DX ID, but is not one of the supplied expected
+    classes, then the return values will look like:
+    (False, None, None, None)
+
+    If the entity can be successfully described, then the return values will
+    look like:
+    <desc_output> ::= {"id": entity_name, "describe": {...}}
+    <desc_or_desc_list> ::= <desc_output> || [<desc_output>]
+    (False, <project>, <folderpath>, <desc_or_desc_list>)
+
+    If the entity may be a folder, then the return values will look like:
+    (False, <project>, <folderpath>, None)
+
+    TODO: Allow arbitrary flags for the describe mapping.
+    """
+    if entity_name is None:
+        # Definitely a folder (or project)
+        # TODO: find a good way to check if folder exists and expected=folder
+        return False, project, folderpath, None
+    elif is_hashid(entity_name):
+
+        found_valid_class = True
+        if expected_classes is not None:
+            found_valid_class = False
+            for klass in expected_classes:
+                if entity_name.startswith(klass):
+                    found_valid_class = True
+        if not found_valid_class:
+            return False, None, None, None
+
+        if describe is True:
+            describe = {}
+
+        # entity is an ID of a valid class, try to describe it
+        if 'project' not in describe:
+            if project != dxpy.WORKSPACE_ID:
+                describe['project'] = project
+            elif dxpy.WORKSPACE_ID is not None:
+                describe['project'] = dxpy.WORKSPACE_ID
+        try:
+            desc = dxpy.DXHTTPRequest('/' + entity_name + '/describe', describe)
+        except Exception as details:
+            if 'project' in describe:
+                # Now try it without the hint
+                del describe['project']
+                try:
+                    desc = dxpy.DXHTTPRequest('/' + entity_name + '/describe', describe)
+                except Exception as details2:
+                    raise ResolutionError(str(details2))
+            else:
+                raise ResolutionError(str(details))
+        result = {"id": entity_name, "describe": desc}
+        if enclose_in_list:
+            return False, project, folderpath, [result]
+        else:
+            return False, project, folderpath, result
+
+    else:
+        # Need to resolve later
+        return True, project, folderpath, entity_name
+
+
+def _resolve_folder(project, parent_folder, folder_name):
+    """
+    :param project: The project that the folder belongs to
+    :type project: string
+    :param parent_folder: Full path to the parent folder that contains
+                         folder_name
+    :type parent_folder: string
+    :param folder_name: Name of the folder
+    :type folder_name: string
+    :returns: The path to folder_name, if it exists, in the form of
+              "<parent_folder>/<folder_name>"
+    :rtype: string
+    :raises: ResolutionError if folder_name is not a folder, or if
+             folder_name points to a folder that does not exist
+
+    Attempts to resolve folder_name at location parent_folder in project.
+    """
+    if '/' in folder_name:
+        # Then there's no way it's supposed to be a folder
+        raise ResolutionError('Object of name ' + str(folder_name) + ' could not be resolved in folder ' +
+                              str(parent_folder) + ' of project ID ' + str(project))
+    possible_folder, _skip = clean_folder_path(parent_folder + '/' + folder_name, 'folder')
+
+    if not check_folder_exists(project, parent_folder, folder_name):
+        raise ResolutionError('Unable to resolve "' + folder_name +
+                              '" to a data object or folder name in \'' + parent_folder + "'")
+    return possible_folder
+
+
+def _validate_resolution_output_length(path, entity_name, results, allow_mult=False, all_mult=False,
+                                       ask_to_resolve=True):
+    """
+    :param path: Path to the object that required resolution; propagated from
+                 command-line
+    :type path: string
+    :param entity_name: Name of the object
+    :type entity_name: string
+    :param results: Result of resolution; non-empty list of object
+                    specifications (each specification is a dictionary with
+                    keys "project" and "id")
+    :type results: list of dictionaries
+    :param allow_mult: If True, it is okay to choose from multiple results
+                       of a single resolved object, or return all results
+                       found; if False, raise an error if multiple results
+                       are found
+    :type allow_mult: boolean
+    :param all_mult: If True, return all results if multiple results are
+                     found for a single resolved object; if False, user needs
+                     to choose a single result if multiple are found; the value
+                     of all_mult only has an effect if allow_mult is True)
+    :type all_mult: boolean
+    :param ask_to_resolve: Whether picking may be necessary (if True, a
+                           list is returned; if False, only one result
+                           is returned); if specified as True, then all
+                           results will be returned, regardless of the
+                           values of allow_mult and all_mult
+    :type ask_to_resolve: boolean
+    :returns: The results of resolving entity_name, expected to be of the
+              following form:
+              <resolved_object>  # If only one result is present or the user
+                                 # is able to select from multiple
+              OR
+              [<resolved_object>, ...]  # If multiple results are present and
+                                        # it is allowed
+              where <resolved_object> is of the following form:
+              {"project": <project_id>, "id": <object_id>}
+    :rtype: dict or list of dicts
+    :raises: ValueError if results is empty
+    :raises: ResolutionError if too many results are found and the user is
+             not in interactive mode and cannot select one
+
+    Precondition: results must be a nonempty list
+
+    Validates length of results.
+
+    If there are multiple results found and the user is in interactive mode,
+    then the user will be prompted to select a single result to be returned.
+    """
+    if len(results) == 0:
+        raise ValueError("'results' must be nonempty.")
+
+    # Caller wants ALL results, so return the entire results list
+    # At this point, do not care about the values of allow_mult or all_mult
+    if not ask_to_resolve:
+        return results
+
+    if len(results) > 1:
+        # The other way the caller can specify it wants all results is by setting
+        # allow_mult to be True and allowing all_mult to be True (or if the object name is a glob pattern)
+        if allow_mult and (all_mult or is_glob_pattern(entity_name)):
+            return results
+        if INTERACTIVE_CLI:
+            print('The given path "' + path + '" resolves to the following data objects:')
+            if any(['describe' not in result for result in results]):
+                # findDataObject API call must be made to get 'describe' mappings
+                project, folderpath, entity_name = resolve_path(path, expected='entity')
+                results = _resolve_global_entity(project, folderpath, entity_name)
+            choice = pick([get_ls_l_desc(result['describe']) for result in results],
+                          allow_mult=allow_mult)
+            if allow_mult and choice == '*':
+                return results
+            else:
+                return [results[choice]] if allow_mult else results[choice]
+        else:
+            raise ResolutionError('The given path "' + path + '" resolves to ' +
+                                  str(len(results)) + ' data objects')
+    else:
+        return [results[0]] if allow_mult else results[0]
+
+
+def _resolve_global_entity(project_or_job_id, folderpath, entity_name, describe=True, visibility="either"):
+    """
+    :param project_or_job_id: The project ID to which the entity belongs
+                              (then the entity is an existing data object),
+                              or the job ID to which the entity belongs
+                              (then the entity is a job-based object
+                              reference to an object that may not exist yet)
+    :type project_or_job_id: string
+    :param folderpath: Full path to the object (parsed from command line)
+    :type folderpath: string
+    :param entity_name: Name of the object
+    :type entity_name: string
+    :param describe: Input mapping used to describe the job's project if
+                     project_or_job_id is a job ID, or True if the input
+                     mapping is to be empty
+    :type describe: dict or True
+    :param visibility: The expected visibility of the entity ("either",
+                       "hidden", or "visible"); to be used in resolution
+    :type visibility: string
+    :returns: The results obtained from attempting to resolve the entity;
+              the expected format of the return value is described below
+    :rtype: list
+    :raises: ResolutionError if dxpy.find_data_objects throws an error
+
+    If project_or_job_id is a job ID, then return value will be like:
+        [{"id": ..., "describe": {...}}, ...]
+
+    Otherwise, the return value will be like:
+        [{"id": ..., "project": ..., "describe": {...}}, ...]
+    Note that if the entity is successfully resolved, then the "describe"
+    key will be in the dictionary if and only if a nonempty describe
+    mapping was provided.
+
+    TODO: Inspect entity_name and conditionally treat it as a "glob" pattern.
+    """
+    if is_job_id(project_or_job_id):
+        if describe is True:
+            describe = {}
+        # The following function call will raise a ResolutionError if no results
+        # could be found.
+        # If the call is successful, then the project will be incorporated into the
+        # "describe" mapping of the returned dictionaries.
+        return resolve_job_ref(project_or_job_id, entity_name, describe=describe)
+    else:
+        try:
+            return list(dxpy.find_data_objects(project=project_or_job_id,
+                                               folder=folderpath,
+                                               name=entity_name,
+                                               name_mode='glob',
+                                               recurse=False,
+                                               describe=describe,
+                                               visibility=visibility))
+        except Exception as details:
+            raise ResolutionError(str(details))
+
+
+def _format_resolution_output(path, project, folderpath, entity_name, result):
+    """
+    :param path: Path to the object that required resolution; propagated from
+                 command-line
+    :type path: string
+    :param project: The potential project the entity belongs to
+    :type project: string
+    :param folderpath: Path to the entity
+    :type folderpath: string
+    :param entity_name: The name of the entity
+    :type entity_name: string
+    :param result: The result of resolving entity_name
+    :type result: list of dictionaries
+    :returns: The validated resolution output
+    :rtype: dictionary
+
+    Formats the output from the resolution of entity_name based on the number
+    of resolved entities.
+
+    If no results are found and entity_name can be resolved to a folder, then
+    the return value will look like:
+    {"project": <project>, "folder": <folder>, "name": None}
+
+    If exactly one result is found, then the return value will look like:
+    {"project": <project>, "folder": <folder>, "name": {"id": <id>,
+                                                        "project": <project>}}
+    OR
+    {"project": None, "folder": <folder>, "name": {"id": <id>,
+                                                   "project": <project>}}
+
+    Else, the return value will look like:
+    {"project": None, "folder": None, "name": None}
+    """
+    try:
+        if len(result) == 0:
+            folder = _resolve_folder(project, folderpath, entity_name)
+            return {"project": project, "folder": folder, "name": None}
+        else:
+            validated_results = _validate_resolution_output_length(path, entity_name, result)
+            return {"project": None if is_job_id(project) else project,
+                    "folder": None, "name": validated_results}
+    except ResolutionError:
+        return {"project": None, "folder": None, "name": None}
+
+
+def resolve_multiple_existing_paths(paths):
+    """
+    :param paths: A list of paths to items that need to be resolved
+    :type paths: list
+    :returns: A dictionary mapping a specified path to either its resolved
+              object or Nones, if the object could not be resolved
+    :rtype: dict
+
+    For each input given in paths, attempts to resolve the path, and returns
+    the resolved object in a dictionary.
+
+    The return value will look like:
+    {<path1>: <resolved_object1>, <path2>: <resolved_object2>,...}
+
+    If entity_id is a DX ID that can be described,
+        <resolved_object*> ::= {"project": None,
+                                "folder": None,
+                                "name": {"id": <id>,
+                                         "describe": <describe_output>}}
+
+    Else if a general resolution (or search) method will be used to resolve
+    the entity,
+        <resolved_object*> ::= {"project": <project>,
+                                "folder": None,
+                                "name": {"project": <project>,
+                                         "id": <resolved_id>}}
+
+    Else if <project> is a job ID,
+        <resolved_object*> ::= {"project": None,
+                                "folder": None,
+                                "name": {"project": <project>,
+                                         "id": <resolved_id>}}
+
+    Else if the path refers to a folder instead of a data object,
+        <resolved_object*> ::= {"project": <project>,
+                                "folder": <folder>,
+                                "name": None}
+
+    Else if description or resolution fails,
+        <resolved_object*> ::= {"project": None, "folder": None, "name": None}
+    """
+    done_objects = {}  # Return value
+    to_resolve_in_batch_paths = []  # Paths to resolve
+    to_resolve_in_batch_inputs = []  # Project, folderpath, and entity name
+    for path in paths:
+        project, folderpath, entity_name = resolve_path(path, expected='entity')
+        try:
+            must_resolve, project, folderpath, entity_name = _check_resolution_needed(
+                path, project, folderpath, entity_name)
+        except:
+            must_resolve = False
+
+        if must_resolve:
+            if is_glob_pattern(entity_name):
+                # TODO: Must call findDataObjects because resolveDataObjects does not support glob patterns
+                try:
+                    find_results = _resolve_global_entity(project, folderpath, entity_name)
+                    done_objects[path] = _format_resolution_output(path, project, folderpath, entity_name,
+                                                                   find_results)
+                except ResolutionError:
+                    # Catches any ResolutionError thrown by _resolve_global_entity
+                    done_objects[path] = {"project": None, "folder": None, "name": None}
+            else:
+                # Prepare batch call for resolveDataObjects
+                to_resolve_in_batch_paths.append(path)
+                to_resolve_in_batch_inputs.append({"project": project, "folder": folderpath, "name": entity_name})
+        else:
+            # No need to resolve
+            done_objects[path] = {"project": project, "folder": folderpath, "name": entity_name}
+
+    # Call resolveDataObjects
+    resolution_results = dxpy.resolve_data_objects(to_resolve_in_batch_inputs)
+    for path, inputs, result in zip(to_resolve_in_batch_paths, to_resolve_in_batch_inputs,
+                                    resolution_results):
+        done_objects[path] = _format_resolution_output(path, inputs["project"], inputs["folder"], inputs["name"],
+                                                       result)
+    return done_objects
+
+
+def resolve_existing_path(path, expected=None, ask_to_resolve=True, expected_classes=None, allow_mult=False,
+                          describe=True, all_mult=False, allow_empty_string=True, visibility="either"):
     '''
     :param ask_to_resolve: Whether picking may be necessary (if true, a list is returned; if false, only one result is returned)
     :type ask_to_resolve: boolean
     :param allow_mult: Whether to allow the user to select multiple results from the same path
     :type allow_mult: boolean
-    :param describe: Input hash to describe call for the results
-    :type describe: dict
+    :param describe: Input hash to describe call for the results, or True if no describe input
+                     is to be provided
+    :type describe: dict or True
     :param all_mult: Whether to return all matching results without prompting (only applicable if allow_mult == True)
     :type all_mult: boolean
     :returns: A LIST of results when ask_to_resolve is False or allow_mult is True
@@ -565,97 +1041,67 @@ def resolve_existing_path(path, expected=None, ask_to_resolve=True, expected_cla
     NOTE: if expected_classes is provided and conflicts with the class
     of the hash ID, it will return None for all fields.
     '''
+    project, folderpath, entity_name = resolve_path(path, expected=expected, allow_empty_string=allow_empty_string)
+    must_resolve, project, folderpath, entity_name = _check_resolution_needed(path,
+                                                                              project,
+                                                                              folderpath,
+                                                                              entity_name,
+                                                                              expected_classes=expected_classes,
+                                                                              describe=describe,
+                                                                              enclose_in_list=(not ask_to_resolve or
+                                                                                               allow_mult))
 
-    project, folderpath, entity_name = resolve_path(path, expected, allow_empty_string=allow_empty_string)
-
-    if entity_name is None:
-        # Definitely a folder (or project)
-        # FIXME? Should I check that the folder exists if expected="folder"?
-        return project, folderpath, entity_name
-    elif is_hashid(entity_name):
-        found_valid_class = True
-        if expected_classes is not None:
-            found_valid_class = False
-            for klass in expected_classes:
-                if entity_name.startswith(klass):
-                    found_valid_class = True
-        if not found_valid_class:
-            return None, None, None
-
-        if 'project' not in describe:
-            if project != dxpy.WORKSPACE_ID:
-                describe['project'] = project
-            elif dxpy.WORKSPACE_ID is not None:
-                describe['project'] = dxpy.WORKSPACE_ID
-        try:
-            desc = dxpy.DXHTTPRequest('/' + entity_name + '/describe', describe)
-        except Exception as details:
-            if 'project' in describe:
-                # Now try it without the hint
-                del describe['project']
-                try:
-                    desc = dxpy.DXHTTPRequest('/' + entity_name + '/describe', describe)
-                except Exception as details:
-                    raise ResolutionError(str(details))
-            else:
-                raise ResolutionError(str(details))
-        result = {"id": entity_name, "describe": desc}
-        if ask_to_resolve and not allow_mult:
-            return project, folderpath, result
-        else:
-            return project, folderpath, [result]
-    elif project is None:
-        raise ResolutionError('Could not resolve "' + path + '" to a project context.  Please either set a default project using dx select or cd, or add a colon (":") after your project ID or name')
-    else:
-        msg = 'Object of name ' + str(entity_name) + ' could not be resolved in folder ' + str(folderpath) + ' of project ID ' + str(project)
-        # Probably an object
-        if is_job_id(project):
-            # The following will raise if no results could be found
-            results = resolve_job_ref(project, entity_name, describe=describe)
-        else:
-            try:
-                results = list(dxpy.find_data_objects(project=project,
-                                                      folder=folderpath,
-                                                      name=entity_name,
-                                                      name_mode='glob',
-                                                      recurse=False,
-                                                      describe=describe,
-                                                      visibility=visibility))
-            except Exception as details:
-                raise ResolutionError(str(details))
+    if must_resolve:
+        results = _resolve_global_entity(project, folderpath, entity_name, describe=describe, visibility=visibility)
         if len(results) == 0:
-            # Could not find it as a data object.  If anything, it's a
-            # folder.
+            # Could not resolve entity, so it is probably a folder
+            folder = _resolve_folder(project, folderpath, entity_name)
+            return project, folder, None
+        else:
+            validated_results = _validate_resolution_output_length(path,
+                                                                   entity_name,
+                                                                   results,
+                                                                   allow_mult=allow_mult,
+                                                                   all_mult=all_mult,
+                                                                   ask_to_resolve=ask_to_resolve)
+            if is_job_id(project):
+                return None, None, validated_results
+            return project, None, validated_results
+    return project, folderpath, entity_name
 
-            if '/' in entity_name:
-                # Then there's no way it's supposed to be a folder
-                raise ResolutionError(msg)
 
-            # This is the only possibility left.  Leave the
-            # error-checking for later.  Note that folderpath does
-            possible_folder = folderpath + '/' + entity_name
-            possible_folder, _skip = clean_folder_path(possible_folder, 'folder')
-            return project, possible_folder, None
+def check_folder_exists(project, path, folder_name):
+    '''
+    :param project: project id
+    :type project: string
+    :param path: path to where we should look for the folder in question
+    :type path: string
+    :param folder_name: name of the folder in question
+    :type folder_name: string
+    :returns: A boolean True or False whether the folder exists at the specified path
+    :type: boolean
+    :raises: :exc:'ResolutionError' if dxpy.api.container_list_folder raises an exception
 
-        # Caller wants ALL results; just return the whole thing
-        if not ask_to_resolve:
-            return project, None, results
+    This function returns a boolean value that indicates whether a folder of the
+    specified name exists at the specified path
 
-        if len(results) > 1:
-            if allow_mult and (all_mult or is_glob_pattern(entity_name)):
-                return project, None, results
-            if INTERACTIVE_CLI:
-                print('The given path "' + path + '" resolves to the following data objects:')
-                choice = pick([get_ls_l_desc(result['describe']) for result in results],
-                              allow_mult=allow_mult)
-                if allow_mult and choice == '*':
-                    return project, None, results
-                else:
-                    return project, None, ([results[choice]] if allow_mult else results[choice])
-            else:
-                raise ResolutionError('The given path "' + path + '" resolves to ' + str(len(results)) + ' data objects')
-        elif len(results) == 1:
-            return project, None, ([results[0]] if allow_mult else results[0])
+    Note: this function will NOT work on the root folder case, i.e. '/'
+    '''
+    if folder_name is None or path is None:
+        return False
+    try:
+        folder_list = dxpy.api.container_list_folder(project, {"folder": path, "only": "folders"})
+    except dxpy.exceptions.DXAPIError as e:
+        if e.name == 'ResourceNotFound':
+            raise ResolutionError(str(e.msg))
+        else:
+            raise e
+    target_folder = path + '/' + folder_name
+    # sanitize input if necessary
+    target_folder, _skip = clean_folder_path(target_folder, 'folder')
+
+    # Check that folder name exists in return from list folder API call
+    return target_folder in folder_list['folders']
 
 def get_app_from_path(path):
     '''

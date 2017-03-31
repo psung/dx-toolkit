@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -57,7 +58,6 @@ public final class DXSearch {
             this.describeOptions = describeOptions;
         }
 
-        @SuppressWarnings("unused")
         @JsonValue
         private Object getValue() {
             if (describeOptions == null) {
@@ -75,13 +75,10 @@ public final class DXSearch {
 
         @JsonInclude(Include.NON_NULL)
         private static class ScopeQuery {
-            @SuppressWarnings("unused")
             @JsonProperty
             private final String project;
-            @SuppressWarnings("unused")
             @JsonProperty
             private final String folder;
-            @SuppressWarnings("unused")
             @JsonProperty
             private final Boolean recurse;
 
@@ -110,9 +107,8 @@ public final class DXSearch {
         private final VisibilityQuery visibility;
         @JsonProperty
         private final NameQuery name;
-        // TODO: support $and and $or queries on type, not just a single type
         @JsonProperty
-        private final String type;
+        private final TypeQuery type;
         @JsonProperty
         private final TagsQuery tags;
         @JsonProperty
@@ -131,24 +127,22 @@ public final class DXSearch {
         @JsonProperty
         private final DescribeParameters describe;
 
-        @SuppressWarnings("unused")
         @JsonProperty
-        private final FindDataObjectsResponse.Entry starting;
-        @SuppressWarnings("unused")
+        private final JsonNode starting;
         @JsonProperty
         private final Integer limit;
 
         /**
          * Creates a new {@code FindDataObjectsRequest} that clones the specified request, but
-         * changes the starting value and limit.
+         * optionally changes the starting point and limit.
          *
          * @param previousQuery previous query to clone
-         * @param next starting value for subsequent results
+         * @param starting starting value for results (obtained from the 'next' attribute of a
+         *        previous result set), or null to start retrieving results from the beginning
          * @param limit maximum number of results to return, or null to use the default
          *        (server-provided) limit
          */
-        private FindDataObjectsRequest(FindDataObjectsRequest previousQuery,
-                FindDataObjectsResponse.Entry next, Integer limit) {
+        private FindDataObjectsRequest(FindDataObjectsRequest previousQuery, JsonNode starting, Integer limit) {
             this.classConstraint = previousQuery.classConstraint;
             this.id = previousQuery.id;
             this.state = previousQuery.state;
@@ -164,7 +158,7 @@ public final class DXSearch {
             this.created = previousQuery.created;
             this.describe = previousQuery.describe;
 
-            this.starting = next;
+            this.starting = (starting == null || starting.isNull()) ? null : starting;
             this.limit = limit;
         }
 
@@ -173,8 +167,12 @@ public final class DXSearch {
          * specified builder.
          *
          * @param builder builder object to initialize this query with
+         * @param starting starting value for results (obtained from the 'next' attribute of a
+         *        previous result set), or null to start retrieving results from the beginning
+         * @param limit maximum number of results to return, or null to use the default
+         *        (server-provided) limit
          */
-        private FindDataObjectsRequest(FindDataObjectsRequestBuilder<?> builder) {
+        private FindDataObjectsRequest(FindDataObjectsRequestBuilder<?> builder, JsonNode starting, Integer limit) {
             this.classConstraint = builder.classConstraint;
             this.id = builder.id;
             this.state = builder.state;
@@ -208,8 +206,8 @@ public final class DXSearch {
                 this.created = null;
             }
 
-            this.starting = null;
-            this.limit = null;
+            this.starting = (starting == null || starting.isNull()) ? null : starting;
+            this.limit = limit;
         }
 
     }
@@ -229,7 +227,7 @@ public final class DXSearch {
         private DataObjectState state;
         private VisibilityQuery visibilityQuery;
         private NameQuery nameQuery;
-        private String type;
+        private TypeQuery type;
         private TagsQuery tags;
         private List<PropertiesQuery> properties = Lists.newArrayList(); // Implicit $and
         private String link;
@@ -251,11 +249,31 @@ public final class DXSearch {
             this.env = env;
         }
 
+        /**
+         * Builds and returns a request to the findDataObjects route.
+         *
+         * <p>
+         * Use this method to test the JSON hash created by a particular builder call without
+         * actually executing the request.
+         * </p>
+         */
         @VisibleForTesting
         FindDataObjectsRequest buildRequestHash() {
-            // Use this method to test the JSON hash created by a particular
-            // builder call without actually executing the request.
-            return new FindDataObjectsRequest(this);
+            return new FindDataObjectsRequest(this, null, null);
+        }
+
+        /**
+         * Builds and returns a request to the findDataObjects route with the specified starting
+         * item and limit.
+         *
+         * <p>
+         * Use this method to test the JSON hash created by a particular builder call without
+         * actually executing the request.
+         * </p>
+         */
+        @VisibleForTesting
+        FindDataObjectsRequest buildRequestHash(JsonNode starting, int limit) {
+            return new FindDataObjectsRequest(this, starting, limit);
         }
 
         /**
@@ -306,8 +324,8 @@ public final class DXSearch {
          * @return object encapsulating the result set
          */
         public FindDataObjectsResult<T> execute(int pageSize) {
-            return new FindDataObjectsResult<T>(this.buildRequestHash(), this.classConstraint,
-                    this.env, pageSize);
+            return new FindDataObjectsResult<T>(this.buildRequestHash(null, pageSize), this.classConstraint, this.env,
+                    pageSize);
         }
 
         /**
@@ -783,7 +801,7 @@ public final class DXSearch {
         }
 
         /**
-         * Only returns data objects with the specified tags query.
+         * Only returns data objects matching the specified tags query.
          *
          * @param tagsQuery tags query
          *
@@ -804,7 +822,20 @@ public final class DXSearch {
          */
         public FindDataObjectsRequestBuilder<T> withType(String type) {
             Preconditions.checkState(this.type == null, "Cannot call withType more than once");
-            this.type = Preconditions.checkNotNull(type, "type may not be null");
+            this.type = TypeQuery.of(Preconditions.checkNotNull(type, "type may not be null"));
+            return this;
+        }
+
+        /**
+         * Only returns data objects matching the specified types query.
+         *
+         * @param typeQuery types query
+         *
+         * @return the same builder object
+         */
+        public FindDataObjectsRequestBuilder<T> withTypes(TypeQuery typeQuery) {
+            Preconditions.checkState(this.type == null, "Cannot specify withType* more than once");
+            this.type = Preconditions.checkNotNull(typeQuery, "typeQuery may not be null");
             return this;
         }
 
@@ -846,7 +877,7 @@ public final class DXSearch {
         private List<Entry> results;
 
         @JsonProperty
-        private Entry next;
+        private JsonNode next;
 
     }
 
@@ -870,48 +901,62 @@ public final class DXSearch {
 
             private final FindDataObjectsResponse response;
 
-            public FindDataObjectsResultPage(FindDataObjectsResponse response) {
-                this.response = response;
+            public FindDataObjectsResultPage(FindDataObjectsRequest request) {
+                this.response = DXAPI.systemFindDataObjects(request, FindDataObjectsResponse.class, env);
             }
 
             @Override
-            public T get(int index) {
-                return getDataObjectInstanceFromResult(response.results.get(index));
+            public JsonNode getNext() {
+                return response.next.deepCopy();
             }
 
             @Override
             public boolean hasNextPage() {
-                return response.next != null;
+                return response.next != null && !response.next.isNull();
+            }
+
+            @Override
+            public Iterator<T> iterator() {
+                final Iterator<FindDataObjectsResponse.Entry> results = response.results.iterator();
+
+                return new AbstractIterator<T>() {
+                    @Override
+                    protected T computeNext() {
+                        if (!results.hasNext()) {
+                            return endOfData();
+                        }
+                        return getDataObjectInstanceFromResult(results.next());
+                    }
+                };
             }
 
             @Override
             public int size() {
                 return response.results.size();
             }
-
         }
 
         /**
          * Iterator implementation for findDataObjects results.
          */
-        private class ResultIterator
+        @VisibleForTesting
+        class ResultIterator
                 extends
                 PaginatingFindResultIterator<T, FindDataObjectsRequest, FindDataObjectsResultPage> {
 
-            public ResultIterator() {
+            private ResultIterator() {
                 super(baseQuery);
             }
 
             @Override
             public FindDataObjectsRequest getNextQuery(FindDataObjectsRequest query,
                     FindDataObjectsResultPage currentResultPage) {
-                return new FindDataObjectsRequest(query, currentResultPage.response.next, pageSize);
+                return new FindDataObjectsRequest(query, currentResultPage.getNext(), pageSize);
             }
 
             @Override
             public FindDataObjectsResultPage issueQuery(FindDataObjectsRequest query) {
-                return new FindDataObjectsResultPage(DXAPI.systemFindDataObjects(query,
-                        FindDataObjectsResponse.class, env));
+                return new FindDataObjectsResultPage(query);
             }
         }
 
@@ -973,6 +1018,35 @@ public final class DXSearch {
             return (T) dataObject;
         }
 
+        /**
+         * Returns a first page of the {@code findDataObjects} results.
+         *
+         * @param pageSize number of elements to retrieve
+         *
+         * @return result set
+         */
+        public FindResultPage<T> getFirstPage(int pageSize) {
+            if (pageSize <= 0) {
+                throw new IllegalArgumentException("Page size must be a positive integer");
+            }
+            return new FindDataObjectsResultPage(new FindDataObjectsRequest(baseQuery, null, pageSize));
+        }
+
+        /**
+         * Returns a subsequent page of the {@code findDataObjects} results starting from the specified item.
+         *
+         * @param starting result of {@link DXSearch.FindDataObjectsResult.Page#getNext()} call on previous page
+         * @param pageSize number of elements to retrieve
+         *
+         * @return result set
+         */
+        public FindResultPage<T> getSubsequentPage(JsonNode starting, int pageSize) {
+            Preconditions.checkNotNull(starting);
+            if (pageSize <= 0) {
+                throw new IllegalArgumentException("Page size must be a positive integer");
+            }
+            return new FindDataObjectsResultPage(new FindDataObjectsRequest(baseQuery, starting, pageSize));
+        }
 
         @Override
         public Iterator<T> iterator() {
@@ -1023,10 +1097,8 @@ public final class DXSearch {
         @JsonProperty
         private final DescribeParameters describe;
 
-        @SuppressWarnings("unused")
         @JsonProperty
-        private final String starting;
-        @SuppressWarnings("unused")
+        private final JsonNode starting;
         @JsonProperty
         private final Integer limit;
 
@@ -1039,7 +1111,7 @@ public final class DXSearch {
          * @param limit maximum number of results to return, or null to use the default
          *        (server-provided) limit
          */
-        private FindExecutionsRequest(FindExecutionsRequest previousQuery, String next,
+        private FindExecutionsRequest(FindExecutionsRequest previousQuery, JsonNode next,
                 Integer limit) {
             this.classConstraint = previousQuery.classConstraint;
             this.id = previousQuery.id;
@@ -1059,7 +1131,7 @@ public final class DXSearch {
 
             this.describe = previousQuery.describe;
 
-            this.starting = next;
+            this.starting = next.isNull() ? null : next;
             this.limit = limit;
         }
 
@@ -1657,7 +1729,7 @@ public final class DXSearch {
         private List<Entry> results;
 
         @JsonProperty
-        private String next;
+        private JsonNode next;
 
     }
 
@@ -1685,20 +1757,34 @@ public final class DXSearch {
             }
 
             @Override
-            public T get(int index) {
-                return getExecutionInstanceFromResult(response.results.get(index));
+            public JsonNode getNext() {
+                return response.next.deepCopy();
             }
 
             @Override
             public boolean hasNextPage() {
-                return response.next != null;
+                return response.next != null && !response.next.isNull();
+            }
+
+            @Override
+            public Iterator<T> iterator() {
+                final Iterator<FindExecutionsResponse.Entry> results = response.results.iterator();
+
+                return new AbstractIterator<T>() {
+                    @Override
+                    protected T computeNext() {
+                        if (!results.hasNext()) {
+                            return endOfData();
+                        }
+                        return getExecutionInstanceFromResult(results.next());
+                    }
+                };
             }
 
             @Override
             public int size() {
                 return response.results.size();
             }
-
         }
 
         /**
@@ -1715,7 +1801,7 @@ public final class DXSearch {
             @Override
             public FindExecutionsRequest getNextQuery(FindExecutionsRequest query,
                     FindExecutionsResultPage currentResultPage) {
-                return new FindExecutionsRequest(query, currentResultPage.response.next, pageSize);
+                return new FindExecutionsRequest(query, currentResultPage.getNext(), pageSize);
             }
 
             @Override
@@ -1789,22 +1875,26 @@ public final class DXSearch {
     }
 
     /**
-     * Encapsulates a single result page (of generic type) for a find route.
+     * Represents a single page of results for a find route.
+     *
+     * <p>
+     * A page contains a set of matching results that can be retrieved using the Iterator protocol,
+     * as well as a "bookmark" that can be used to retrieve the next page.
+     * </p>
      *
      * @param <T> Type of result to be returned e.g. DXDataObject for findDataObjects
      */
-    private static interface FindResultPage<T> {
+    public static interface FindResultPage<T> extends Iterable<T> {
         /**
-         * Returns the specified result from the current page.
-         *
-         * @param index index of result to obtain
-         *
-         * @return the requested result
+         * Returns an object that can be used in a later call to getSubsequentPage (e.g.
+         * {@link DXSearch.FindDataObjectsResult#getSubsequentPage(JsonNode, int)}) to continue
+         * retrieving results where this page leaves off, or null if there are no more results after
+         * the end of this page.
          */
-        public T get(int index);
+        public JsonNode getNext();
 
         /**
-         * Returns true if the next page exists.
+         * Returns true if more results exist.
          *
          * @return whether there are more results
          */
@@ -1833,7 +1923,6 @@ public final class DXSearch {
                 this.nameExact = nameExact;
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             private Object getValue() {
                 return this.nameExact;
@@ -1850,7 +1939,6 @@ public final class DXSearch {
                 this.glob = glob;
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             private Map<String, String> getValue() {
                 return ImmutableMap.of("glob", this.glob);
@@ -1874,7 +1962,6 @@ public final class DXSearch {
                 this.flags = flags;
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             private Map<String, String> getValue() {
                 ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
@@ -1933,7 +2020,8 @@ public final class DXSearch {
                 Iterator<T> {
         private Q query;
         private P currentPage;
-        private int nextResultIndex = 0;
+        private Iterator<T> currentPageIterator;
+        private int currentPageNo = 0;
 
         /**
          * Initializes the iterator with the specified initial query.
@@ -1944,21 +2032,22 @@ public final class DXSearch {
         private PaginatingFindResultIterator(Q initialQuery) {
             this.query = initialQuery;
             this.currentPage = issueQuery(initialQuery);
+            this.currentPageIterator = this.currentPage.iterator();
+            this.currentPageNo++;
         }
 
         /**
          * Ensures that the next element is loaded (if it exists).
          *
          * <p>
-         * Postcondition: either findProjectsResponse.results.get(nextResultIndex) points to the
-         * next valid result, or nextResultIndex is equal to findProjectsResponse.results.size() and
-         * there are no results left.
+         * Postcondition: either currentPageIterator.hasNext() is true, or
+         * currentPageIterator.hasNext() is false and currentPage.hasNextPage() is false.
          * </p>
          */
         private void ensureNextElementAvailable() {
             // If two successive calls are made to this method with no intervening mutators, the
             // second call should be very fast.
-            if (nextResultIndex < currentPage.size()) {
+            if (currentPageIterator.hasNext()) {
                 return;
             }
             if (!currentPage.hasNextPage()) {
@@ -1967,7 +2056,8 @@ public final class DXSearch {
             // Reached the end of the previous page. Load a new page.
             query = getNextQuery(query, currentPage);
             currentPage = issueQuery(query);
-            nextResultIndex = 0;
+            this.currentPageIterator = this.currentPage.iterator();
+            this.currentPageNo++;
         }
 
         /**
@@ -1985,7 +2075,7 @@ public final class DXSearch {
         @Override
         public boolean hasNext() {
             ensureNextElementAvailable();
-            return nextResultIndex < currentPage.size();
+            return currentPageIterator.hasNext();
         }
 
         /**
@@ -2000,7 +2090,17 @@ public final class DXSearch {
         @Override
         public T next() {
             ensureNextElementAvailable();
-            return currentPage.get(nextResultIndex++);
+            return currentPageIterator.next();
+        }
+
+        /**
+         * Returns current page number in search result.
+         *
+         * @return Current page number
+         */
+        @VisibleForTesting
+        int pageNo() {
+            return this.currentPageNo;
         }
 
         @Override
@@ -2010,7 +2110,7 @@ public final class DXSearch {
     }
 
     /**
-     * Query for objects (data objects, executions, or projects) with the specified properties.
+     * A query for objects (data objects, executions, or projects) with specified properties.
      */
     public static abstract class PropertiesQuery {
 
@@ -2023,17 +2123,9 @@ public final class DXSearch {
                 this.operands = ImmutableList.copyOf(operands);
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             protected JsonNode getValue() {
-                List<JsonNode> transformedArgs = Lists.newArrayList();
-                for (PropertiesQuery propertiesQuery : this.operands) {
-                    transformedArgs.add(MAPPER.valueToTree(propertiesQuery));
-                }
-                return DXJSON
-                        .getObjectBuilder()
-                        .put(this.operator,
-                                DXJSON.getArrayBuilder().addAll(transformedArgs).build()).build();
+                return serializeCompoundQuery(this.operator, this.operands);
             }
         }
 
@@ -2051,7 +2143,6 @@ public final class DXSearch {
                 this.propertyValue = Preconditions.checkNotNull(value);
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             protected Object getValue() {
                 if (propertyValue == null) {
@@ -2143,7 +2234,7 @@ public final class DXSearch {
 
 
     /**
-     * Query for objects (data objects, executions, or projects) with the specified tags.
+     * A query for objects (data objects, executions, or projects) with specified tags.
      */
     public static abstract class TagsQuery {
 
@@ -2156,17 +2247,9 @@ public final class DXSearch {
                 this.operands = ImmutableList.copyOf(operands);
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             protected JsonNode getValue() {
-                List<JsonNode> transformedArgs = Lists.newArrayList();
-                for (TagsQuery tagsQuery : this.operands) {
-                    transformedArgs.add(MAPPER.valueToTree(tagsQuery));
-                }
-                return DXJSON
-                        .getObjectBuilder()
-                        .put(this.operator,
-                                DXJSON.getArrayBuilder().addAll(transformedArgs).build()).build();
+                return serializeCompoundQuery(this.operator, this.operands);
             }
         }
 
@@ -2177,7 +2260,6 @@ public final class DXSearch {
                 this.tag = Preconditions.checkNotNull(tag);
             }
 
-            @SuppressWarnings("unused")
             @JsonValue
             protected String getValue() {
                 return this.tag;
@@ -2289,7 +2371,6 @@ public final class DXSearch {
             this.after = after;
         }
 
-        @SuppressWarnings("unused")
         @JsonProperty("after")
         private Long getAfter() {
             if (after == null) {
@@ -2298,7 +2379,6 @@ public final class DXSearch {
             return after.getTime();
         }
 
-        @SuppressWarnings("unused")
         @JsonProperty("before")
         private Long getBefore() {
             if (before == null) {
@@ -2306,6 +2386,131 @@ public final class DXSearch {
             }
             return before.getTime();
         }
+    }
+
+    /**
+     * A query for data objects with specified types.
+     */
+    public static abstract class TypeQuery {
+
+        private static class CompoundTypeQuery extends TypeQuery {
+            private final String operator;
+            private final List<TypeQuery> operands;
+
+            public CompoundTypeQuery(String operator, List<TypeQuery> operands) {
+                this.operator = operator;
+                this.operands = ImmutableList.copyOf(operands);
+            }
+
+            @JsonValue
+            protected JsonNode getValue() {
+                return serializeCompoundQuery(this.operator, this.operands);
+            }
+
+        }
+
+        private static class SimpleTypeQuery extends TypeQuery {
+            private final String type;
+
+            public SimpleTypeQuery(String type) {
+                this.type = Preconditions.checkNotNull(type);
+            }
+
+            @JsonValue
+            protected String getValue() {
+                return this.type;
+            }
+        }
+
+        /**
+         * A query that must match all of the type queries in the provided list.
+         *
+         * @param typeQueries list of queries, all of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery allOf(List<TypeQuery> typeQueries) {
+            return new CompoundTypeQuery("$and", typeQueries);
+        }
+
+        /**
+         * A query that must match all of the specified types.
+         *
+         * @param types Strings containing types, all of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery allOf(String... types) {
+            List<TypeQuery> typeQueries = Lists.newArrayList();
+            for (String type : types) {
+                typeQueries.add(TypeQuery.of(type));
+            }
+            return TypeQuery.allOf(typeQueries);
+        }
+
+        /**
+         * A query that must match all of the specified type queries recursively.
+         *
+         * @param typeQueries queries, all of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery allOf(TypeQuery... typeQueries) {
+            return TypeQuery.allOf(ImmutableList.copyOf(typeQueries));
+        }
+
+        /**
+         * A query that matches any of the type queries in the provided list.
+         *
+         * @param typeQueries list of queries, at least one of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery anyOf(List<TypeQuery> typeQueries) {
+            return new CompoundTypeQuery("$or", typeQueries);
+        }
+
+        /**
+         * A query that matches any of the specified types.
+         *
+         * @param types Strings containing types, at least one of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery anyOf(String... types) {
+            List<TypeQuery> typeQueries = Lists.newArrayList();
+            for (String type : types) {
+                typeQueries.add(TypeQuery.of(type));
+            }
+            return TypeQuery.anyOf(typeQueries);
+        }
+
+        /**
+         * A query that matches any of the specified type queries recursively.
+         *
+         * @param typeQueries queries, at least one of which must be matched
+         *
+         * @return query
+         */
+        public static TypeQuery anyOf(TypeQuery... typeQueries) {
+            return TypeQuery.anyOf(ImmutableList.copyOf(typeQueries));
+        }
+
+        /**
+         * A query that matches the specified type.
+         *
+         * @param type String containing type to match
+         *
+         * @return query
+         */
+        public static TypeQuery of(String type) {
+            return new SimpleTypeQuery(type);
+        }
+
+        private TypeQuery() {
+            // Do not allow subclassing except by the implementations provided here
+        }
+
     }
 
     /**
@@ -2331,7 +2536,6 @@ public final class DXSearch {
             this.value = value;
         }
 
-        @SuppressWarnings("unused")
         @JsonValue
         private String getValue() {
             return this.value;
@@ -2449,6 +2653,20 @@ public final class DXSearch {
     @Deprecated
     public static FindExecutionsRequestBuilder<DXJob> findJobsWithEnvironment(DXEnvironment env) {
         return new FindExecutionsRequestBuilder<DXExecution>(env).withClassJob();
+    }
+
+    // Serializes a query to the form
+    //
+    //   {operator: [operand1, operand2, ...]}
+    //
+    // where operator is typically either "$and" or "$or"
+    private static JsonNode serializeCompoundQuery(String operator, List<? extends Object> operands) {
+        List<JsonNode> transformedArgs = Lists.newArrayList();
+        for (Object operand : operands) {
+            transformedArgs.add(MAPPER.valueToTree(operand));
+        }
+        return DXJSON.getObjectBuilder()
+                .put(operator, DXJSON.getArrayBuilder().addAll(transformedArgs).build()).build();
     }
 
     // Prevent this utility class from being instantiated.

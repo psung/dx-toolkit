@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -25,7 +25,7 @@ existing analysis ID.
 
 """
 
-from __future__ import (print_function, unicode_literals)
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import time
 import dxpy
@@ -48,8 +48,12 @@ class DXAnalysis(DXObject):
         DXObject.__init__(self, dxid=dxid)
         self.set_id(dxid)
 
-    def describe(self, **kwargs):
+    def describe(self, fields=None, **kwargs):
         """
+        :param fields: dict where the keys are field names that should
+            be returned, and values should be set to True (by default,
+            all fields are returned)
+        :type fields: dict
         :returns: Description of the analysis
         :rtype: dict
 
@@ -57,9 +61,11 @@ class DXAnalysis(DXObject):
         about the analysis
 
         """
-        self._desc = dxpy.api.analysis_describe(self._dxid, {}, **kwargs)
+        describe_input = {}
+        if fields is not None:
+            describe_input['fields'] = fields
+        self._desc = dxpy.api.analysis_describe(self._dxid, describe_input, **kwargs)
         return self._desc
-
 
     def add_tags(self, tags, **kwargs):
         """
@@ -171,4 +177,4 @@ class DXAnalysis(DXObject):
 
         '''
 
-        return self.describe(**kwargs)["state"]
+        return self.describe(fields=dict(state=True), **kwargs)["state"]

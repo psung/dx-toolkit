@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -112,7 +112,6 @@ public class DXRecord extends DXDataObject {
      *
      * @return data object
      */
-    @SuppressWarnings("unused")
     @JsonCreator
     private static DXRecord create(Map<String, Object> value) {
         checkDXLinkFormat(value);

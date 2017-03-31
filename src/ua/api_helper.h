@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -28,7 +28,7 @@ void createFolder(const std::string &projectID, const std::string &folder);
 
 void createFolders(const std::vector<std::string> &projects, const std::vector<std::string> &folders);
 
-std::string createFileObject(const std::string &project, const std::string &folder, const std::string &name, const std::string &mimeType, const dx::JSON &properties);
+std::string createFileObject(const std::string &project, const std::string &folder, const std::string &name, const std::string &mimeType, const dx::JSON &properties, const dx::JSON &type, const dx::JSON & tags, const std::string &visibility, const dx::JSON &details);
 
 void closeFileObject(const std::string &fileID);
 

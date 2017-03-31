@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 DNAnexus, Inc.
+# Copyright (C) 2013-2016 DNAnexus, Inc.
 #
 # This file is part of dx-toolkit (DNAnexus platform client libraries).
 #
@@ -19,16 +19,13 @@ This submodule contains workflow-based commands for the dx
 command-line client.
 '''
 
-from __future__ import (print_function, unicode_literals)
-
-import os, sys
+from __future__ import print_function, unicode_literals, division, absolute_import
 
 import dxpy
 import dxpy.utils.printing as printing
 from .parsers import (process_dataobject_args, process_single_dataobject_output_args,
                       process_instance_type_arg)
 from ..utils.describe import io_val_to_str
-from ..utils.env import get_env_var
 from ..utils.resolver import (resolve_existing_path, resolve_path, is_analysis_id)
 from ..exceptions import (err_exit, DXCLIError, InvalidState)
 from . import (try_call, try_call_err_exit)
@@ -47,10 +44,10 @@ def new_workflow(args):
             init_from = dxpy.get_handler(init_result['id'], project=init_project)
     if args.output is None:
         project = dxpy.WORKSPACE_ID
-        folder = get_env_var('DX_CLI_WD', u'/')
+        folder = dxpy.config.get("DX_CLI_WD", "/")
         name = None
     else:
-        project, folder, name = dxpy.utils.resolver.resolve_path(args.output)
+        project, folder, name = try_call(dxpy.utils.resolver.resolve_path, args.output)
     if args.output_folder is not None:
         try:
             # Try to resolve to a path in the project

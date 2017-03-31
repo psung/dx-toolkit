@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -22,8 +22,10 @@
 #include <iostream>
 
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 #include "SimpleHttp.h"
+#include "dxjson/dxjson.h"
 
 namespace po = boost::program_options;
 
@@ -42,8 +44,10 @@ public:
   bool help();
   bool version();
   bool env();
+  bool test();
   void printHelp(char * programName);
   void validate();
+  unsigned int getNumberOfFilesInDirectory(const boost::filesystem::path &dir);
 
   friend std::ostream &operator<<(std::ostream &out, const Options &opt);
 
@@ -51,7 +55,11 @@ public:
   std::vector<std::string> folders;
   std::vector<std::string> names;
   std::vector<std::string> files;
-
+  std::string visibility;
+  std::vector<std::string> propertiesInput;
+  std::vector<std::string> typeInput;
+  std::vector<std::string> tagsInput;
+    
   int readThreads;
   int compressThreads;
   int uploadThreads;
@@ -62,6 +70,9 @@ public:
   bool progress;
   bool verbose;
   bool waitOnClose;
+  bool recursive;
+  bool overrideFileLimit;
+  bool standardInput;
 
   // Import flags
   bool reads;
@@ -73,6 +84,12 @@ public:
   bool noRoundRobinDNS;
 
   int64_t throttle;
+  
+  std::string detailsInput;
+  dx::JSON properties;
+  dx::JSON type;
+  dx::JSON tags;
+  dx::JSON details;
 
 private:
 

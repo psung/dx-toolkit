@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -18,6 +18,7 @@
 #define DXCPP_LOG_H
 
 #include <sstream>
+#include <boost/thread.hpp>
 
 #define DXLOG(level) \
 if (level < dx::Log::ReportingLevel()) ; \
@@ -39,12 +40,13 @@ namespace dx {
     logINFO, // Default priority for a log message
     logWARNING,
     logERROR, // Highest priority log message
-    DISABLE_LOGGING = 15// If ReportingLevel is set to this, nothing is logged
+    DISABLE_LOGGING = 15,// If ReportingLevel is set to this, nothing is logged
+    logUSERINFO = 16 // Highest level: for logs that are always shown to the user.
   };
 
   class Log {
   public:
-    Log() { }
+    Log() { };
     ~Log();
     std::ostringstream& Get(LogLevel l=logINFO);
   public:
@@ -56,6 +58,7 @@ namespace dx {
     Log(const Log&);
     Log& operator=(const Log&);
   protected:
+    static boost::mutex mtx;
     std::ostringstream oss;
   };
 }

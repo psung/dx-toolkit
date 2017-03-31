@@ -307,7 +307,8 @@ namespace dx {
   }
 
   JSON appRun(const std::string &app_id_or_name, const JSON &input_params, const bool safe_to_retry) {
-    return appRun(app_id_or_name, input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return appRun(app_id_or_name, input_params_cp.toString(), safe_to_retry);
   }
 
   JSON appRunWithAlias(const std::string &app_name, const std::string &app_alias, const std::string &input_params, const bool safe_to_retry) {
@@ -315,7 +316,8 @@ namespace dx {
   }
 
   JSON appRunWithAlias(const std::string &app_name, const std::string &app_alias, const JSON &input_params, const bool safe_to_retry) {
-    return appRunWithAlias(app_name, app_alias, input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return appRunWithAlias(app_name, app_alias, input_params_cp.toString(), safe_to_retry);
   }
 
   JSON appUninstall(const std::string &app_id_or_name, const std::string &input_params, const bool safe_to_retry) {
@@ -355,7 +357,8 @@ namespace dx {
   }
 
   JSON appNew(const JSON &input_params, const bool safe_to_retry) {
-    return appNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return appNew(input_params_cp.toString(), safe_to_retry);
   }
 
   JSON appletAddTags(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -419,7 +422,8 @@ namespace dx {
   }
 
   JSON appletRun(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
-    return appletRun(object_id, input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return appletRun(object_id, input_params_cp.toString(), safe_to_retry);
   }
 
   JSON appletSetProperties(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -435,7 +439,8 @@ namespace dx {
   }
 
   JSON appletNew(const JSON &input_params, const bool safe_to_retry) {
-    return appletNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return appletNew(input_params_cp.toString(), safe_to_retry);
   }
 
   JSON containerClone(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -627,7 +632,8 @@ namespace dx {
   }
 
   JSON fileNew(const JSON &input_params, const bool safe_to_retry) {
-    return fileNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return fileNew(input_params_cp.toString(), safe_to_retry);
   }
 
   JSON gtableAddRows(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -811,7 +817,8 @@ namespace dx {
   }
 
   JSON jobNew(const JSON &input_params, const bool safe_to_retry) {
-    return jobNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return jobNew(input_params_cp.toString(), safe_to_retry);
   }
 
   JSON notificationsGet(const std::string &input_params, const bool safe_to_retry) {
@@ -828,6 +835,79 @@ namespace dx {
 
   JSON notificationsMarkRead(const JSON &input_params, const bool safe_to_retry) {
     return notificationsMarkRead(input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgDescribe(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/describe"), input_params, safe_to_retry);
+  }
+
+  JSON orgDescribe(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgDescribe(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgFindMembers(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/findMembers"), input_params, safe_to_retry);
+  }
+
+  JSON orgFindMembers(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgFindMembers(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgFindProjects(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/findProjects"), input_params, safe_to_retry);
+  }
+
+  JSON orgFindProjects(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgFindProjects(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgFindApps(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/findApps"), input_params, safe_to_retry);
+  }
+
+  JSON orgFindApps(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgFindApps(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgInvite(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/invite"), input_params, safe_to_retry);
+  }
+
+  JSON orgInvite(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgInvite(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgRemoveMember(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/removeMember"), input_params, safe_to_retry);
+  }
+
+  JSON orgRemoveMember(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgRemoveMember(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgSetMemberAccess(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/setMemberAccess"), input_params, safe_to_retry);
+  }
+
+  JSON orgSetMemberAccess(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgSetMemberAccess(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgUpdate(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/update"), input_params, safe_to_retry);
+  }
+
+  JSON orgUpdate(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return orgUpdate(object_id, input_params.toString(), safe_to_retry);
+  }
+
+  JSON orgNew(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/org/new", input_params, safe_to_retry);
+  }
+
+  JSON orgNew(const JSON &input_params, const bool safe_to_retry) {
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return orgNew(input_params_cp.toString(), safe_to_retry);
   }
 
   JSON projectAddTags(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -966,6 +1046,14 @@ namespace dx {
     return projectUpdate(object_id, input_params.toString(), safe_to_retry);
   }
 
+  JSON projectUpdateSponsorship(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest(std::string("/") + object_id + std::string("/updateSponsorship"), input_params, safe_to_retry);
+  }
+
+  JSON projectUpdateSponsorship(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
+    return projectUpdateSponsorship(object_id, input_params.toString(), safe_to_retry);
+  }
+
   JSON projectNew(const std::string &input_params, const bool safe_to_retry) {
     return DXHTTPRequest("/project/new", input_params, safe_to_retry);
   }
@@ -1075,7 +1163,32 @@ namespace dx {
   }
 
   JSON recordNew(const JSON &input_params, const bool safe_to_retry) {
-    return recordNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return recordNew(input_params_cp.toString(), safe_to_retry);
+  }
+
+  JSON systemDescribeDataObjects(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/describeDataObjects", input_params, safe_to_retry);
+  }
+
+  JSON systemDescribeDataObjects(const JSON &input_params, const bool safe_to_retry) {
+    return systemDescribeDataObjects(input_params.toString(), safe_to_retry);
+  }
+
+  JSON systemDescribeExecutions(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/describeExecutions", input_params, safe_to_retry);
+  }
+
+  JSON systemDescribeExecutions(const JSON &input_params, const bool safe_to_retry) {
+    return systemDescribeExecutions(input_params.toString(), safe_to_retry);
+  }
+
+  JSON systemDescribeProjects(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/describeProjects", input_params, safe_to_retry);
+  }
+
+  JSON systemDescribeProjects(const JSON &input_params, const bool safe_to_retry) {
+    return systemDescribeProjects(input_params.toString(), safe_to_retry);
   }
 
   JSON systemFindAffiliates(const std::string &input_params, const bool safe_to_retry) {
@@ -1100,6 +1213,14 @@ namespace dx {
 
   JSON systemFindDataObjects(const JSON &input_params, const bool safe_to_retry) {
     return systemFindDataObjects(input_params.toString(), safe_to_retry);
+  }
+
+  JSON systemResolveDataObjects(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/resolveDataObjects", input_params, safe_to_retry);
+  }
+
+  JSON systemResolveDataObjects(const JSON &input_params, const bool safe_to_retry) {
+    return systemResolveDataObjects(input_params.toString(), safe_to_retry);
   }
 
   JSON systemFindExecutions(const std::string &input_params, const bool safe_to_retry) {
@@ -1150,6 +1271,22 @@ namespace dx {
     return systemFindProjectMembers(input_params.toString(), safe_to_retry);
   }
 
+  JSON systemFindOrgs(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/findOrgs", input_params, safe_to_retry);
+  }
+
+  JSON systemFindOrgs(const JSON &input_params, const bool safe_to_retry) {
+    return systemFindOrgs(input_params.toString(), safe_to_retry);
+  }
+
+  JSON systemGlobalSearch(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/globalSearch", input_params, safe_to_retry);
+  }
+
+  JSON systemGlobalSearch(const JSON &input_params, const bool safe_to_retry) {
+    return systemGlobalSearch(input_params.toString(), safe_to_retry);
+  }
+
   JSON systemGreet(const std::string &input_params, const bool safe_to_retry) {
     return DXHTTPRequest("/system/greet", input_params, safe_to_retry);
   }
@@ -1158,12 +1295,28 @@ namespace dx {
     return systemGreet(input_params.toString(), safe_to_retry);
   }
 
+  JSON systemHeaders(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/headers", input_params, safe_to_retry);
+  }
+
+  JSON systemHeaders(const JSON &input_params, const bool safe_to_retry) {
+    return systemHeaders(input_params.toString(), safe_to_retry);
+  }
+
   JSON systemShortenURL(const std::string &input_params, const bool safe_to_retry) {
     return DXHTTPRequest("/system/shortenURL", input_params, safe_to_retry);
   }
 
   JSON systemShortenURL(const JSON &input_params, const bool safe_to_retry) {
     return systemShortenURL(input_params.toString(), safe_to_retry);
+  }
+
+  JSON systemWhoami(const std::string &input_params, const bool safe_to_retry) {
+    return DXHTTPRequest("/system/whoami", input_params, safe_to_retry);
+  }
+
+  JSON systemWhoami(const JSON &input_params, const bool safe_to_retry) {
+    return systemWhoami(input_params.toString(), safe_to_retry);
   }
 
   JSON userDescribe(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -1307,7 +1460,8 @@ namespace dx {
   }
 
   JSON workflowRun(const std::string &object_id, const JSON &input_params, const bool safe_to_retry) {
-    return workflowRun(object_id, input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return workflowRun(object_id, input_params_cp.toString(), safe_to_retry);
   }
 
   JSON workflowSetDetails(const std::string &object_id, const std::string &input_params, const bool safe_to_retry) {
@@ -1363,7 +1517,8 @@ namespace dx {
   }
 
   JSON workflowNew(const JSON &input_params, const bool safe_to_retry) {
-    return workflowNew(input_params.toString(), safe_to_retry);
+    JSON input_params_cp = Nonce::updateNonce(input_params);
+    return workflowNew(input_params_cp.toString(), safe_to_retry);
   }
 
 }

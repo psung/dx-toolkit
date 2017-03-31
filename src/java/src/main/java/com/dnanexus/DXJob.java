@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -241,7 +241,6 @@ public final class DXJob extends DXExecution {
         private List<StateTransition> stateTransitions;
         @JsonProperty
         private String function;
-        @SuppressWarnings("unused")
         @JsonProperty
         private List<String> dependsOn;
         @JsonProperty
@@ -252,7 +251,6 @@ public final class DXJob extends DXExecution {
         private Boolean isFree;
         @JsonProperty
         private String applet;
-        @SuppressWarnings("unused")
         @JsonProperty
         private String app;
         @JsonProperty
@@ -408,7 +406,7 @@ public final class DXJob extends DXExecution {
 
     private Describe describeImpl(JsonNode describeInput) {
         return new Describe(DXAPI.jobDescribe(this.getId(), describeInput,
-                DescribeResponseHash.class), this.env);
+                DescribeResponseHash.class, this.env), this.env);
     }
 
     @Override
@@ -436,7 +434,7 @@ public final class DXJob extends DXExecution {
 
     @Override
     public void terminate() {
-        DXAPI.jobTerminate(this.getId(), JobTerminateResponse.class);
+        DXAPI.jobTerminate(this.getId(), JobTerminateResponse.class, this.env);
     }
 
     /**

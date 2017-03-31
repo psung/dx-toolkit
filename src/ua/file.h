@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 DNAnexus, Inc.
+// Copyright (C) 2013-2016 DNAnexus, Inc.
 //
 // This file is part of dx-toolkit (DNAnexus platform client libraries).
 //
@@ -21,18 +21,23 @@
 
 #include "dxcpp/bqueue.h"
 #include "chunk.h"
+#include "dxjson/dxjson.h"
 
 class File {
 public:
 
   File(const std::string &localFile_,
        const std::string &projectSpec_, const std::string &folder_, const std::string &name_,
+       const std::string &visibility, const dx::JSON &properties_, const dx::JSON &type_,
+       const dx::JSON &tags_, const dx::JSON &details,
        const bool toCompress_, const bool tryResuming, const std::string &mimeType_, 
-       const int64_t chunkSize, const unsigned int fileIndex_);
+       const int64_t chunkSize, const unsigned int fileIndex_, const bool standardInput_);
 
+  void init();
   void init(const bool tryResuming);
 
   unsigned int createChunks(dx::BlockingQueue<Chunk *> &queue, const int tries);
+  unsigned int readStdin(dx::BlockingQueue<Chunk *> &queue, const int tries);
 
   void close(void);
 
@@ -56,6 +61,21 @@ public:
   /* Destination file name. */
   std::string name;
 
+  /* Visibility */
+  std::string visibility;
+
+  /* JSON object containing the file's properties. */
+  dx::JSON properties;
+  
+  /* List of types specified for this file. */
+  dx::JSON type;
+
+  /* List of tags specified for this file. */
+  dx::JSON tags;
+
+  /* JSON object containing details specified for this file. */
+  dx::JSON details;
+
   /* Set to true if one or more chunks of the file fails to be uploaded. */
   bool failed;
 
@@ -78,13 +98,13 @@ public:
   std::string mimeType;
 
   /* chunk size for this file*/
-  int64_t chunkSize;
+  uint64_t chunkSize;
 
   /* Size of the local file to be uploaded */
-  int64_t size;
+  uint64_t size;
 
   /* Number of bytes uploaded succesfuly so far from local file */
-  int64_t bytesUploaded;
+  uint64_t bytesUploaded;
   
   /* Index of this File object in the Files vector (in main.cpp) */
   unsigned int fileIndex;
@@ -104,6 +124,9 @@ public:
    */
   std::string jobID;
 
+  /* File content comes from stdin.*/
+  bool standardInput;
+
   friend std::ostream &operator<<(std::ostream &out, const File &file);
   
   /* 
@@ -111,8 +134,8 @@ public:
    * (with space as delimiter). This string is used for identifying whether
    * an upload can be resumed or not.
    */
-  static std::string createResumeInfoString(const int64_t fileSize, const int64_t modifiedTimestamp,
-                                            const bool toCompress, const int64_t chunkSize, const std::string &path);
+  static std::string createResumeInfoString(const uint64_t fileSize, const int64_t modifiedTimestamp,
+                                            const bool toCompress, const uint64_t chunkSize, const std::string &path);
 
 };
 
